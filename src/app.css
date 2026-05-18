@@ -69,6 +69,8 @@ a {
 a:hover {
 	color: var(--color-text-soft);
 	text-decoration: underline dotted;
+	text-decoration-thickness: clamp(1px, 0.13vw, 2px);
+	text-underline-offset: clamp(1px, 0.15vw, 2.5px);
 	cursor: pointer;
 }
 
