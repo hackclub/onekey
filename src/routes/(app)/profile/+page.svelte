@@ -35,11 +35,12 @@
 
 <style>
 	.eyebrow {
-		font-size: 0.68rem;
+		font-size: 0.8rem;
+		font-weight: 500;
 		letter-spacing: 0.18em;
 		text-transform: uppercase;
 		color: var(--rail-label);
-		margin: 0 0 0.6rem;
+		margin: 0 0;
 	}
 
 	.heading {
@@ -71,11 +72,12 @@
 
 	.card-label {
 		display: block;
-		font-size: clamp(0.6rem, 0.7vw, 0.85rem);
+		font-size: clamp(0.8rem, 0.9vw, 1.1rem);
 		text-transform: uppercase;
 		letter-spacing: 0.14em;
-		color: var(--rail-label);
+		color: var(--color-text-soft);
 		margin-bottom: 1.25rem;
+		font-weight: bold;
 	}
 
 	.field-list {

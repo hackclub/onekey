@@ -25,7 +25,7 @@
 	}
 
 	.work {
-		margin-left: clamp(110px, 9.5vw, 170px);
+		margin-left: max(110px, 17vh);
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
@@ -35,17 +35,13 @@
 		padding: clamp(2rem, 3vw, 4rem) clamp(1.5rem, 3vw, 3rem);
 		width: 100%;
 		flex: 1;
-		font-size: clamp(1rem, 1vw, 1.3rem);
+		font-size: 1rem;
 		box-sizing: border-box;
 		margin: 0;
 	}
 
 	.content :global(h1) {
-		font-size: clamp(2rem, 3vw, 3.5rem);
-		margin-bottom: 1rem;
+		font-size: 2rem;
 	}
 
-	.content :global(p) {
-		font-size: clamp(1.05rem, 1vw, 1.3rem);
-	}
 </style>

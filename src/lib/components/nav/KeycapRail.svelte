@@ -65,7 +65,7 @@
 				ontouchend={handleRelease}
 			>
 				<Keycap
-					size="clamp(55px, 5vw, 82px)"
+					size="max(55px, 9vh)"
 					color={active ? 'var(--keycap-border)' : 'var(--keycap-color)'}
 					dark={active}
 					pressed={pressedHref === item.href}
@@ -88,14 +88,14 @@
 		position: fixed;
 		top: 0;
 		left: 0;
-		width: clamp(110px, 9.5vw, 170px);
+		width: max(110px, 17vh);
 		height: 100vh;
 		background-color: var(--rail-bg);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: clamp(1rem, 1.2vw, 1.6rem) 0;
-		gap: clamp(0.75rem, 0.9vw, 1.25rem);
+		padding: max(16px, 2.1vh) 0;
+		gap: max(12px, 1.6vh);
 		z-index: 20;
 		box-sizing: border-box;
 	}
@@ -103,12 +103,12 @@
 	.brand {
 		display: flex;
 		justify-content: center;
-		padding: 0.25rem 0 0.5rem;
+		padding: 4px 0 8px;
 		text-decoration: none;
 	}
 
 	.brand img {
-		height: clamp(28px, 2.4vw, 40px);
+		height: max(28px, 4.3vh);
 		filter: invert(1);
 	}
 
@@ -122,18 +122,19 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: clamp(0.75rem, 1vw, 1.3rem);
+		gap: max(16px, 2.3vh);
 		background: #fff;
-		padding: clamp(0.35rem, 0.4vw, 0.6rem) clamp(0.5rem, 0.6vw, 0.85rem)
-			clamp(0.5rem, 0.6vw, 0.85rem);
-		border-radius: clamp(8.7px, 0.8vw, 13.05px);
+		padding: max(11px, 1.4vh) max(8px, 1.1vh) max(11px, 1.4vh);
+		border-radius: max(8.7px, 1.4vh);
+		overflow: hidden;
+		margin-block: auto;
 	}
 
 	.item {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: clamp(12px, 1.1vw, 18px);
+		gap: max(4px, 0.7vh);
 		text-decoration: none;
 		outline: none;
 		border-radius: 8px;
@@ -146,19 +147,20 @@
 		pointer-events: none;
 	}
 
+	.item.active :global(.face) {
+		border-color: color-mix(in srgb, #ffffff 25%, transparent);
+	}
+
 	.item:focus-visible :global(.keycap) {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
 	}
 
-	.item.active :global(.face) {
-		border-color: color-mix(in srgb, #ffffff 25%, transparent);
-	}
 
 	.svg-icon {
 		display: flex;
-		width: clamp(24px, 2.2vw, 36px);
-		height: clamp(24px, 2.2vw, 36px);
+		width: max(24px, 3.9vh);
+		height: max(24px, 3.9vh);
 		color: #000;
 	}
 
@@ -173,7 +175,7 @@
 
 	.label {
 		font-family: 'Phantom Sans', sans-serif;
-		font-size: clamp(9px, 0.8vw, 12px);
+		font-size: max(9px, 1.4vh);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: #8a8f99;
@@ -188,16 +190,16 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: clamp(0.7rem, 0.85vw, 1.1rem);
+		gap: max(11px, 1.5vh);
 		width: 100%;
-		padding-bottom: 0.25rem;
+		padding-bottom: 4px;
 	}
 
 	.avatar {
-		width: clamp(48px, 4.4vw, 70px);
-		height: clamp(48px, 4.4vw, 70px);
+		width: max(48px, 7.8vh);
+		height: max(48px, 7.8vh);
 		border-radius: 50%;
 		background-color: var(--accent);
-		border: 3px solid var(--rail-bg-2);
+		border: max(2px, 0.4vh) solid var(--rail-bg-2);
 	}
 </style>

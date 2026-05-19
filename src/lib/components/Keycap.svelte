@@ -62,7 +62,7 @@
 		box-sizing: border-box;
 		padding: calc(var(--size) * 0.13) calc(var(--size) * 0.10);
 		border-radius: calc(var(--size) * 0.07);
-		border: 2px solid var(--border);
+		border: calc(var(--size) * 0.033) solid var(--border);
 		background: conic-gradient(
 			from 315deg at 50% 50%,
 			color-mix(in srgb, var(--color) 91%, white) 0deg 90deg,
@@ -92,7 +92,7 @@
 		height: 100%;
 		margin: 0 auto;
 		border-radius: calc(var(--size) * 0.09);
-		border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
+		border: calc(var(--size) * 0.016) solid color-mix(in srgb, var(--border) 18%, transparent);
 		background: var(--color);
 		display: flex;
 		align-items: center;
