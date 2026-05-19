@@ -1,3 +1,7 @@
+<script lang="ts">
+	import { theme } from '$lib/theme.svelte';
+</script>
+
 <svelte:head>
 	<title>onekey - account</title>
 </svelte:head>
@@ -31,6 +35,23 @@
 	<div class="card">
 		<span class="card-label">rewards</span>
 	</div>
+
+	<div class="card">
+		<span class="card-label">preferences</span>
+		<div class="pref-row">
+			<span class="pref-label">dark mode</span>
+			<button
+				class="toggle"
+				class:toggle-on={theme.dark}
+				onclick={() => (theme.dark = !theme.dark)}
+				aria-label="Toggle dark mode"
+				role="switch"
+				aria-checked={theme.dark}
+			>
+				<span class="toggle-thumb"></span>
+			</button>
+		</div>
+	</div>
 </div>
 
 <style>
@@ -58,7 +79,7 @@
 	}
 
 	.card {
-		background: var(--color-bg);
+		background: var(--color-bg-soft);
 		border-radius: var(--radius-card);
 		border: solid var(--border-width);
 		padding: clamp(1rem, 1.5vw, 1.75rem) clamp(1.1rem, 1.5vw, 1.75rem);
@@ -103,5 +124,51 @@
 
 	.field-val {
 		font-size: 0.95rem;
+	}
+
+	/* preferences card */
+	.pref-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.pref-label {
+		font-size: 0.9rem;
+	}
+
+	.toggle {
+		position: relative;
+		width: 2.75rem;
+		height: 1.5rem;
+		border-radius: var(--radius-pill);
+		border: solid var(--border-width);
+		background: black;
+		border-color: black;
+		padding: 0;
+		cursor: pointer;
+		flex-shrink: 0;
+	}
+
+	.toggle-on {
+		background: var(--color-text);
+		border-color: var(--color-text);
+	}
+
+	.toggle-thumb {
+		position: absolute;
+		top: 50%;
+		left: 0.15rem;
+		transform: translateY(-50%);
+		width: 0.9rem;
+		height: 0.9rem;
+		border-radius: 50%;
+		background: white;
+		transition: transform var(--transition-med);
+	}
+
+	.toggle-on .toggle-thumb {
+		transform: translate(1.2rem, -50%);
+		background: var(--color-bg);
 	}
 </style>

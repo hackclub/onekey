@@ -25,7 +25,7 @@
 		{ pct: 5, label: "decide max's pfp", hours: '100 hours' },
 		{ pct: 12.5, label: 'i want to cheese', hours: '250 hours' },
 		{ pct: 25, label: "dye max's hair", hours: '500 hours' },
-		{ pct: 37.5, label: "bleach alfie's hair", hours: '750 hours' },
+		{ pct: 37.5, label: "bleach [redacted]'s hair", hours: '750 hours' },
 		{ pct: 50, label: "dye jenin's hair", hours: '1000 hours' },
 		{ pct: 75, label: 'tiktok dance', hours: '1500 hours' },
 		{ pct: 100, label: 'catmaid for a day', hours: '2000 hours' }
@@ -144,13 +144,10 @@
 	</div> -->
 </div>
 
-
 <style>
 	.eyebrow {
-		font-size: 0.8rem;
+		font-size: 1.05rem;
 		font-weight: 500;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
 		color: var(--rail-label);
 		margin: 0 0;
 	}
@@ -299,7 +296,7 @@
 		width: 3.7rem;
 		height: 3.7rem;
 		border-radius: 50%;
-		border: 0.35rem solid white;
+		border: 0.35rem solid var(--color-bg);
 		background: #e0e0e0;
 		flex-shrink: 0;
 	}
@@ -318,10 +315,10 @@
 		bottom: calc(100% + 0.4rem);
 		font-size: 0.6rem;
 		font-weight: bold;
-		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		color: var(--rail-label);
 		white-space: nowrap;
+		text-transform: uppercase;
 	}
 
 	.goal-marker-label {
@@ -329,10 +326,10 @@
 		position: absolute;
 		top: calc(100% + 0.4rem);
 		font-size: 0.6rem;
-		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		color: var(--rail-label);
 		white-space: nowrap;
+		text-transform: uppercase;
 	}
 
 	.milestone-list {
@@ -422,5 +419,21 @@
 		height: 100%;
 		background: var(--color-text);
 		border-radius: 9999px;
+	}
+
+	:global([data-theme='dark']) .goal-track {
+		background: #3a3f4a;
+	}
+
+	:global([data-theme='dark']) .goal-dot {
+		background: #3a3f4a;
+	}
+
+	:global([data-theme='dark']) .goal-dot.reached {
+		background: white;
+	}
+
+	:global([data-theme='dark']) .quest-track {
+		background: #3a3f4a;
 	}
 </style>

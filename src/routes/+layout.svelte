@@ -1,7 +1,13 @@
 <script lang="ts">
 	import '../app.css';
+	import { browser } from '$app/environment';
+	import { theme } from '$lib/theme.svelte';
 
 	let { children } = $props();
+
+	if (browser) {
+		theme.dark = localStorage.getItem('theme') === 'dark';
+	}
 </script>
 
 <svelte:head>

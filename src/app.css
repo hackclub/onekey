@@ -47,6 +47,13 @@
 	--transition-med: 0.2s linear;
 }
 
+[data-theme='dark'] {
+	--color-text: #eaedf4;
+	--color-text-soft: #eaedf4;
+	--color-bg: #16181d;
+	--color-bg-soft: #1e2027;
+}
+
 html:has(.dashboard) {
 	font-size: clamp(12px, 1.25vw, 48px);
 }
