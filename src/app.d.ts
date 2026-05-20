@@ -15,13 +15,12 @@ declare global {
 				slack_display_name?: string;
 				ysws_eligible?: boolean;
 				hackatime_linked: boolean;
-				address?: {
-					street_address?: string;
-					locality?: string;
-					region?: string;
-					postal_code?: string;
-					country?: string;
-				};
+				street_address?: string;
+				locality?: string;
+				region?: string;
+				postal_code?: string;
+				country?: string;
+				key_sfx_enabled: boolean;
 			} | null;
 		}
 	}

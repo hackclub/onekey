@@ -66,10 +66,14 @@
 					<a href="/auth/hackatime/start" class="started-action" data-sveltekit-reload>go</a>
 				{/if}
 			</li>
-			<li class="started-item">
+			<li class="started-item" class:done={!!(data.user?.street_address || data.user?.locality || data.user?.country)}>
 				<span class="started-check"></span>
 				<span>set your address</span>
-				<a href="/account" class="started-action">go</a>
+				{#if data.user?.street_address || data.user?.locality || data.user?.country}
+					<span class="started-action">done!</span>
+				{:else}
+					<a href="/account" class="started-action">go</a>
+				{/if}
 			</li>
 			<li class="started-item">
 				<span class="started-check"></span>

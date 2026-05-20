@@ -30,7 +30,9 @@
 
 	function handlePress(href: string) {
 		pressedHref = href;
-		new Audio('/audio/key.wav').play().catch(() => {});
+		if (page.data.user?.key_sfx_enabled !== false) {
+			new Audio('/audio/key.wav').play().catch(() => {});
+		}
 	}
 
 	function handleRelease() {

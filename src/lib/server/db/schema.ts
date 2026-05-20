@@ -26,6 +26,12 @@ export const users = pgTable('users', {
 	hackatimeTokenCt: text('hackatime_token_ct'),
 	hackatimeTokenIv: text('hackatime_token_iv'),
 	hackatimeTokenTag: text('hackatime_token_tag'),
+	streetAddress: text('street_address'),
+	locality: text('locality'),
+	region: text('region'),
+	postalCode: text('postal_code'),
+	country: text('country'),
+	keySfxEnabled: boolean('key_sfx_enabled').notNull().default(true),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
 });

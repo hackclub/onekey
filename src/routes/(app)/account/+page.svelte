@@ -1,5 +1,23 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+
 	let { data } = $props();
+
+	let editingAddress = $state(false);
+	let sfxEnabled = $state(data.user?.key_sfx_enabled ?? true);
+
+	let sfxForm: HTMLFormElement;
+	let sfxInput: HTMLInputElement;
+
+	const hasAddress = $derived(
+		!!(
+			data.user?.street_address ||
+			data.user?.locality ||
+			data.user?.region ||
+			data.user?.postal_code ||
+			data.user?.country
+		)
+	);
 </script>
 
 <svelte:head>
@@ -47,43 +65,149 @@
 		<a href="/logout" class="logout-link">log out</a>
 	</div>
 
-	{#if data.user?.address}
-		<div class="card">
+	<div class="card">
+		<span class="card-label">settings</span>
+		<form
+			method="POST"
+			action="?/saveSfx"
+			bind:this={sfxForm}
+			use:enhance
+		>
+			<input type="hidden" name="key_sfx_enabled" bind:this={sfxInput} value={sfxEnabled ? 'true' : 'false'} />
+			<label class="toggle-row">
+				<span class="toggle-label">sidebar key sfx</span>
+				<button
+					type="button"
+					class="toggle"
+					class:on={sfxEnabled}
+					role="switch"
+					aria-checked={sfxEnabled}
+					onclick={() => {
+						sfxEnabled = !sfxEnabled;
+						sfxInput.value = sfxEnabled ? 'true' : 'false';
+						sfxForm.requestSubmit();
+					}}
+				>
+					<span class="toggle-thumb"></span>
+				</button>
+			</label>
+		</form>
+	</div>
+
+	<div class="card card-full">
+		<div class="address-header">
 			<span class="card-label">address</span>
+			{#if !editingAddress}
+				<button class="edit-link" onclick={() => (editingAddress = true)}>edit</button>
+			{/if}
+		</div>
+
+		{#if editingAddress}
+			<form
+				method="POST"
+				action="?/saveAddress"
+				use:enhance={() => {
+					return ({ update }) => {
+						update();
+						editingAddress = false;
+					};
+				}}
+				class="edit-form"
+			>
+				<div class="edit-grid">
+					<label class="edit-field edit-field-full">
+						<span class="edit-field-label">street</span>
+						<input
+							class="edit-input"
+							type="text"
+							name="street_address"
+							value={data.user?.street_address ?? ''}
+							placeholder="123 Main St"
+						/>
+					</label>
+					<label class="edit-field">
+						<span class="edit-field-label">city</span>
+						<input
+							class="edit-input"
+							type="text"
+							name="locality"
+							value={data.user?.locality ?? ''}
+							placeholder="Springfield"
+						/>
+					</label>
+					<label class="edit-field">
+						<span class="edit-field-label">region</span>
+						<input
+							class="edit-input"
+							type="text"
+							name="region"
+							value={data.user?.region ?? ''}
+							placeholder="CA"
+						/>
+					</label>
+					<label class="edit-field">
+						<span class="edit-field-label">postal code</span>
+						<input
+							class="edit-input"
+							type="text"
+							name="postal_code"
+							value={data.user?.postal_code ?? ''}
+							placeholder="90210"
+						/>
+					</label>
+					<label class="edit-field">
+						<span class="edit-field-label">country</span>
+						<input
+							class="edit-input"
+							type="text"
+							name="country"
+							value={data.user?.country ?? ''}
+							placeholder="US"
+						/>
+					</label>
+				</div>
+				<div class="edit-actions">
+					<button type="submit" class="btn-save">save</button>
+					<button type="button" class="btn-cancel" onclick={() => (editingAddress = false)}>cancel</button>
+				</div>
+			</form>
+		{:else if hasAddress}
 			<div class="field-list">
-				{#if data.user.address.street_address}
+				{#if data.user?.street_address}
 					<div class="field">
 						<span class="field-key">street</span>
-						<span class="field-val">{data.user.address.street_address}</span>
+						<span class="field-val">{data.user.street_address}</span>
 					</div>
 				{/if}
-				{#if data.user.address.locality}
+				{#if data.user?.locality}
 					<div class="field">
 						<span class="field-key">city</span>
-						<span class="field-val">{data.user.address.locality}</span>
+						<span class="field-val">{data.user.locality}</span>
 					</div>
 				{/if}
-				{#if data.user.address.region}
+				{#if data.user?.region}
 					<div class="field">
 						<span class="field-key">region</span>
-						<span class="field-val">{data.user.address.region}</span>
+						<span class="field-val">{data.user.region}</span>
 					</div>
 				{/if}
-				{#if data.user.address.postal_code}
+				{#if data.user?.postal_code}
 					<div class="field">
 						<span class="field-key">postal</span>
-						<span class="field-val">{data.user.address.postal_code}</span>
+						<span class="field-val">{data.user.postal_code}</span>
 					</div>
 				{/if}
-				{#if data.user.address.country}
+				{#if data.user?.country}
 					<div class="field">
 						<span class="field-key">country</span>
-						<span class="field-val">{data.user.address.country}</span>
+						<span class="field-val">{data.user.country}</span>
 					</div>
 				{/if}
 			</div>
-		</div>
-	{/if}
+		{:else}
+			<p class="no-address">no address set yet</p>
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -141,6 +265,10 @@
 
 	.card.card-wide {
 		grid-column: span 2;
+	}
+
+	.card.card-full {
+		grid-column: span 3;
 	}
 
 	.card-label {
@@ -205,5 +333,173 @@
 
 	.logout-link:hover {
 		color: var(--color-text);
+	}
+
+	/* settings */
+
+	.toggle-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		cursor: pointer;
+	}
+
+	.toggle-label {
+		font-size: 0.85rem;
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.toggle {
+		position: relative;
+		width: 2.4rem;
+		height: 1.35rem;
+		border-radius: 9999px;
+		background: var(--rail-label);
+		border: none;
+		cursor: pointer;
+		flex-shrink: 0;
+		transition: background 0.18s;
+		padding: 0;
+	}
+
+	.toggle.on {
+		background: black;
+	}
+
+	.toggle-thumb {
+		position: absolute;
+		top: 0.18rem;
+		left: 0.18rem;
+		width: 0.95rem;
+		height: 0.95rem;
+		border-radius: 50%;
+		background: white;
+		transition: transform 0.18s;
+	}
+
+	.toggle.on .toggle-thumb {
+		transform: translateX(1.05rem);
+	}
+
+	/* address */
+
+	.address-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+	}
+
+	.address-header .card-label {
+		margin-bottom: 0;
+	}
+
+	.edit-link {
+		font-size: 0.7rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--rail-label);
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		margin-bottom: 1.25rem;
+	}
+
+	.edit-link:hover {
+		color: var(--color-text);
+	}
+
+	.no-address {
+		font-size: 0.85rem;
+		color: var(--rail-label);
+		margin: 0;
+		margin-top: 0.25rem;
+	}
+
+	.field-list {
+		margin-top: 0.25rem;
+	}
+
+	.edit-form {
+		margin-top: 0.25rem;
+	}
+
+	.edit-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.75rem;
+	}
+
+	.edit-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+
+	.edit-field.edit-field-full {
+		grid-column: span 2;
+	}
+
+	.edit-field-label {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--rail-label);
+		font-weight: 500;
+	}
+
+	.edit-input {
+		background: transparent;
+		border: solid var(--border-width);
+		border-radius: calc(var(--radius-card) / 2);
+		padding: 0.45rem 0.65rem;
+		font-size: 0.9rem;
+		font-family: inherit;
+		color: var(--color-text);
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.edit-input:focus {
+		outline: none;
+		border-color: var(--color-text);
+	}
+
+	.edit-actions {
+		display: flex;
+		gap: 0.6rem;
+		margin-top: 1rem;
+	}
+
+	.btn-save,
+	.btn-cancel {
+		font-size: 0.7rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		border-radius: var(--radius-pill);
+		padding: 0.45rem 1rem;
+		cursor: pointer;
+		border: solid var(--border-width);
+		font-family: inherit;
+	}
+
+	.btn-save {
+		background: black;
+		color: white;
+		border-color: black;
+	}
+
+	.btn-cancel {
+		background: transparent;
+		color: var(--color-text);
+	}
+
+	.btn-cancel:hover {
+		background: var(--color-bg-alt, #f5f5f5);
 	}
 </style>
