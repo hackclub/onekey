@@ -90,7 +90,7 @@
 	<div class="card card-full goals-card">
 		<div class="goals-main">
 			{#if allCompleted}
-				<p class="goals-complete">all goals complete!</p>
+				<p class="goals-complete">all goals complete! 🎉</p>
 			{:else}
 				<div class="goals-callouts">
 					<div class="goals-callout-item">
