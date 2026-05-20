@@ -100,8 +100,8 @@
 	}
 
 	.profile-avatar {
-		width: clamp(3rem, 5vw, 5rem);
-		height: clamp(3rem, 5vw, 5rem);
+		width: clamp(3rem, 4.5vw, 5rem);
+		height: clamp(3rem, 4.5vw, 5rem);
 		border-radius: 50%;
 		object-fit: cover;
 		border: var(--border-width) solid;

@@ -270,31 +270,6 @@
 		transform: translateX(0.1em);
 	}
 
-	.card-hours {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-	}
-
-	.hours-label {
-		font-size: clamp(1.5rem, 3vw, 4rem);
-		font-weight: bold;
-		letter-spacing: -0.03em;
-		line-height: 1;
-	}
-
-	.hours-value {
-		font-size: clamp(4rem, 9vw, 10rem);
-		font-weight: 500;
-		letter-spacing: -0.04em;
-		line-height: 0.9;
-	}
-
-	.hours-unit {
-		margin-left: 0.05em;
-		font-size: 0.85em;
-	}
-
 	.goals-card {
 		display: flex;
 		flex-direction: row;

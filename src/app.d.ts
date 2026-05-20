@@ -1,6 +1,8 @@
 declare global {
 	namespace App {
 		interface Locals {
+			isAdmin: boolean;
+			isReviewer: boolean;
 			user: {
 				sub: string;
 				name?: string;
