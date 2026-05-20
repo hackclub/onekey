@@ -1,22 +1,5 @@
 <script lang="ts">
-	const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-	const months = [
-		'january',
-		'february',
-		'march',
-		'april',
-		'may',
-		'june',
-		'july',
-		'august',
-		'september',
-		'october',
-		'november',
-		'december'
-	];
-
-	const now = new Date();
-	const dateLabel = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+	let { data } = $props();
 
 	const personalHours = 47.6;
 	const communityGoalHours = 2000;
@@ -53,8 +36,17 @@
 	<title>onekey - home</title>
 </svelte:head>
 
-<p class="eyebrow">{dateLabel}</p>
-<h1 class="greeting">welcome back, [name]</h1>
+<div class="greeting-row">
+	{#if data.user?.avatar_url}
+		<img class="greeting-avatar" src={data.user.avatar_url} alt="avatar" />
+	{/if}
+	<div>
+		<h1 class="greeting">welcome back, {data.user?.nickname ?? 'onekeyer!'}</h1>
+		{#if data.user?.slack_display_name}
+			<p class="slack-handle">@{data.user.slack_display_name}</p>
+		{/if}
+	</div>
+</div>
 
 <div class="bento">
 	<div class="card card-started">
@@ -163,11 +155,20 @@
 </div>
 
 <style>
-	.eyebrow {
-		font-size: 1.2rem;
-		font-weight: 500;
-		color: var(--rail-label);
-		margin: 0 0;
+	.greeting-row {
+		display: flex;
+		align-items: flex-end;
+		gap: 0.85rem;
+		margin: 1rem 0 1.25rem;
+	}
+
+	.greeting-avatar {
+		width: clamp(3rem, 4.5vw, 5rem);
+		height: clamp(3rem, 4.5vw, 5rem);
+		border-radius: 50%;
+		object-fit: cover;
+		flex-shrink: 0;
+		border: solid var(--border-width);
 	}
 
 	.greeting {
@@ -175,7 +176,14 @@
 		font-weight: bold;
 		letter-spacing: -0.03em;
 		line-height: 1;
-		margin: 0 0 1.25rem;
+		margin: 0;
+	}
+
+	.slack-handle {
+		font-size: 1rem;
+		font-weight: 500;
+		color: var(--rail-label);
+		margin: 0 0;
 	}
 
 	.bento {
@@ -432,7 +440,7 @@
 	}
 
 	.started-title {
-		font-size: clamp(1.05rem, 1.3vw, 1.55rem);
+		font-size: clamp(1.2rem, 1.6vw, 1.85rem);
 		font-weight: bold;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
@@ -441,7 +449,7 @@
 
 	.started-list {
 		list-style: none;
-		margin-top: 0.91rem;
+		margin-top: 0.8rem;
 		margin-bottom: 0;
 		padding: 0;
 		display: flex;
@@ -455,7 +463,7 @@
 		display: flex;
 		align-items: center;
 		gap: 0.8rem;
-		font-size: clamp(1.2rem, 1.8vw, 2.2rem);
+		font-size: clamp(1.05rem, 1.5vw, 1.75rem);
 		font-weight: 500;
 		color: var(--color-text);
 	}

@@ -137,10 +137,13 @@ input.dotted:focus {
 	background-color: var(--color-text);
 	color: var(--color-bg);
 	font-weight: 600;
+	transition: background-color var(--transition-fast);
 }
 
 .filled:hover {
 	background-color: var(--color-text-soft);
+	color: var(--color-bg);
+	text-decoration: none;
 }
 
 /* ---------- card ---------- */

@@ -79,7 +79,12 @@
 
 	<div class="bottom">
 		<div class="divider"></div>
-		<a href="/account" class="avatar" aria-label="account" draggable="false"></a>
+		<a href="/account" class="avatar" aria-label="account" draggable="false">
+			{#if page.data.user?.avatar_url}
+				<img src={page.data.user.avatar_url} alt="avatar" draggable="false" />
+			{/if}
+		</a>
+		<a href="/logout" class="logout">log out</a>
 	</div>
 </aside>
 
@@ -199,7 +204,29 @@
 		width: max(48px, 7.8vh);
 		height: max(48px, 7.8vh);
 		border-radius: 50%;
-		background-color: var(--accent);
+		background-color: var(--rail-bg-2);
 		border: max(2px, 0.4vh) solid var(--rail-bg-2);
+		overflow: hidden;
+		display: flex;
+	}
+
+	.avatar img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		pointer-events: none;
+		-webkit-user-drag: none;
+	}
+
+	.logout {
+		font-size: max(8px, 1.2vh);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--rail-label);
+		text-decoration: none;
+	}
+
+	.logout:hover {
+		color: white;
 	}
 </style>

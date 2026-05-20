@@ -1,12 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	let { data } = $props();
 
-	const framesDown = [
-		'/img/frame1.png',
-		'/img/frame2.png',
-		'/img/frame3.png',
-		'/img/frame4.png'
-	];
+	const framesDown = ['/img/frame1.png', '/img/frame2.png', '/img/frame3.png', '/img/frame4.png'];
 	const framesUp = ['/img/frame4.png', '/img/frame3.png', '/img/frame1.png'];
 
 	let keyFrame = $state(framesDown[0]);
@@ -121,10 +117,11 @@
 	<div class="panel">
 		<img class="logo" src="/img/onekey.png" alt="onekey" />
 		<p class="tagline">make a program that only uses one key, get a one key macropad!</p>
-		<form method="GET" action="https://onekey.fillout.com/rsvp" class="rsvp">
-			<input class="input dotted" type="email" name="email" placeholder="email" required />
-			<button type="submit" class="filled">RSVP!</button>
-		</form>
+		{#if data.user}
+			<a href="/home" class="button filled cta">go to dashboard</a>
+		{:else}
+			<a href="/login" class="button filled cta">log in with hack club</a>
+		{/if}
 	</div>
 </div>
 
@@ -145,8 +142,8 @@
 		<p>
 			sign up, and ship projects that only use one key! use
 			<a href="https://hackatime.hackclub.com/">hackatime</a> to track your progress, and qualify for
-			prizes at different milestones of time spent! the coolest projects will qualify for special
-			prizes or customizations.
+			prizes at different milestones of time spent! the coolest projects will qualify for special prizes
+			or customizations.
 		</p>
 		<p class="subhead subhead-spaced"><strong>what can i even make?</strong></p>
 		<p>
@@ -163,8 +160,8 @@
 					<img class="example-img" src="/img/Osu!_logo_2024.png" alt="osu! logo" />
 				</div>
 				<p>
-					<strong>osu!</strong><br />a rhythm game where you aim at circles and tap a single key at the
-					right time!
+					<strong>osu!</strong><br />a rhythm game where you aim at circles and tap a single key at
+					the right time!
 				</p>
 			</div>
 			<div class="card example-card bordered">
@@ -172,7 +169,8 @@
 					<img class="example-img" src="/img/geometry_dash.png" alt="geometry dash logo" />
 				</div>
 				<p>
-					<strong>geometry dash</strong><br />a platformer where you tap a single key to jump over spikes!
+					<strong>geometry dash</strong><br />a platformer where you tap a single key to jump over
+					spikes!
 				</p>
 			</div>
 			<div class="card example-card bordered">
@@ -180,16 +178,16 @@
 					<img class="example-img" src="/img/stack.png" alt="stack logo" />
 				</div>
 				<p>
-					<strong>stack</strong><br />a mobile game where you tap a single key to place moving blocks
-					and build a tower!
+					<strong>stack</strong><br />a mobile game where you tap a single key to place moving
+					blocks and build a tower!
 				</p>
 			</div>
 		</div>
 		<p class="subhead subhead-spaced"><strong>what do i get?</strong></p>
 		<p>
 			you can get a community-designed macropad with only onekey™!<br />
-			you'll be able to unlock different customizations for your macropad's keycap + case design, by
-			participating in various side quests or meeting certain requirements.
+			you'll be able to unlock different customizations for your macropad's keycap + case design, by participating
+			in various side quests or meeting certain requirements.
 		</p>
 	</div>
 </div>
@@ -233,8 +231,8 @@
 				<div class="card faq-card bordered">
 					<p class="subhead"><strong>what can i make?</strong></p>
 					<p>
-						all types of projects are allowed! whether it's a game, an app, or a website, as long
-						as it only uses one key, it qualifies!
+						all types of projects are allowed! whether it's a game, an app, or a website, as long as
+						it only uses one key, it qualifies!
 					</p>
 				</div>
 				<div class="card faq-card bordered">
@@ -252,9 +250,9 @@
 						we're legit! hack club is the world's largest community of teenage makers, and a
 						501(c)(3) nonprofit. we've hosted programs like
 						<a href="https://highseas.hackclub.com/">high seas</a> and
-						<a href="https://summer.hackclub.com/">summer of making</a> which gave out prizes for
-						building other sorts of projects. we're supported by donations from companies like
-						GitHub or individual generous donations!
+						<a href="https://summer.hackclub.com/">summer of making</a> which gave out prizes for building
+						other sorts of projects. we're supported by donations from companies like GitHub or individual
+						generous donations!
 					</p>
 				</div>
 			</div>
@@ -283,6 +281,12 @@
 		width: 37rem;
 	}
 
+	@media screen and (max-width: 1350px) {
+		.logo {
+			width: 31rem;
+		}
+	}
+
 	.key-img {
 		margin-left: 3rem;
 		margin-top: 15vh;
@@ -297,8 +301,10 @@
 		margin-right: 3rem;
 	}
 
-	.rsvp .input {
-		margin-right: 0.5rem;
+	.cta {
+		display: inline-block;
+		font-size: 1.8rem;
+		padding: 1.2rem 2.4rem;
 	}
 
 	.tldr {
@@ -384,10 +390,6 @@
 		.example-img {
 			height: auto;
 			width: 15vw;
-		}
-
-		form {
-			margin-top: 3vh;
 		}
 
 		.duo {

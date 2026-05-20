@@ -7,7 +7,9 @@
       "Bash(curl -sSL -o audio/key.wav \"https://raw.githubusercontent.com/maxstellar/onekey/main/audio/key.wav\")",
       "Bash(curl -sSL -o audio/key.mp3 \"https://raw.githubusercontent.com/maxstellar/onekey/main/audio/key.mp3\")",
       "Bash(curl -sSL -o favicon.ico \"https://raw.githubusercontent.com/maxstellar/onekey/main/favicon.ico\")",
-      "Bash(bun run *)"
+      "Bash(bun run *)",
+      "WebFetch(domain:auth.hackclub.com)",
+      "Bash(xargs ls *)"
     ]
   }
 }
