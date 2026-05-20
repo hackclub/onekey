@@ -9,11 +9,14 @@
 <div class="admin">
 	<div class="header">
 		<h1>admin panel</h1>
-		<p class="sub">logged in as <strong>{data.user?.nickname ?? data.user?.name ?? data.user?.email}</strong></p>
+		<p class="sub">logged in as <strong>@{data.user?.slack_display_name ?? data.user?.nickname ?? data.user?.name ?? data.user?.email}</strong></p>
 	</div>
 
-	<div class="placeholder">
-		<p>nothing here yet.</p>
+	<div class="cards">
+		<a href="/admin/users" class="card">
+			<span class="card-label">users</span>
+			<p class="card-desc">view all registered users and their data</p>
+		</a>
 	</div>
 </div>
 
@@ -37,18 +40,41 @@
 		margin: 0;
 	}
 
-	.placeholder {
+	.cards {
 		display: flex;
-		align-items: center;
-		justify-content: center;
-		border: 1.5px dashed #2a2f38;
-		border-radius: 12px;
-		padding: 4rem 2rem;
-		color: #8a8f99;
-		font-size: 0.95rem;
+		flex-wrap: wrap;
+		gap: 1rem;
 	}
 
-	.placeholder p {
+	.card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding: 1.25rem 1.5rem;
+		border: 1px solid #2a2f38;
+		border-radius: 10px;
+		text-decoration: none;
+		color: inherit;
+		min-width: 200px;
+		transition: border-color 0.15s, background 0.15s;
+	}
+
+	.card:hover {
+		border-color: #3a3f48;
+		background: #0d0f12;
+	}
+
+	.card-label {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: #8a8f99;
+		font-weight: bold;
+	}
+
+	.card-desc {
 		margin: 0;
+		font-size: 0.9rem;
+		color: #cdd0d6;
 	}
 </style>

@@ -10,7 +10,7 @@
 	<div class="header">
 		<h1>review panel</h1>
 		<p class="sub">
-			logged in as <strong>{data.user?.nickname ?? data.user?.name ?? data.user?.email}</strong>
+			logged in as <strong>@{data.user?.slack_display_name ?? data.user?.nickname ?? data.user?.name ?? data.user?.email}</strong>
 		</p>
 	</div>
 

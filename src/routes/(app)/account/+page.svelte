@@ -1,6 +1,5 @@
 <script lang="ts">
 	let { data } = $props();
-	const { user } = data;
 </script>
 
 <svelte:head>
@@ -9,77 +8,77 @@
 
 <p class="eyebrow">account</p>
 <div class="profile-header">
-	{#if user?.avatar_url}
-		<img class="profile-avatar" src={user.avatar_url} alt="avatar" />
+	{#if data.user?.avatar_url}
+		<img class="profile-avatar" src={data.user.avatar_url} alt="avatar" />
 	{/if}
-	<h1 class="heading">{user?.nickname ?? user?.name ?? 'onekeyer'}</h1>
+	<h1 class="heading">{data.user?.nickname ?? data.user?.name ?? 'onekeyer'}</h1>
 </div>
 
 <div class="bento">
 	<div class="card card-wide">
 		<span class="card-label">details</span>
 		<div class="field-list">
-			{#if user?.name}
+			{#if data.user?.name}
 				<div class="field">
 					<span class="field-key">name</span>
-					<span class="field-val">{user.name}</span>
+					<span class="field-val">{data.user.name}</span>
 				</div>
 			{/if}
 			<div class="field">
 				<span class="field-key">email</span>
 				<span class="field-val">
-					{user?.email ?? '—'}
-					{#if user?.email_verified}<span class="badge">verified</span>{/if}
+					{data.user?.email ?? '—'}
+					{#if data.user?.email_verified}<span class="badge">verified</span>{/if}
 				</span>
 			</div>
-			{#if user?.slack_id}
+			{#if data.user?.slack_id}
 				<div class="field">
 					<span class="field-key">slack</span>
-					<span class="field-val">{user.slack_id}</span>
+					<span class="field-val">{data.user.slack_id}</span>
 				</div>
 			{/if}
-			{#if user?.verification_status}
+			{#if data.user?.verification_status}
 				<div class="field">
 					<span class="field-key">status</span>
-					<span class="field-val">{user.verification_status}</span>
+					<span class="field-val">{data.user.verification_status}</span>
 				</div>
 			{/if}
 		</div>
 		<a href="/logout" class="logout-link">log out</a>
 	</div>
 
-	{#if user?.address}
+	{#if data.user?.address}
 		<div class="card">
 			<span class="card-label">address</span>
 			<div class="field-list">
-				{#if user.address.street_address}
+				{#if data.user.address.street_address}
 					<div class="field">
 						<span class="field-key">street</span>
-						<span class="field-val">{user.address.street_address}</span>
+						<span class="field-val">{data.user.address.street_address}</span>
 					</div>
 				{/if}
-				{#if user.address.locality}
+				{#if data.user.address.locality}
 					<div class="field">
 						<span class="field-key">city</span>
-						<span class="field-val">{user.address.locality}</span>
+						<span class="field-val">{data.user.address.locality}</span>
 					</div>
 				{/if}
-				{#if user.address.region}
+				{#if data.user.address.region}
 					<div class="field">
 						<span class="field-key">region</span>
-						<span class="field-val">{user.address.region}</span>
+						<span class="field-val">{data.user.address.region}</span>
 					</div>
 				{/if}
-				{#if user.address.postal_code}
+				{#if data.user.address.postal_code}
 					<div class="field">
 						<span class="field-key">postal</span>
-						<span class="field-val">{user.address.postal_code}</span>
+						<span class="field-val">{data.user.address.postal_code}</span>
 					</div>
 				{/if}
-				{#if user.address.country}
+				{#if data.user.address.country}
 					<div class="field">
 						<span class="field-key">country</span>
-						<span class="field-val">{user.address.country}</span>
+						<span class="field-val">{data.user.address.country}</span>
 					</div>
 				{/if}
 			</div>

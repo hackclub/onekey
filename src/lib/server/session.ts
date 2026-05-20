@@ -1,22 +1,30 @@
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 
-export function signCookie(data: string, secret: string): string {
-	const sig = createHmac('sha256', secret).update(data).digest('base64url');
-	return `${data}.${sig}`;
+export function encryptToken(plaintext: string, key: Buffer): { ct: string; iv: string; tag: string } {
+	const iv = randomBytes(12);
+	const cipher = createCipheriv('aes-256-gcm', key, iv);
+	const ct = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+	const tag = cipher.getAuthTag();
+	return {
+		ct: ct.toString('base64'),
+		iv: iv.toString('base64'),
+		tag: tag.toString('base64')
+	};
 }
 
-export function verifyCookie(signed: string, secret: string): string | null {
-	const dot = signed.lastIndexOf('.');
-	if (dot === -1) return null;
-	const data = signed.slice(0, dot);
-	const expected = createHmac('sha256', secret).update(data).digest('base64url');
-	const actual = signed.slice(dot + 1);
-	try {
-		const a = Buffer.from(actual, 'base64url');
-		const b = Buffer.from(expected, 'base64url');
-		if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-	} catch {
-		return null;
-	}
-	return data;
+export function decryptToken(ct: string, iv: string, tag: string, key: Buffer): string {
+	const decipher = createDecipheriv('aes-256-gcm', key, Buffer.from(iv, 'base64'));
+	decipher.setAuthTag(Buffer.from(tag, 'base64'));
+	return Buffer.concat([
+		decipher.update(Buffer.from(ct, 'base64')),
+		decipher.final()
+	]).toString('utf8');
+}
+
+export function generateSessionToken(): string {
+	return randomBytes(32).toString('base64url');
+}
+
+export function hashToken(token: string): string {
+	return createHash('sha256').update(token).digest('hex');
 }

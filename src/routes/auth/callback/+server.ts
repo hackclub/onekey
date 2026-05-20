@@ -1,8 +1,19 @@
 import { redirect, error } from '@sveltejs/kit';
-import { HCA_CLIENT_ID, HCA_CLIENT_SECRET, HCA_REDIRECT_URI, SLACK_BOT_TOKEN, SESSION_SECRET } from '$env/static/private';
+import {
+	HCA_CLIENT_ID,
+	HCA_CLIENT_SECRET,
+	HCA_REDIRECT_URI,
+	SLACK_BOT_TOKEN,
+	TOKEN_ENCRYPTION_KEY
+} from '$env/static/private';
 import { dev } from '$app/environment';
-import { signCookie } from '$lib/server/session';
+import { db } from '$lib/server/db';
+import { sessions, users } from '$lib/server/db/schema';
+import { encryptToken, generateSessionToken, hashToken } from '$lib/server/session';
 import type { RequestHandler } from './$types';
+
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const DEV_ENCRYPTION_KEY = '0'.repeat(64);
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	const code = url.searchParams.get('code');
@@ -51,14 +62,45 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		slack_display_name = slackData.user?.profile?.display_name || slackData.user?.name || undefined;
 	}
 
-	const secret = SESSION_SECRET || (dev ? 'dev-secret-do-not-use-in-prod' : '');
-	const payload = JSON.stringify({ access_token, user: { ...user, avatar_url, slack_display_name } });
-	cookies.set('hca_session', signCookie(payload, secret), {
+	const encKey = Buffer.from(TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');
+	const { ct, iv, tag } = encryptToken(access_token, encKey);
+
+	const userRow = {
+		hcaId: user.sub,
+		name: user.name ?? null,
+		nickname: user.nickname ?? null,
+		email: user.email ?? null,
+		emailVerified: user.email_verified ?? null,
+		slackId: user.slack_id ?? null,
+		slackAvatarUrl: avatar_url ?? null,
+		slackDisplayName: slack_display_name ?? null,
+		verificationStatus: user.verification_status ?? null,
+		yswsEligible: user.ysws_eligible ?? null,
+		accessTokenCt: ct,
+		accessTokenIv: iv,
+		accessTokenTag: tag,
+		updatedAt: new Date()
+	};
+
+	const [dbUser] = await db
+		.insert(users)
+		.values(userRow)
+		.onConflictDoUpdate({ target: users.hcaId, set: userRow })
+		.returning({ id: users.id });
+
+	const rawToken = generateSessionToken();
+	await db.insert(sessions).values({
+		id: hashToken(rawToken),
+		userId: dbUser.id,
+		expiresAt: new Date(Date.now() + SESSION_TTL_MS)
+	});
+
+	cookies.set('hca_session', rawToken, {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'lax',
 		secure: !dev,
-		maxAge: 60 * 60 * 24 * 30
+		maxAge: SESSION_TTL_MS / 1000
 	});
 
 	redirect(302, '/home');

@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { replaceState } from '$app/navigation';
 	let { data } = $props();
+
+	let showToast = $state(data.needsAuth);
+	let toastTimer: ReturnType<typeof setTimeout>;
 
 	const framesDown = ['/img/frame1.png', '/img/frame2.png', '/img/frame3.png', '/img/frame4.png'];
 	const framesUp = ['/img/frame4.png', '/img/frame3.png', '/img/frame1.png'];
@@ -32,6 +36,11 @@
 	}
 
 	onMount(() => {
+		if (showToast) {
+			replaceState('/', {});
+			toastTimer = setTimeout(() => (showToast = false), 4000);
+		}
+
 		const handleMouseUp = () => {
 			if (!isPressed) return;
 			isPressed = false;
@@ -64,6 +73,13 @@
 <svelte:head>
 	<title>onekey</title>
 </svelte:head>
+
+{#if showToast}
+	<div class="toast" role="alert">
+		you need to be logged in to access this!
+		<button class="toast-close" onclick={() => { showToast = false; clearTimeout(toastTimer); }}>✕</button>
+	</div>
+{/if}
 
 <header>
 	<button
@@ -270,6 +286,39 @@
 </footer>
 
 <style>
+	.toast {
+		position: fixed;
+		top: clamp(0.75rem, 2vw, 1.5rem);
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 100;
+		background: var(--color-text);
+		color: var(--color-bg);
+		font-family: 'Phantom Sans', sans-serif;
+		font-size: clamp(0.75rem, 1.2vw, 1rem);
+		padding: clamp(0.4rem, 0.8vw, 0.7rem) clamp(0.75rem, 1.2vw, 1.25rem);
+		border-radius: 9999px;
+		display: flex;
+		align-items: center;
+		gap: clamp(0.5rem, 0.8vw, 0.75rem);
+		white-space: nowrap;
+		box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+	}
+
+	.toast-close {
+		background: none;
+		border: none;
+		color: inherit;
+		font-size: 0.75rem;
+		padding: 0;
+		cursor: pointer;
+		opacity: 0.6;
+		line-height: 1;
+		border-radius: 0;
+	}
+
+	.toast-close:hover { opacity: 1; }
+
 	/* ---------- landing ---------- */
 	.panel {
 		margin-top: 20vh;

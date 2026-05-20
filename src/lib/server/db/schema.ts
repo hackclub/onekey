@@ -1,7 +1,36 @@
-import { pgTable, serial, integer, text } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, text, boolean, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
 export const task = pgTable('task', {
 	id: serial('id').primaryKey(),
 	title: text('title').notNull(),
 	priority: integer('priority').notNull().default(1)
+});
+
+export const users = pgTable('users', {
+	id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+	hcaId: text('hca_id').notNull().unique(),
+	name: text('name'),
+	nickname: text('nickname'),
+	email: text('email'),
+	emailVerified: boolean('email_verified'),
+	slackId: text('slack_id'),
+	slackAvatarUrl: text('slack_avatar_url'),
+	slackDisplayName: text('slack_display_name'),
+	verificationStatus: text('verification_status'),
+	yswsEligible: boolean('ysws_eligible'),
+	accessTokenCt: text('access_token_ct'),
+	accessTokenIv: text('access_token_iv'),
+	accessTokenTag: text('access_token_tag'),
+	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+});
+
+export const sessions = pgTable('sessions', {
+	id: text('id').primaryKey(),
+	userId: uuid('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
 });
