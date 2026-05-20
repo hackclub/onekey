@@ -22,6 +22,10 @@ export const users = pgTable('users', {
 	accessTokenCt: text('access_token_ct'),
 	accessTokenIv: text('access_token_iv'),
 	accessTokenTag: text('access_token_tag'),
+	hackatimeUserId: text('hackatime_user_id'),
+	hackatimeTokenCt: text('hackatime_token_ct'),
+	hackatimeTokenIv: text('hackatime_token_iv'),
+	hackatimeTokenTag: text('hackatime_token_tag'),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
 });

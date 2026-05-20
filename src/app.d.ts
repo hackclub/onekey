@@ -14,6 +14,7 @@ declare global {
 				avatar_url?: string;
 				slack_display_name?: string;
 				ysws_eligible?: boolean;
+				hackatime_linked: boolean;
 				address?: {
 					street_address?: string;
 					locality?: string;

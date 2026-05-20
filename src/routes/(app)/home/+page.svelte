@@ -57,6 +57,15 @@
 				<span>join onekey</span>
 				<span class="started-action">joined!</span>
 			</li>
+			<li class="started-item" class:done={data.user?.hackatime_linked}>
+				<span class="started-check"></span>
+				<span>link hackatime</span>
+				{#if data.user?.hackatime_linked}
+					<span class="started-action">linked!</span>
+				{:else}
+					<a href="/auth/hackatime/start" class="started-action" data-sveltekit-reload>go</a>
+				{/if}
+			</li>
 			<li class="started-item">
 				<span class="started-check"></span>
 				<span>create a project</span>
@@ -64,13 +73,8 @@
 			</li>
 			<li class="started-item">
 				<span class="started-check"></span>
-				<span>fortnite</span>
-				<a href="/fortnite" class="started-action">go</a>
-			</li>
-			<li class="started-item">
-				<span class="started-check"></span>
-				<span>skibidi</span>
-				<a href="/skibidi" class="started-action">go</a>
+				<span>skibidi fortnite</span>
+				<a href="/skibidifortnite" class="started-action">go</a>
 			</li>
 		</ul>
 	</div>

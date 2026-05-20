@@ -37,7 +37,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 				verification_status: u.verificationStatus ?? undefined,
 				avatar_url: u.slackAvatarUrl ?? undefined,
 				slack_display_name: u.slackDisplayName ?? undefined,
-				ysws_eligible: u.yswsEligible ?? undefined
+				ysws_eligible: u.yswsEligible ?? undefined,
+				hackatime_linked: !!(u.hackatimeTokenCt && u.hackatimeTokenIv && u.hackatimeTokenTag)
 			};
 			event.locals.isAdmin = adminSet.has(u.hcaId);
 			event.locals.isReviewer = reviewerSet.has(u.hcaId);
