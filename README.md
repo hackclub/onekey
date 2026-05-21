@@ -1,6 +1,11 @@
-# onekey
-
-the platform for onekey, a hack club YSWS, written in sveltekit 5 + drizzle.
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://assets.hackclub.com/flag-standalone-wtransparent.svg" />
+    <img src="https://assets.hackclub.com/flag-standalone-bw.svg" width="100" alt="Hack Club flag" />
+  </picture>
+  <h1>onekey</h1>
+  <p>the platform for onekey, a hack club YSWS, written in sveltekit 5 + drizzle.</p>
+</div>
 
 ## features
 
