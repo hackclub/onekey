@@ -1,0 +1,649 @@
+<script lang="ts">
+	import { enhance } from '$app/forms';
+
+	let { data, form } = $props();
+
+	let project = $derived(data.project);
+	const isDraft = $derived(project.status === null);
+
+	let screenshotPreview = $state('');
+	let screenshotCleared = $state(false);
+	let screenshotInput = $state<HTMLInputElement | null>(null);
+
+	function handleFilePick(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (screenshotPreview) URL.revokeObjectURL(screenshotPreview);
+		screenshotPreview = file ? URL.createObjectURL(file) : '';
+		screenshotCleared = false;
+	}
+
+	function clearScreenshot() {
+		if (screenshotPreview) URL.revokeObjectURL(screenshotPreview);
+		screenshotPreview = '';
+		screenshotCleared = true;
+		if (screenshotInput) screenshotInput.value = '';
+	}
+
+	const displayUrl = $derived(
+		screenshotCleared ? '' : screenshotPreview || project.screenshotUrl || ''
+	);
+
+	const createdAt = $derived(
+		new Date(project.createdAt).toLocaleDateString('en-US', {
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric'
+		})
+	);
+
+	let showToast = $state(false);
+	let toastTimer: ReturnType<typeof setTimeout>;
+
+	$effect(() => {
+		if (form?.success) {
+			clearTimeout(toastTimer);
+			showToast = true;
+			toastTimer = setTimeout(() => (showToast = false), 3500);
+		}
+	});
+</script>
+
+<svelte:head>
+	<title>onekey - {project.name}</title>
+</svelte:head>
+
+<a href="/projects" class="back">
+	<svg
+		fill-rule="evenodd"
+		clip-rule="evenodd"
+		stroke-linejoin="round"
+		stroke-miterlimit="1.414"
+		xmlns="http://www.w3.org/2000/svg"
+		aria-hidden="true"
+		viewBox="0 0 32 32"
+		preserveAspectRatio="xMidYMid meet"
+		fill="currentColor"
+		class="back-icon"
+		><path
+			d="M19.768,23.89c0.354,-0.424 0.296,-1.055 -0.128,-1.408c-1.645,-1.377 -5.465,-4.762 -6.774,-6.482c1.331,-1.749 5.1,-5.085 6.774,-6.482c0.424,-0.353 0.482,-0.984 0.128,-1.408c-0.353,-0.425 -0.984,-0.482 -1.409,-0.128c-1.839,1.532 -5.799,4.993 -7.2,6.964c-0.219,0.312 -0.409,0.664 -0.409,1.054c0,0.39 0.19,0.742 0.409,1.053c1.373,1.932 5.399,5.462 7.2,6.964l0.001,0.001c0.424,0.354 1.055,0.296 1.408,-0.128Z"
+		/></svg
+	>
+	back to projects
+</a>
+
+<div
+	class="banner"
+	role={isDraft ? 'button' : undefined}
+	tabindex={isDraft ? 0 : undefined}
+	aria-label={isDraft ? 'upload screenshot' : undefined}
+	onclick={() => isDraft && screenshotInput?.click()}
+	onkeydown={(e) => isDraft && (e.key === 'Enter' || e.key === ' ') && screenshotInput?.click()}
+>
+	{#if displayUrl}
+		<img src={displayUrl} alt="{project.name} screenshot" class="banner-img" />
+		{#if isDraft}
+			<button
+				type="button"
+				class="banner-remove"
+				aria-label="remove screenshot"
+				onclick={(e) => {
+					e.stopPropagation();
+					clearScreenshot();
+				}}>×</button
+			>
+		{/if}
+	{:else}
+		<span class="banner-empty">click to add screenshot</span>
+	{/if}
+	{#if isDraft}
+		<div class="banner-overlay" aria-hidden="true">
+			<svg
+				fill-rule="evenodd"
+				clip-rule="evenodd"
+				stroke-linejoin="round"
+				stroke-miterlimit="1.414"
+				xmlns="http://www.w3.org/2000/svg"
+				aria-label="camera"
+				viewBox="0 0 32 32"
+				preserveAspectRatio="xMidYMid meet"
+				fill="currentColor"
+				class="banner-icon"
+			>
+				<path
+					d="M18.4941 6.96399C18.2617 5.82149 17.2225 4.96399 16.0007 4.96399C14.7784 4.96399 13.7396 5.82149 13.5073 6.96399C13.5007 6.99623 13.4987 7.02713 13.5008 7.05675C4.84338 7.22758 4 8.61743 4 17.036C4 26.203 5 27.036 16 27.036C27 27.036 28 26.203 28 17.036C28 8.61693 27.1565 7.22741 18.4976 7.05672C18.5017 7.02702 18.5006 6.99613 18.4941 6.96399ZM26 17.036C26 19.292 25.95 20.872 25.709 22.084C25.493 23.194 25.176 23.661 24.845 23.937C24.461 24.257 23.751 24.578 22.248 24.78C20.717 24.99 18.726 25.036 16 25.036C13.275 25.036 11.283 24.99 9.752 24.78C8.249 24.578 7.539 24.257 7.155 23.937C6.824 23.661 6.507 23.194 6.291 22.084C6.05 20.872 6 19.292 6 17.036C6 14.78 6.05 13.2 6.291 11.988C6.507 10.878 6.824 10.411 7.155 10.135C7.539 9.81501 8.249 9.49401 9.752 9.29101C11.283 9.08201 13.275 9.03601 16 9.03601C18.726 9.03601 20.717 9.08201 22.248 9.29101C23.751 9.49401 24.461 9.81501 24.845 10.135C25.176 10.411 25.493 10.878 25.709 11.988C25.95 13.2 26 14.78 26 17.036ZM19 17.036C19 18.6929 17.6569 20.036 16 20.036C14.3431 20.036 13 18.6929 13 17.036C13 15.3792 14.3431 14.036 16 14.036C17.6569 14.036 19 15.3792 19 17.036ZM21 17.036C21 19.7974 18.7614 22.036 16 22.036C13.2386 22.036 11 19.7974 11 17.036C11 14.2746 13.2386 12.036 16 12.036C18.7614 12.036 21 14.2746 21 17.036ZM9 13.536C9.829 13.536 10.5 12.864 10.5 12.036C10.5 11.208 9.829 10.536 9 10.536C8.171 10.536 7.5 11.208 7.5 12.036C7.5 12.864 8.171 13.536 9 13.536Z"
+				/>
+			</svg>
+		</div>
+	{/if}
+</div>
+
+<div class="bento">
+	<div class="card card-wide">
+		<div class="card-header">
+			<span class="card-label">project</span>
+			<div class="meta">
+				{#if project.status}
+					<span class="status-badge status-{project.status}">{project.status}</span>
+				{/if}
+				<span class="created-at">created {createdAt}</span>
+			</div>
+		</div>
+
+		{#if isDraft}
+			{#if form?.error}
+				<p class="form-error">{form.error}</p>
+			{/if}
+			<form
+				method="POST"
+				action="?/save"
+				enctype="multipart/form-data"
+				use:enhance={() =>
+					({ update }) =>
+						update({ reset: false })}
+				class="edit-form"
+			>
+				<input
+					type="hidden"
+					name="screenshot_keep"
+					value={screenshotCleared ? '' : (project.screenshotUrl ?? '')}
+				/>
+				<input
+					bind:this={screenshotInput}
+					name="screenshot1"
+					type="file"
+					class="file-hidden"
+					accept="image/jpeg,image/png,image/gif,image/webp"
+					onchange={handleFilePick}
+				/>
+				<div class="edit-grid">
+					<label class="edit-field edit-field-full">
+						<span class="edit-field-label">name</span>
+						<input class="edit-input" type="text" name="name" value={project.name} required />
+					</label>
+					<label class="edit-field edit-field-full">
+						<span class="edit-field-label">description</span>
+						<textarea class="edit-input edit-textarea" name="description"
+							>{project.description ?? ''}</textarea
+						>
+					</label>
+					<label class="edit-field">
+						<span class="edit-field-label">repo url</span>
+						<input
+							class="edit-input"
+							type="url"
+							name="repo_url"
+							value={project.repoUrl ?? ''}
+							placeholder="https://github.com/..."
+						/>
+					</label>
+					<label class="edit-field">
+						<span class="edit-field-label">demo url</span>
+						<input
+							class="edit-input"
+							type="url"
+							name="demo_url"
+							value={project.demoUrl ?? ''}
+							placeholder="https://..."
+						/>
+					</label>
+				</div>
+				<div class="edit-actions">
+					<button type="submit" class="btn-save">save</button>
+				</div>
+			</form>
+		{:else}
+			<div class="field-list">
+				<div class="field">
+					<span class="field-key">name</span>
+					<span class="field-val">{project.name}</span>
+				</div>
+				{#if project.description}
+					<div class="field">
+						<span class="field-key">description</span>
+						<span class="field-val">{project.description}</span>
+					</div>
+				{/if}
+				{#if project.repoUrl}
+					<div class="field">
+						<span class="field-key">repo</span>
+						<span class="field-val">
+							<a href={project.repoUrl} target="_blank" rel="noopener noreferrer" class="ext-link"
+								>{project.repoUrl}</a
+							>
+						</span>
+					</div>
+				{/if}
+				{#if project.demoUrl}
+					<div class="field">
+						<span class="field-key">demo</span>
+						<span class="field-val">
+							<a href={project.demoUrl} target="_blank" rel="noopener noreferrer" class="ext-link"
+								>{project.demoUrl}</a
+							>
+						</span>
+					</div>
+				{/if}
+			</div>
+		{/if}
+	</div>
+
+	<div class="card card-right">
+		{#if isDraft}
+			<span class="card-label">submit</span>
+			<p class="danger-desc">ready? submit your project for review.</p>
+			<form method="POST" action="?/submit" use:enhance>
+				<button type="submit" class="btn-submit">submit for review</button>
+			</form>
+		{/if}
+
+		<div class="danger-section" class:has-top={isDraft}>
+			<span class="card-label">danger zone</span>
+			<p class="danger-desc">permanently delete this project - this cannot be undone.</p>
+			<form method="POST" action="?/delete" use:enhance>
+				<button type="submit" class="btn-delete">delete project</button>
+			</form>
+		</div>
+	</div>
+</div>
+
+{#if showToast}
+	<div class="toast" role="alert">
+		project saved!
+		<button
+			class="toast-close"
+			onclick={() => {
+				showToast = false;
+				clearTimeout(toastTimer);
+			}}>✕</button
+		>
+	</div>
+{/if}
+
+<style>
+	.back {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
+		font-size: 0.85rem;
+		font-weight: 500;
+		color: var(--rail-label);
+		text-decoration: none;
+		margin-bottom: 1.25rem;
+	}
+
+	.back:hover {
+		color: var(--color-text);
+	}
+
+	.back-icon {
+		width: 1.1rem;
+		height: 1.1rem;
+		flex-shrink: 0;
+	}
+
+	.banner {
+		position: relative;
+		width: 100%;
+		height: 360px;
+		border-radius: var(--radius-card);
+		border: solid var(--border-width);
+		box-sizing: border-box;
+		margin-bottom: clamp(0.75rem, 1.2vw, 1.75rem);
+		overflow: hidden;
+		background: var(--color-bg);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+	}
+
+	.banner[role='button']:focus-visible {
+		outline: 2px solid var(--color-text);
+		outline-offset: 2px;
+	}
+
+	.banner-img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+	}
+
+	.banner-overlay {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.45);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0;
+		transition: opacity 0.15s ease;
+		pointer-events: none;
+	}
+
+	.banner:hover .banner-overlay {
+		opacity: 1;
+	}
+
+	.banner-icon {
+		width: 2.5rem;
+		height: 2.5rem;
+		color: white;
+	}
+
+	.banner-remove {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		background: rgba(0, 0, 0, 0.55);
+		color: white;
+		border: none;
+		border-radius: 50%;
+		width: 2.5rem;
+		height: 2.5rem;
+		font-size: 1.9rem;
+		line-height: 1;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		z-index: 2;
+		pointer-events: all;
+	}
+
+	.banner-remove:hover {
+		background: rgba(0, 0, 0, 0.8);
+	}
+
+	.banner-empty {
+		font-size: 1.6rem;
+		font-weight: bold;
+		color: var(--rail-label);
+	}
+
+	.file-hidden {
+		display: none;
+	}
+
+	.bento {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: clamp(0.75rem, 1.2vw, 1.75rem);
+	}
+
+	.card {
+		background: var(--color-bg);
+		border-radius: var(--radius-card);
+		border: solid var(--border-width);
+		padding: clamp(1rem, 1.5vw, 1.75rem) clamp(1.1rem, 1.5vw, 1.75rem);
+		box-sizing: border-box;
+	}
+
+	.card.card-wide {
+		grid-column: span 2;
+	}
+
+	.card.card-right {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+	}
+
+	.card-header {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		margin-bottom: 1.25rem;
+		gap: 1rem;
+	}
+
+	.card-label {
+		display: block;
+		font-size: clamp(0.8rem, 0.9vw, 1.1rem);
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		color: var(--color-text-soft);
+		font-weight: bold;
+		flex-shrink: 0;
+	}
+
+	.meta {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.created-at {
+		font-size: 0.75rem;
+		color: var(--rail-label);
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+	}
+
+	.status-badge {
+		font-size: 0.6rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		border-radius: var(--radius-pill);
+		padding: 0.2em 0.55em;
+		flex-shrink: 0;
+	}
+
+	.status-pending {
+		background: #2a2620;
+		color: #c9a84c;
+	}
+	.status-approved {
+		background: #1a2a1a;
+		color: #6abf6a;
+	}
+	.status-rejected {
+		background: #2a1a1a;
+		color: #c96a6a;
+	}
+
+	.field-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.field {
+		display: flex;
+		gap: 1.5rem;
+		align-items: baseline;
+	}
+
+	.field-key {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--rail-label);
+		width: 5rem;
+		flex-shrink: 0;
+	}
+
+	.field-val {
+		font-size: 0.95rem;
+		word-break: break-all;
+	}
+
+	.ext-link {
+		color: var(--color-text-soft);
+		font-size: 0.85rem;
+	}
+
+	.ext-link:hover {
+		color: var(--color-text);
+	}
+
+	.edit-form {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.edit-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.75rem;
+	}
+
+	.edit-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
+
+	.edit-field.edit-field-full {
+		grid-column: span 2;
+	}
+
+	.edit-field-label {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--rail-label);
+		font-weight: 500;
+	}
+
+	.edit-input {
+		background: transparent;
+		border: solid calc(var(--border-width) / 2);
+		border-radius: calc(var(--radius-card) / 2);
+		padding: 0.45rem 0.65rem;
+		font-size: 0.9rem;
+		font-family: inherit;
+		color: var(--color-text);
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.edit-input:focus {
+		outline: none;
+		border-color: var(--color-text);
+	}
+
+	.edit-textarea {
+		resize: vertical;
+		min-height: 5rem;
+	}
+
+	.edit-actions {
+		display: flex;
+		gap: 0.6rem;
+		margin-top: 1rem;
+	}
+
+	.btn-save {
+		font-size: 0.85rem;
+		font-weight: bold;
+		border-radius: var(--radius-pill);
+		padding: 0.45rem 0.9rem;
+		cursor: pointer;
+		border: solid var(--border-width) black;
+		font-family: inherit;
+		background: black;
+		color: white;
+	}
+
+	.btn-submit {
+		font-size: 0.85rem;
+		font-weight: bold;
+		border-radius: var(--radius-pill);
+		padding: 0.45rem 0.9rem;
+		cursor: pointer;
+		border: solid var(--border-width) black;
+		font-family: inherit;
+		background: var(--color-bg);
+		color: var(--color-text);
+		width: 100%;
+		transition:
+			0.3s color,
+			0.3s background-color;
+	}
+
+	.btn-submit:hover {
+		background: var(--color-text);
+		color: var(--color-bg);
+		border-color: var(--color-text);
+	}
+
+	.danger-section {
+		margin-top: auto;
+	}
+
+	.danger-section.has-top {
+		padding-top: 1.5rem;
+		margin-top: 1.5rem;
+		border-top: solid calc(var(--border-width) / 2) #3a1a1a;
+	}
+
+	.danger-desc {
+		font-size: 0.85rem;
+		color: var(--rail-label);
+		margin: 0.5rem 0 1rem;
+	}
+
+	.btn-delete {
+		font-size: 0.85rem;
+		font-weight: bold;
+		border-radius: var(--radius-pill);
+		padding: 0.45rem 0.9rem;
+		cursor: pointer;
+		border: solid var(--border-width) #c96a6a;
+		font-family: inherit;
+		background: transparent;
+		color: #c96a6a;
+		width: 100%;
+		transition:
+			0.3s color,
+			0.3s background-color;
+	}
+
+	.btn-delete:hover {
+		background: #c96a6a;
+		color: white;
+	}
+
+	.form-error {
+		font-size: 0.8rem;
+		color: #c96a6a;
+		margin: 0 0 0.75rem;
+	}
+
+	.toast {
+		position: fixed;
+		top: clamp(0.75rem, 2vw, 1.5rem);
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 100;
+		background: #1a3a1a;
+		color: #6abf6a;
+		font-size: clamp(0.75rem, 1.2vw, 1rem);
+		padding: clamp(0.4rem, 0.8vw, 0.7rem) clamp(0.75rem, 1.2vw, 1.25rem);
+		border-radius: 9999px;
+		display: flex;
+		align-items: center;
+		gap: clamp(0.5rem, 0.8vw, 0.75rem);
+		white-space: nowrap;
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+	}
+
+	.toast-close {
+		background: none;
+		border: none;
+		color: inherit;
+		font-size: 0.75rem;
+		padding: 0;
+		cursor: pointer;
+		opacity: 0.6;
+		line-height: 1;
+		font-family: inherit;
+	}
+
+	.toast-close:hover {
+		opacity: 1;
+	}
+</style>

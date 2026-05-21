@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { untrack } from 'svelte';
 
 	let { data } = $props();
 
 	let editingAddress = $state(false);
-	let sfxEnabled = $state(data.user?.key_sfx_enabled ?? true);
+	let sfxEnabled = $state(untrack(() => data.user?.key_sfx_enabled ?? true));
 
 	let sfxForm: HTMLFormElement;
 	let sfxInput: HTMLInputElement;

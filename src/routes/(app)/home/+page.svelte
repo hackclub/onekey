@@ -1,7 +1,6 @@
 <script lang="ts">
 	let { data } = $props();
 
-	const personalHours = 47.6;
 	const communityGoalHours = 2000;
 	let communityHours = $state(670);
 	const communityProgress = $derived((communityHours / communityGoalHours) * 100);
@@ -66,7 +65,10 @@
 					<a href="/auth/hackatime/start" class="started-action" data-sveltekit-reload>go</a>
 				{/if}
 			</li>
-			<li class="started-item" class:done={!!(data.user?.street_address || data.user?.locality || data.user?.country)}>
+			<li
+				class="started-item"
+				class:done={!!(data.user?.street_address || data.user?.locality || data.user?.country)}
+			>
 				<span class="started-check"></span>
 				<span>set your address</span>
 				{#if data.user?.street_address || data.user?.locality || data.user?.country}

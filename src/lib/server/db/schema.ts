@@ -44,3 +44,18 @@ export const sessions = pgTable('sessions', {
 	expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
 });
+
+export const projects = pgTable('projects', {
+	id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+	userId: uuid('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	name: text('name').notNull(),
+	description: text('description'),
+	screenshotUrl: text('screenshot_url'),
+	repoUrl: text('repo_url'),
+	demoUrl: text('demo_url'),
+	status: text('status'),
+	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+});
