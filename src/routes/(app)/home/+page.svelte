@@ -1,11 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/state';
-
 	let { data } = $props();
 
 	const communityGoalHours = 2000;
-	const communityHours = $derived(Math.round((page.data.communityApprovedSeconds ?? 0) / 3600));
-	const communityProgress = $derived((communityHours / communityGoalHours) * 100);
+	const communityHours = Math.floor((data.communityApprovedSeconds ?? 0) / 3600);
+	const communityProgress = (communityHours / communityGoalHours) * 100;
 	const goals = [
 		{ pct: 5, label: "decide max's pfp", hours: '100 hours' },
 		{ pct: 12.5, label: 'i want to cheese', hours: '250 hours' },
@@ -17,20 +15,13 @@
 	];
 
 	const barSegments = Array.from({ length: 20 }, (_, i) => i);
-	const allCompleted = $derived(communityProgress >= 100);
-	const prevGoal = $derived(
-		goals.findLast((g) => g.pct <= communityProgress) ?? {
-			pct: 0,
-			label: 'start',
-			hours: '0 hours'
-		}
-	);
-	const nextGoal = $derived(
-		goals.find((g) => g.pct > communityProgress) ?? goals[goals.length - 1]
-	);
-	const segmentProgress = $derived(
-		allCompleted ? 100 : ((communityProgress - prevGoal.pct) / (nextGoal.pct - prevGoal.pct)) * 100
-	);
+	const allCompleted = communityProgress >= 100;
+	const prevGoal =
+		goals.findLast((g) => g.pct <= communityProgress) ?? { pct: 0, label: 'start', hours: '0 hours' };
+	const nextGoal = goals.find((g) => g.pct > communityProgress) ?? goals[goals.length - 1];
+	const segmentProgress = allCompleted
+		? 100
+		: ((communityProgress - prevGoal.pct) / (nextGoal.pct - prevGoal.pct)) * 100;
 </script>
 
 <svelte:head>
@@ -269,8 +260,8 @@
 		align-items: center;
 		gap: 0.15em;
 		text-decoration: none;
-		background: black;
-		color: white;
+		background: var(--color-text);
+		color: var(--color-bg);
 		font-weight: bold;
 		border: none;
 		border-radius: var(--radius-pill);
@@ -411,7 +402,7 @@
 	}
 
 	.goal-seg.filled {
-		background: black;
+		background: var(--color-text);
 	}
 
 	.goals-complete {

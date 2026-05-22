@@ -426,9 +426,9 @@
 	}
 
 	.btn-save {
-		background: black;
-		color: white;
-		border-color: black;
+		background: var(--color-text);
+		color: var(--color-bg);
+		border-color: var(--color-text);
 	}
 
 	.btn-cancel {

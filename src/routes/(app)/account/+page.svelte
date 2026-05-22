@@ -6,9 +6,12 @@
 
 	let editingAddress = $state(false);
 	let sfxEnabled = $state(untrack(() => data.user?.key_sfx_enabled ?? true));
+	let darkEnabled = $state(untrack(() => data.user?.dark_mode_enabled ?? false));
 
 	let sfxForm: HTMLFormElement;
 	let sfxInput: HTMLInputElement;
+	let darkForm: HTMLFormElement;
+	let darkInput: HTMLInputElement;
 
 	const hasAddress = $derived(
 		!!(
@@ -68,6 +71,34 @@
 
 	<div class="card">
 		<span class="card-label">settings</span>
+		<div class="settings-list">
+		<form method="POST" action="?/saveDarkMode" bind:this={darkForm} use:enhance>
+			<input
+				type="hidden"
+				name="dark_mode_enabled"
+				bind:this={darkInput}
+				value={darkEnabled ? 'true' : 'false'}
+			/>
+			<label class="toggle-row">
+				<span class="toggle-label">dark mode</span>
+				<button
+					type="button"
+					class="toggle"
+					class:on={darkEnabled}
+					role="switch"
+					aria-checked={darkEnabled}
+					aria-label="dark mode"
+					onclick={() => {
+						darkEnabled = !darkEnabled;
+						darkInput.value = darkEnabled ? 'true' : 'false';
+						document.querySelector('.dashboard')?.classList.toggle('dark', darkEnabled);
+						darkForm.requestSubmit();
+					}}
+				>
+					<span class="toggle-thumb"></span>
+				</button>
+			</label>
+		</form>
 		<form method="POST" action="?/saveSfx" bind:this={sfxForm} use:enhance>
 			<input
 				type="hidden"
@@ -83,6 +114,7 @@
 					class:on={sfxEnabled}
 					role="switch"
 					aria-checked={sfxEnabled}
+					aria-label="sidebar key sfx"
 					onclick={() => {
 						sfxEnabled = !sfxEnabled;
 						sfxInput.value = sfxEnabled ? 'true' : 'false';
@@ -93,6 +125,7 @@
 				</button>
 			</label>
 		</form>
+		</div>
 	</div>
 
 	<div class="card card-full">
@@ -317,8 +350,8 @@
 		font-weight: bold;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
-		background: black;
-		color: white;
+		background: var(--color-text);
+		color: var(--color-bg);
 		border-radius: var(--radius-pill);
 		padding: 0.2em 0.55em;
 	}
@@ -339,6 +372,12 @@
 	}
 
 	/* settings */
+
+	.settings-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
 
 	.toggle-row {
 		display: flex;
@@ -369,7 +408,7 @@
 	}
 
 	.toggle.on {
-		background: black;
+		background: var(--color-text);
 	}
 
 	.toggle-thumb {
@@ -379,7 +418,7 @@
 		width: 0.95rem;
 		height: 0.95rem;
 		border-radius: 50%;
-		background: white;
+		background: var(--color-bg);
 		transition: transform 0.18s;
 	}
 
@@ -489,9 +528,9 @@
 	}
 
 	.btn-save {
-		background: black;
-		color: white;
-		border-color: black;
+		background: var(--color-text);
+		color: var(--color-bg);
+		border-color: var(--color-text);
 	}
 
 	.btn-cancel {

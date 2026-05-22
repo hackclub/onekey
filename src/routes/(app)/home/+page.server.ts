@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { projects, users } from '$lib/server/db/schema';
-import { eq, count } from 'drizzle-orm';
+import { eq, count, sum } from 'drizzle-orm';
 
 export async function load({ locals }) {
 	let hasProject = false;
@@ -21,5 +21,11 @@ export async function load({ locals }) {
 		}
 	}
 
-	return { user: locals.user, hasProject };
+	const [r] = await db
+		.select({ total: sum(projects.approvedSeconds) })
+		.from(projects)
+		.where(eq(projects.status, 'approved'));
+	const communityApprovedSeconds = Number(r?.total ?? 0);
+
+	return { user: locals.user, hasProject, communityApprovedSeconds };
 }

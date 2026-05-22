@@ -2,10 +2,10 @@
 	import KeycapRail from '$lib/components/nav/KeycapRail.svelte';
 	import { page } from '$app/state';
 
-	let { children } = $props();
+	let { children, data } = $props();
 </script>
 
-<div class="dashboard">
+<div class="dashboard" class:dark={data.user?.dark_mode_enabled}>
 	<KeycapRail />
 	<div class="work">
 		{#if page.data.isAdmin || page.data.isReviewer}
@@ -37,6 +37,23 @@
 		--keycap-color: white;
 		--keycap-border: #0e0f12;
 		min-height: 100vh;
+		background-color: var(--color-bg);
+		color: var(--color-text);
+	}
+
+	.dashboard.dark {
+		--color-text: white;
+		--color-text-soft: #d0d0d0;
+		--color-bg: #0f0f0f;
+		--color-bg-soft: #1a1a1a;
+	}
+
+	:global(.dashboard.dark .hero-bg) {
+		filter: invert(1) blur(3.5px);
+	}
+
+	:global(.dashboard.dark .goal-seg:not(.filled)) {
+		background: #555;
 	}
 
 	.work {

@@ -21,6 +21,7 @@ declare global {
 				postal_code?: string;
 				country?: string;
 				key_sfx_enabled: boolean;
+				dark_mode_enabled: boolean;
 			} | null;
 		}
 	}

@@ -786,10 +786,10 @@
 		border-radius: var(--radius-pill);
 		padding: 0.45rem 0.9rem;
 		cursor: pointer;
-		border: solid var(--border-width) black;
+		border: solid var(--border-width) var(--color-text);
 		font-family: inherit;
-		background: black;
-		color: white;
+		background: var(--color-text);
+		color: var(--color-bg);
 	}
 
 	.btn-submit {
@@ -798,7 +798,7 @@
 		border-radius: var(--radius-pill);
 		padding: 0.45rem 0.9rem;
 		cursor: pointer;
-		border: solid var(--border-width) black;
+		border: solid var(--border-width) var(--color-text);
 		font-family: inherit;
 		background: var(--color-bg);
 		color: var(--color-text);

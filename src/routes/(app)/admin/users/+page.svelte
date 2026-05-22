@@ -110,7 +110,7 @@
 		text-decoration: none;
 	}
 
-	.back:hover { color: #000; }
+	.back:hover { color: var(--color-text); }
 
 	h1 {
 		font-size: 1.6rem;
@@ -129,8 +129,8 @@
 		padding: 0.5rem 0.85rem;
 		font-family: 'Phantom Sans', sans-serif;
 		font-size: 0.85rem;
-		background: #fff;
-		color: #000;
+		background: var(--color-bg);
+		color: var(--color-text);
 		border: 1px solid #2a2f38;
 		border-radius: 8px;
 		outline: none;
@@ -211,7 +211,7 @@
 
 	.detail {
 		padding: 0.75rem 1rem 0.75rem 2.5rem;
-		background: #fff;
+		background: var(--color-bg);
 		border-top: 1px solid #1e2229;
 	}
 

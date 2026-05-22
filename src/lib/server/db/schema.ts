@@ -32,6 +32,7 @@ export const users = pgTable('users', {
 	postalCode: text('postal_code'),
 	country: text('country'),
 	keySfxEnabled: boolean('key_sfx_enabled').notNull().default(true),
+	darkModeEnabled: boolean('dark_mode_enabled').notNull().default(false),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
 });

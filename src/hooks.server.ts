@@ -44,7 +44,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 				region: u.region ?? undefined,
 				postal_code: u.postalCode ?? undefined,
 				country: u.country ?? undefined,
-				key_sfx_enabled: u.keySfxEnabled
+				key_sfx_enabled: u.keySfxEnabled,
+				dark_mode_enabled: u.darkModeEnabled
 			};
 			event.locals.isAdmin = adminSet.has(u.hcaId);
 			event.locals.isReviewer = reviewerSet.has(u.hcaId);
