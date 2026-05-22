@@ -63,7 +63,9 @@
 			<div class="project-card-top">
 				<span class="project-name">{project.name}</span>
 				{#if project.totalSeconds > 0}
-					<span class="ht-time"><span class="ht-icon">{@html clockSvg}</span>{formatHours(project.totalSeconds)}</span>
+					<span class="ht-time"
+						><span class="ht-icon">{@html clockSvg}</span>{formatHours(project.totalSeconds)}</span
+					>
 				{/if}
 			</div>
 			{#if project.description}
@@ -81,7 +83,13 @@
 {#if showErrorToast}
 	<div class="toast toast-error" role="alert">
 		this project doesn't exist!
-		<button class="toast-close" onclick={() => { showErrorToast = false; clearTimeout(errorToastTimer); }}>✕</button>
+		<button
+			class="toast-close"
+			onclick={() => {
+				showErrorToast = false;
+				clearTimeout(errorToastTimer);
+			}}>✕</button
+		>
 	</div>
 {/if}
 
@@ -162,7 +170,7 @@
 
 	.project-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
 		gap: clamp(0.75rem, 1.2vw, 1.25rem);
 	}
 

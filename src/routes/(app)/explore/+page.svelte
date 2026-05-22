@@ -37,16 +37,26 @@
 			>
 				<div class="project-card-img-wrap">
 					{#if project.screenshotUrl}
-						<img src={project.screenshotUrl} alt="{project.name} screenshot" class="project-card-img" />
+						<img
+							src={project.screenshotUrl}
+							alt="{project.name} screenshot"
+							class="project-card-img"
+						/>
 					{/if}
 				</div>
 				<div class="project-card-top">
 					<span class="project-name">{project.name}</span>
 					{#if project.approvedSeconds}
-						<span class="ht-time"><span class="ht-icon">{@html clockSvg}</span>{formatHours(project.approvedSeconds)}</span>
+						<span class="ht-time"
+							><span class="ht-icon">{@html clockSvg}</span>{formatHours(
+								project.approvedSeconds
+							)}</span
+						>
 					{/if}
 				</div>
-				<span class="project-author">by {project.authorName ?? project.authorNickname ?? 'unknown'}</span>
+				<span class="project-author"
+					>by {project.authorName ?? project.authorNickname ?? 'unknown'}</span
+				>
 				{#if project.description}
 					<p class="project-desc">{project.description}</p>
 				{/if}
@@ -85,7 +95,7 @@
 
 	.project-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
 		gap: clamp(0.75rem, 1.2vw, 1.25rem);
 	}
 
