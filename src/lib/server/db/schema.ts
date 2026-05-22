@@ -62,3 +62,17 @@ export const projects = pgTable('projects', {
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
 });
+
+export const projectEvents = pgTable('project_events', {
+	id: serial('id').primaryKey(),
+	projectId: integer('project_id')
+		.notNull()
+		.references(() => projects.id, { onDelete: 'cascade' }),
+	actorId: uuid('actor_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	action: text('action').notNull(), // 'submitted' | 'approved' | 'rejected' | 'comment'
+	message: text('message'),
+	internalNote: text('internal_note'),
+	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
+});

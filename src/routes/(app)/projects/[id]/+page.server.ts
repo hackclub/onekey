@@ -2,8 +2,8 @@ import { redirect, error, fail } from '@sveltejs/kit';
 import { TOKEN_ENCRYPTION_KEY } from '$env/static/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
-import { projects, users } from '$lib/server/db/schema';
-import { eq, and, isNull } from 'drizzle-orm';
+import { projects, users, projectEvents } from '$lib/server/db/schema';
+import { eq, and, isNull, asc } from 'drizzle-orm';
 import { uploadImageBlob } from '$lib/server/cdn';
 import { decryptToken } from '$lib/server/session';
 
@@ -54,7 +54,29 @@ export async function load({ locals, params }) {
 		redirect(302, '/projects?error=not_found');
 	}
 
-	return { project, isReviewer: locals.isReviewer, isOwnProject: project.userId === dbUser.id };
+	const events = await db
+		.select({
+			id: projectEvents.id,
+			action: projectEvents.action,
+			message: projectEvents.message,
+			internalNote: projectEvents.internalNote,
+			createdAt: projectEvents.createdAt,
+			actorName: users.name,
+			actorNickname: users.nickname,
+			actorAvatar: users.slackAvatarUrl
+		})
+		.from(projectEvents)
+		.innerJoin(users, eq(projectEvents.actorId, users.id))
+		.where(eq(projectEvents.projectId, id))
+		.orderBy(asc(projectEvents.createdAt));
+
+	return {
+		project,
+		events,
+		isReviewer: locals.isReviewer,
+		isAdmin: locals.isAdmin,
+		isOwnProject: project.userId === dbUser.id
+	};
 }
 
 export const actions = {
@@ -150,6 +172,8 @@ export const actions = {
 			.set({ name, description, screenshotUrl, repoUrl, demoUrl, hackatimeProject, status: 'pending', updatedAt: new Date() })
 			.where(eq(projects.id, id));
 
+		await db.insert(projectEvents).values({ projectId: id, actorId: dbUser.id, action: 'submitted' });
+
 		return { success: true };
 	},
 
@@ -172,11 +196,21 @@ export const actions = {
 		redirect(302, '/projects');
 	},
 
-	reject: async ({ locals, params }) => {
-		if (!locals.isReviewer) return fail(403, { error: 'forbidden' });
+	reject: async ({ request, locals, params }) => {
+		if (!locals.isReviewer || !locals.user) return fail(403, { error: 'forbidden' });
 
 		const id = parseInt(params.id, 10);
 		if (isNaN(id)) error(404, 'project not found');
+
+		const reviewerDbUser = await getDbUser(locals.user.sub);
+		if (!reviewerDbUser) return fail(403, { error: 'forbidden' });
+
+		const form = await request.formData();
+		const message = (form.get('message') as string)?.trim() || null;
+		const internalNote = (form.get('internal_note') as string)?.trim() || null;
+
+		if (!message) return fail(400, { error: 'message to author is required' });
+		if (!internalNote) return fail(400, { error: 'internal note is required' });
 
 		const [updated] = await db
 			.update(projects)
@@ -186,17 +220,26 @@ export const actions = {
 
 		if (!updated) return fail(400, { error: 'can only reject pending projects' });
 
+		await db.insert(projectEvents).values({ projectId: id, actorId: reviewerDbUser.id, action: 'rejected', message, internalNote });
+
 		return { success: true };
 	},
 
-	approve: async ({ locals, params }) => {
-		if (!locals.isReviewer) return fail(403, { error: 'forbidden' });
+	approve: async ({ request, locals, params }) => {
+		if (!locals.isReviewer || !locals.user) return fail(403, { error: 'forbidden' });
 
 		const id = parseInt(params.id, 10);
 		if (isNaN(id)) error(404, 'project not found');
 
 		const reviewerDbUser = await getDbUser(locals.user.sub);
 		if (!reviewerDbUser) return fail(403, { error: 'forbidden' });
+
+		const form = await request.formData();
+		const message = (form.get('message') as string)?.trim() || null;
+		const internalNote = (form.get('internal_note') as string)?.trim() || null;
+
+		if (!message) return fail(400, { error: 'message to author is required' });
+		if (!internalNote) return fail(400, { error: 'internal note is required' });
 
 		const [project] = await db
 			.select()
@@ -219,6 +262,28 @@ export const actions = {
 			.update(projects)
 			.set({ status: 'approved', approvedSeconds, updatedAt: new Date() })
 			.where(eq(projects.id, id));
+
+		await db.insert(projectEvents).values({ projectId: id, actorId: reviewerDbUser.id, action: 'approved', message, internalNote });
+
+		return { success: true };
+	},
+
+	comment: async ({ request, locals, params }) => {
+		if (!locals.isReviewer || !locals.user) return fail(403, { error: 'forbidden' });
+
+		const id = parseInt(params.id, 10);
+		if (isNaN(id)) error(404, 'project not found');
+
+		const reviewerDbUser = await getDbUser(locals.user.sub);
+		if (!reviewerDbUser) return fail(403, { error: 'forbidden' });
+
+		const form = await request.formData();
+		const message = (form.get('message') as string)?.trim() || null;
+		const internalNote = (form.get('internal_note') as string)?.trim() || null;
+
+		if (!message && !internalNote) return fail(400, { error: 'comment must have a message or internal note' });
+
+		await db.insert(projectEvents).values({ projectId: id, actorId: reviewerDbUser.id, action: 'comment', message, internalNote });
 
 		return { success: true };
 	}

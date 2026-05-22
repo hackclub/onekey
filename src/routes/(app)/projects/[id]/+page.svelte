@@ -5,6 +5,23 @@
 
 	let project = $derived(data.project);
 	const isDraft = $derived(project.status === null);
+	const isReviewerOrAdmin = $derived(data.isReviewer || data.isAdmin);
+
+	let reviewAction = $state('comment');
+	const reviewFormAction = $derived(
+		reviewAction === 'approve' ? '?/approve' : reviewAction === 'reject' ? '?/reject' : '?/comment'
+	);
+	const reviewActionLabel = $derived(
+		reviewAction === 'approve' ? 'approve' : reviewAction === 'reject' ? 'reject' : 'post comment'
+	);
+	const reviewActionClass = $derived(
+		reviewAction === 'approve' ? 'btn-approve' : reviewAction === 'reject' ? 'btn-reject' : 'btn-save'
+	);
+
+	function formatDate(d: Date | string) {
+		const date = new Date(d);
+		return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+	}
 
 	let screenshotPreview = $state('');
 	let screenshotCleared = $state(false);
@@ -324,26 +341,6 @@
 		{/if}
 	</div>
 
-	{#if !isDraft && data.isReviewer && project.status !== 'approved'}
-	<div class="card card-right">
-		{#if !data.isOwnProject && project.status !== 'approved'}
-			<span class="card-label">approve</span>
-			<p class="danger-desc">approve this project and credit the submitter's hours.</p>
-			<form method="POST" action="?/approve" use:enhance>
-				<button type="submit" class="btn-approve">approve</button>
-			</form>
-		{/if}
-		{#if project.status !== 'approved'}
-		<div class="danger-section" class:has-top={!data.isOwnProject}>
-			<span class="card-label">reject</span>
-			<p class="danger-desc">send this project back to the submitter as a draft.</p>
-			<form method="POST" action="?/reject" use:enhance>
-				<button type="submit" class="btn-reject">reject</button>
-			</form>
-		</div>
-		{/if}
-	</div>
-	{/if}
 
 	{#if isDraft}
 	<div class="card card-right">
@@ -364,6 +361,61 @@
 	</div>
 	{/if}
 </div>
+
+{#if data.events.length > 0 || isReviewerOrAdmin}
+<div class="history">
+	<h2 class="history-title">history</h2>
+
+	{#if data.events.length > 0}
+	<div class="event-list">
+		{#each data.events.filter(e => e.action !== 'comment' || isReviewerOrAdmin) as event (event.id)}
+		<div class="event">
+			<div class="event-meta">
+				{#if event.actorAvatar}
+					<img class="event-avatar" src={event.actorAvatar} alt="" />
+				{:else}
+					<div class="event-avatar event-avatar-placeholder"></div>
+				{/if}
+				<span class="event-actor">{event.actorNickname ?? event.actorName ?? 'unknown'}</span>
+				<span class="event-action event-action-{event.action}">{event.action}</span>
+				<span class="event-time">{formatDate(event.createdAt)}</span>
+			</div>
+			{#if event.message}
+				<p class="event-message">{event.message}</p>
+			{/if}
+			{#if event.internalNote && isReviewerOrAdmin}
+				<p class="event-internal"><span class="event-internal-label">internal</span>{event.internalNote}</p>
+			{/if}
+		</div>
+		{/each}
+	</div>
+	{/if}
+
+	{#if isReviewerOrAdmin}
+	<form method="POST" action={reviewFormAction} use:enhance class="comment-form">
+		<div class="review-action-row">
+			<span class="card-label">action</span>
+			<select bind:value={reviewAction} class="review-select">
+				<option value="comment">comment</option>
+				{#if project.status === 'pending'}
+					{#if !data.isOwnProject}
+						<option value="approve">approve</option>
+					{/if}
+					<option value="reject">reject</option>
+				{/if}
+			</select>
+		</div>
+		{#if reviewAction !== 'comment'}
+			<textarea class="review-textarea" name="message" placeholder="message to author" required></textarea>
+			<textarea class="review-textarea" name="internal_note" placeholder="internal note (reviewer-only)" required></textarea>
+		{:else}
+			<textarea class="review-textarea" name="internal_note" placeholder="internal note"></textarea>
+		{/if}
+		<button type="submit" class={reviewActionClass}>{reviewActionLabel}</button>
+	</form>
+	{/if}
+</div>
+{/if}
 
 {#if showToast}
 	<div class="toast" role="alert">
@@ -790,6 +842,7 @@
 		font-family: inherit;
 		background: var(--color-text);
 		color: var(--color-bg);
+		transition: none;
 	}
 
 	.btn-submit {
@@ -803,9 +856,6 @@
 		background: var(--color-bg);
 		color: var(--color-text);
 		width: 100%;
-		transition:
-			0.3s color,
-			0.3s background-color;
 	}
 
 	.btn-submit:hover {
@@ -859,17 +909,10 @@
 		cursor: pointer;
 		border: solid var(--border-width) #6abf6a;
 		font-family: inherit;
-		background: transparent;
-		color: #6abf6a;
-		width: 100%;
-		transition:
-			0.3s color,
-			0.3s background-color;
-	}
-
-	.btn-approve:hover {
 		background: #6abf6a;
 		color: black;
+		width: 100%;
+		transition: none;
 	}
 
 	.danger-section {
@@ -892,17 +935,10 @@
 		cursor: pointer;
 		border: solid var(--border-width) #c9a84c;
 		font-family: inherit;
-		background: transparent;
-		color: #c9a84c;
-		width: 100%;
-		transition:
-			0.3s color,
-			0.3s background-color;
-	}
-
-	.btn-reject:hover {
 		background: #c9a84c;
 		color: black;
+		width: 100%;
+		transition: none;
 	}
 
 	.form-error {
@@ -948,5 +984,161 @@
 
 	.toast-close:hover {
 		opacity: 1;
+	}
+
+	.review-action-row {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-bottom: 0.25rem;
+	}
+
+	.review-select {
+		background: transparent;
+		border: solid calc(var(--border-width) / 2);
+		border-radius: var(--radius-pill);
+		padding: 0.25rem 0.6rem;
+		font-size: 0.8rem;
+		font-family: inherit;
+		color: var(--color-text);
+		cursor: pointer;
+	}
+
+	.review-select:focus {
+		outline: none;
+		border-color: var(--color-text);
+	}
+
+	.review-textarea {
+		background: transparent;
+		border: solid calc(var(--border-width) / 2);
+		border-radius: calc(var(--radius-card) / 2);
+		padding: 0.45rem 0.65rem;
+		font-size: 0.8rem;
+		font-family: inherit;
+		color: var(--color-text);
+		width: 100%;
+		box-sizing: border-box;
+		resize: vertical;
+		min-height: 3.5rem;
+	}
+
+	.review-textarea:focus {
+		outline: none;
+		border-color: var(--color-text);
+	}
+
+	.review-textarea::placeholder {
+		color: var(--rail-label);
+	}
+
+	.history {
+		margin-top: clamp(1.5rem, 2.5vw, 2.5rem);
+	}
+
+	.history-title {
+		font-size: clamp(1rem, 1.2vw, 1.4rem);
+		font-weight: bold;
+		margin: 0 0 1rem;
+		color: var(--color-text);
+	}
+
+	.event-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.event {
+		background: var(--color-bg);
+		border: solid var(--border-width);
+		border-radius: var(--radius-card);
+		padding: clamp(0.75rem, 1vw, 1.25rem);
+	}
+
+	.event-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.event-avatar {
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: 50%;
+		object-fit: cover;
+		flex-shrink: 0;
+	}
+
+	.event-avatar-placeholder {
+		background: var(--color-bg-soft);
+		border: solid calc(var(--border-width) / 2);
+	}
+
+	.event-actor {
+		font-size: 0.85rem;
+		font-weight: 600;
+	}
+
+	.event-action {
+		font-size: 0.65rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		border-radius: var(--radius-pill);
+		padding: 0.15em 0.5em;
+	}
+
+	.event-action-submitted { background: #1a2a3a; color: #6aaabf; }
+	.event-action-approved  { background: #1a2a1a; color: #6abf6a; }
+	.event-action-rejected  { background: #2a1a1a; color: #c96a6a; }
+	.event-action-comment   { background: #2a2620; color: #c9a84c; }
+
+	.event-time {
+		font-size: 0.75rem;
+		color: var(--rail-label);
+		margin-left: auto;
+	}
+
+	.event-message {
+		font-size: 0.85rem;
+		margin: 0.6rem 0 0;
+		line-height: 1.5;
+	}
+
+	.event-internal {
+		font-size: 0.8rem;
+		margin: 0.5rem 0 0;
+		padding: 0.4rem 0.6rem;
+		background: color-mix(in srgb, #c9a84c 8%, transparent);
+		border-left: 2px solid #c9a84c;
+		border-radius: 0 calc(var(--radius-card) / 3) calc(var(--radius-card) / 3) 0;
+		color: var(--color-text-soft);
+		line-height: 1.5;
+	}
+
+	.event-internal-label {
+		font-size: 0.65rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #c9a84c;
+		margin-right: 0.5rem;
+	}
+
+	.comment-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		background: var(--color-bg);
+		border: solid var(--border-width);
+		border-radius: var(--radius-card);
+		padding: clamp(0.75rem, 1vw, 1.25rem);
+	}
+
+	.comment-form .card-label {
+		margin-bottom: 0.25rem;
 	}
 </style>
