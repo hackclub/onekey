@@ -11,8 +11,8 @@
 
 - login and authentication with HCA
 - connection to hackatime
-- submit projects - coming soon!
-- explore others' projects - coming soon!
+- submit projects
+- explore others' projects
 - purchase accessories from a shop - coming soon!
 - customize your macropad - coming soon!
 
