@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { projects, users } from '$lib/server/db/schema';
+import { projects, users, projectApprovals } from '$lib/server/db/schema';
 import { eq, and, sum } from 'drizzle-orm';
 
 export async function load({ locals, url }) {
@@ -20,16 +20,17 @@ export async function load({ locals, url }) {
 
 	if (dbUser) {
 		const [r] = await db
-			.select({ total: sum(projects.approvedSeconds) })
-			.from(projects)
-			.where(and(eq(projects.userId, dbUser.id), eq(projects.status, 'approved')));
+			.select({ total: sum(projectApprovals.approvedSeconds) })
+			.from(projectApprovals)
+			.innerJoin(projects, eq(projectApprovals.projectId, projects.id))
+			.where(and(eq(projects.userId, dbUser.id), eq(projectApprovals.status, 'approved')));
 		userApprovedSeconds = Number(r?.total ?? 0);
 	}
 
 	const [r2] = await db
-		.select({ total: sum(projects.approvedSeconds) })
-		.from(projects)
-		.where(eq(projects.status, 'approved'));
+		.select({ total: sum(projectApprovals.approvedSeconds) })
+		.from(projectApprovals)
+		.where(eq(projectApprovals.status, 'approved'));
 	communityApprovedSeconds = Number(r2?.total ?? 0);
 
 	return {

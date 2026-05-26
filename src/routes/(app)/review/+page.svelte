@@ -1,5 +1,13 @@
 <script lang="ts">
 	let { data } = $props();
+
+	function formatHours(seconds: number) {
+		const h = Math.floor(seconds / 3600);
+		const m = Math.floor((seconds % 3600) / 60);
+		if (h === 0) return `${m}m`;
+		if (m === 0) return `${h}h`;
+		return `${h}h ${m}m`;
+	}
 </script>
 
 <svelte:head>
@@ -29,6 +37,7 @@
 				<span class="col-name">project</span>
 				<span class="col-desc">description</span>
 				<span class="col-author">author</span>
+				<span class="col-hours">hours</span>
 				<span class="col-submitted">submitted</span>
 			</div>
 			{#each data.submitted as project (project.id)}
@@ -36,7 +45,8 @@
 					<span class="col-name">{project.name}</span>
 					<span class="col-desc">{project.description ?? '—'}</span>
 					<span class="col-author">{project.submitterSlack ?? project.submitterName ?? project.submitterEmail ?? 'unknown'}</span>
-					<span class="col-submitted">{new Date(project.updatedAt).toLocaleDateString()}</span>
+					<span class="col-hours">{formatHours(project.submittedSeconds)}</span>
+					<span class="col-submitted">{new Date(project.submittedAt).toLocaleDateString()}</span>
 				</a>
 			{/each}
 		</div>
@@ -89,7 +99,7 @@
 	.table-header,
 	.table-row {
 		display: grid;
-		grid-template-columns: 1.2fr 2fr 1fr 1fr;
+		grid-template-columns: 1.2fr 2fr 1fr 0.6fr 0.8fr;
 		align-items: center;
 		padding: 0.6rem 1.25rem;
 		gap: 1rem;
@@ -132,6 +142,7 @@
 
 	.col-desc,
 	.col-author,
+	.col-hours,
 	.col-submitted {
 		color: var(--color-text-soft);
 		overflow: hidden;

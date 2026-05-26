@@ -46,10 +46,10 @@
 				</div>
 				<div class="project-card-top">
 					<span class="project-name">{project.name}</span>
-					{#if project.approvedSeconds}
+					{#if project.totalApprovedSeconds}
 						<span class="ht-time"
 							><span class="ht-icon">{@html clockSvg}</span>{formatHours(
-								project.approvedSeconds
+								project.totalApprovedSeconds
 							)}</span
 						>
 					{/if}

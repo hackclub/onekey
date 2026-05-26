@@ -56,11 +56,27 @@ export const projects = pgTable('projects', {
 	screenshotUrl: text('screenshot_url'),
 	repoUrl: text('repo_url'),
 	demoUrl: text('demo_url'),
-	status: text('status'),
-	approvedSeconds: integer('approved_seconds'),
 	hackatimeProject: text('hackatime_project'),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+});
+
+export const projectApprovals = pgTable('project_approvals', {
+	id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+	projectId: integer('project_id')
+		.notNull()
+		.references(() => projects.id, { onDelete: 'cascade' }),
+	submittedById: uuid('submitted_by_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	reviewerId: uuid('reviewer_id').references(() => users.id, { onDelete: 'set null' }),
+	submittedSeconds: integer('submitted_seconds').notNull(),
+	approvedSeconds: integer('approved_seconds'),
+	status: text('status').notNull().default('pending'),
+	publicMessage: text('public_message'),
+	internalNote: text('internal_note'),
+	submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().default(sql`now()`),
+	reviewedAt: timestamp('reviewed_at', { withTimezone: true })
 });
 
 export const projectEvents = pgTable('project_events', {

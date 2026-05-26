@@ -4,7 +4,8 @@
 	let { data, form } = $props();
 
 	let project = $derived(data.project);
-	const isDraft = $derived(project.status === null);
+	const derivedStatus = $derived(data.derivedStatus);
+	const isDraft = $derived(derivedStatus === null);
 	const isReviewerOrAdmin = $derived(data.isReviewer || data.isAdmin);
 
 	let reviewAction = $state('comment');
@@ -17,6 +18,24 @@
 	const reviewActionClass = $derived(
 		reviewAction === 'approve' ? 'btn-approve' : reviewAction === 'reject' ? 'btn-reject' : 'btn-save'
 	);
+
+	const canReship = $derived(
+		data.isOwnProject && (derivedStatus === 'approved' || derivedStatus === 'rejected')
+	);
+
+	let approvedHoursInput = $state(
+		data.latestApproval ? (data.latestApproval.submittedSeconds / 3600).toFixed(2) : ''
+	);
+	const approvedHoursConverted = $derived(() => {
+		const h = parseFloat(approvedHoursInput);
+		if (!isFinite(h) || h <= 0) return null;
+		const totalSeconds = Math.floor(h * 3600);
+		const hrs = Math.floor(totalSeconds / 3600);
+		const mins = Math.floor((totalSeconds % 3600) / 60);
+		if (hrs === 0) return `${mins}m`;
+		if (mins === 0) return `${hrs}h`;
+		return `${hrs}h ${mins}m`;
+	});
 
 	function formatDate(d: Date | string) {
 		const date = new Date(d);
@@ -191,9 +210,9 @@
 
 <div class="bento">
 	<div class="card card-wide" class:card-full={!isDraft}>
-		{#if project.status}
+		{#if derivedStatus}
 			<div class="card-header">
-				<span class="status-badge status-{project.status}">{project.status}</span>
+				<span class="status-badge status-{derivedStatus}">{derivedStatus}</span>
 			</div>
 		{/if}
 
@@ -360,15 +379,63 @@
 		</div>
 	</div>
 	{/if}
+
+	{#if canReship}
+	<div class="card card-right">
+		<span class="card-label">reship</span>
+		{#if data.availableSeconds >= 3600}
+			<p class="danger-desc">you have {formatHours(data.availableSeconds)} of new work to submit.</p>
+			{#if form?.error && !form?.success}
+				<p class="form-error">{form.error}</p>
+			{/if}
+			<form method="POST" action="?/reship" use:enhance>
+				<button type="submit" class="btn-submit">ship again</button>
+			</form>
+		{:else}
+			<p class="danger-desc">keep working! you need at least 1 new hour since your last submission{data.availableSeconds > 0 ? ` (you have ${formatHours(data.availableSeconds)})` : ''}.</p>
+		{/if}
+	</div>
+	{/if}
 </div>
 
-{#if data.events.length > 0 || isReviewerOrAdmin}
+{#if data.approvals.length > 0 || data.events.length > 0 || isReviewerOrAdmin}
 <div class="history">
 	<h2 class="history-title">history</h2>
 
-	{#if data.events.length > 0}
+	{#if data.approvals.length > 0 || data.events.length > 0}
+	{@const allEvents = [
+		...data.approvals.map(a => ({
+			id: `approval-${a.id}`,
+			type: 'approval' as const,
+			action: a.status === 'pending' ? 'submitted' : a.status,
+			time: a.status === 'pending' ? a.submittedAt : (a.reviewedAt ?? a.submittedAt),
+			actorAvatar: a.reviewerAvatar,
+			actorName: a.reviewerName,
+			actorNickname: a.reviewerNickname,
+			message: a.publicMessage,
+			internalNote: a.internalNote,
+			submittedSeconds: a.submittedSeconds,
+			approvedSeconds: a.approvedSeconds,
+			isSubmission: a.status === 'pending'
+		})),
+		...data.events.map(e => ({
+			id: `event-${e.id}`,
+			type: 'comment' as const,
+			action: e.action,
+			time: e.createdAt,
+			actorAvatar: e.actorAvatar,
+			actorName: e.actorName,
+			actorNickname: e.actorNickname,
+			message: e.message,
+			internalNote: e.internalNote,
+			submittedSeconds: null,
+			approvedSeconds: null,
+			isSubmission: false
+		}))
+	].sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+	 .filter(e => e.action !== 'comment' || isReviewerOrAdmin)}
 	<div class="event-list">
-		{#each data.events.filter(e => e.action !== 'comment' || isReviewerOrAdmin) as event (event.id)}
+		{#each allEvents as event (event.id)}
 		<div class="event">
 			<div class="event-meta">
 				{#if event.actorAvatar}
@@ -376,9 +443,18 @@
 				{:else}
 					<div class="event-avatar event-avatar-placeholder"></div>
 				{/if}
-				<span class="event-actor">{event.actorNickname ?? event.actorName ?? 'unknown'}</span>
+				{#if event.isSubmission}
+					<span class="event-actor">you</span>
+				{:else}
+					<span class="event-actor">{event.actorNickname ?? event.actorName ?? 'reviewer'}</span>
+				{/if}
 				<span class="event-action event-action-{event.action}">{event.action}</span>
-				<span class="event-time">{formatDate(event.createdAt)}</span>
+				{#if event.isSubmission && event.submittedSeconds}
+					<span class="event-hours">{formatHours(event.submittedSeconds)} submitted</span>
+				{:else if event.action === 'approved' && event.approvedSeconds}
+					<span class="event-hours">{event.submittedSeconds && event.approvedSeconds < event.submittedSeconds ? `${formatHours(event.approvedSeconds)} of ${formatHours(event.submittedSeconds)}` : formatHours(event.approvedSeconds)} approved</span>
+				{/if}
+				<span class="event-time">{formatDate(event.time)}</span>
 			</div>
 			{#if event.message}
 				<p class="event-message">{event.message}</p>
@@ -397,7 +473,7 @@
 			<span class="card-label">action</span>
 			<select bind:value={reviewAction} class="review-select">
 				<option value="comment">comment</option>
-				{#if project.status === 'pending'}
+				{#if derivedStatus === 'pending'}
 					{#if !data.isOwnProject}
 						<option value="approve">approve</option>
 					{/if}
@@ -405,7 +481,29 @@
 				{/if}
 			</select>
 		</div>
-		{#if reviewAction !== 'comment'}
+		{#if reviewAction === 'approve'}
+			<label class="review-hours-label">
+				<span class="review-hours-text">hours to approve</span>
+				<input
+					type="number"
+					name="approved_hours"
+					class="review-input"
+					min="0.01"
+					max={data.latestApproval ? data.latestApproval.submittedSeconds / 3600 : undefined}
+					bind:value={approvedHoursInput}
+					step="0.01"
+					required
+				/>
+				<span class="review-hours-hint">
+					{#if approvedHoursConverted()}
+						= {approvedHoursConverted()} ·
+					{/if}
+					submitted: {data.latestApproval ? formatHours(data.latestApproval.submittedSeconds) : '—'}
+				</span>
+			</label>
+			<textarea class="review-textarea" name="message" placeholder="message to author" required></textarea>
+			<textarea class="review-textarea" name="internal_note" placeholder="internal note (reviewer-only)" required></textarea>
+		{:else if reviewAction === 'reject'}
 			<textarea class="review-textarea" name="message" placeholder="message to author" required></textarea>
 			<textarea class="review-textarea" name="internal_note" placeholder="internal note (reviewer-only)" required></textarea>
 		{:else}
@@ -1102,6 +1200,12 @@
 		margin-left: auto;
 	}
 
+	.event-hours {
+		font-size: 0.75rem;
+		color: var(--color-text-soft);
+		font-weight: 500;
+	}
+
 	.event-message {
 		font-size: 0.85rem;
 		margin: 0.6rem 0 0;
@@ -1140,5 +1244,41 @@
 
 	.comment-form .card-label {
 		margin-bottom: 0.25rem;
+	}
+
+	.review-hours-label {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.review-hours-text {
+		font-size: 0.7rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--rail-label);
+		font-weight: 500;
+	}
+
+	.review-input {
+		background: transparent;
+		border: solid calc(var(--border-width) / 2);
+		border-radius: calc(var(--radius-card) / 2);
+		padding: 0.35rem 0.65rem;
+		font-size: 0.9rem;
+		font-family: inherit;
+		color: var(--color-text);
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.review-input:focus {
+		outline: none;
+		border-color: var(--color-text);
+	}
+
+	.review-hours-hint {
+		font-size: 0.7rem;
+		color: var(--rail-label);
 	}
 </style>
