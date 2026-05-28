@@ -24,8 +24,10 @@
 		data.isOwnProject && (derivedStatus === 'approved' || derivedStatus === 'rejected')
 	);
 
+	const canEdit = $derived(isDraft || canReship);
+
 	let approvedHoursInput = $state(
-		data.latestApproval ? (data.latestApproval.submittedSeconds / 3600).toFixed(2) : ''
+		data.latestApproval ? (Math.ceil((data.latestApproval.newSeconds / 3600) * 100) / 100).toFixed(2) : ''
 	);
 	const approvedHoursConverted = $derived(() => {
 		const h = parseFloat(approvedHoursInput);
@@ -157,15 +159,15 @@
 
 <div
 	class="banner"
-	role={isDraft ? 'button' : undefined}
-	tabindex={isDraft ? 0 : undefined}
-	aria-label={isDraft ? 'upload screenshot' : undefined}
-	onclick={() => isDraft && screenshotInput?.click()}
-	onkeydown={(e) => isDraft && (e.key === 'Enter' || e.key === ' ') && screenshotInput?.click()}
+	role={canEdit ? 'button' : undefined}
+	tabindex={canEdit ? 0 : undefined}
+	aria-label={canEdit ? 'upload screenshot' : undefined}
+	onclick={() => canEdit && screenshotInput?.click()}
+	onkeydown={(e) => canEdit && (e.key === 'Enter' || e.key === ' ') && screenshotInput?.click()}
 >
 	{#if displayUrl}
 		<img src={displayUrl} alt="{project.name} screenshot" class="banner-img" />
-		{#if isDraft}
+		{#if canEdit}
 			<button
 				type="button"
 				class="banner-remove"
@@ -179,7 +181,7 @@
 	{:else}
 		<span class="banner-empty">click to add screenshot</span>
 	{/if}
-	{#if isDraft}
+	{#if canEdit}
 		<div class="banner-overlay" aria-hidden="true">
 			<svg
 				fill-rule="evenodd"
@@ -209,7 +211,7 @@
 			</div>
 		{/if}
 
-		{#if isDraft}
+		{#if canEdit}
 			{#if form?.error}
 				<p class="form-error">{form.error}</p>
 			{/if}
@@ -408,6 +410,7 @@
 			message: a.publicMessage,
 			internalNote: a.internalNote,
 			submittedSeconds: a.submittedSeconds,
+			newSeconds: a.newSeconds,
 			approvedSeconds: a.approvedSeconds,
 			isSubmission: a.status === 'pending'
 		})),
@@ -422,6 +425,7 @@
 			message: e.message,
 			internalNote: e.internalNote,
 			submittedSeconds: null,
+			newSeconds: null,
 			approvedSeconds: null,
 			isSubmission: false
 		}))
@@ -442,10 +446,10 @@
 					<span class="event-actor">{event.actorNickname ?? event.actorName ?? 'reviewer'}</span>
 				{/if}
 				<span class="event-action event-action-{event.action}">{event.action}</span>
-				{#if event.isSubmission && event.submittedSeconds}
-					<span class="event-hours">{formatHours(event.submittedSeconds)} submitted</span>
+				{#if event.isSubmission && event.newSeconds}
+					<span class="event-hours">{formatHours(event.newSeconds)} submitted</span>
 				{:else if event.action === 'approved' && event.approvedSeconds}
-					<span class="event-hours">{event.submittedSeconds && event.approvedSeconds < event.submittedSeconds ? `${formatHours(event.approvedSeconds)} of ${formatHours(event.submittedSeconds)}` : formatHours(event.approvedSeconds)} approved</span>
+					<span class="event-hours">{event.newSeconds && event.approvedSeconds < event.newSeconds ? `${formatHours(event.approvedSeconds)} of ${formatHours(event.newSeconds)}` : formatHours(event.approvedSeconds)} approved</span>
 				{/if}
 				<span class="event-time">{formatDate(event.time)}</span>
 			</div>
@@ -482,7 +486,7 @@
 					name="approved_hours"
 					class="review-input"
 					min="0.01"
-					max={data.latestApproval ? data.latestApproval.submittedSeconds / 3600 : undefined}
+					max={data.latestApproval ? Math.ceil((data.latestApproval.newSeconds / 3600) * 100) / 100 : undefined}
 					bind:value={approvedHoursInput}
 					step="0.01"
 					required
@@ -491,7 +495,7 @@
 					{#if approvedHoursConverted()}
 						= {approvedHoursConverted()} ·
 					{/if}
-					submitted: {data.latestApproval ? formatHours(data.latestApproval.submittedSeconds) : '—'}
+					submitted: {data.latestApproval ? formatHours(data.latestApproval.newSeconds) : '—'}
 				</span>
 			</label>
 			<textarea class="review-textarea" name="message" placeholder="message to author" required></textarea>

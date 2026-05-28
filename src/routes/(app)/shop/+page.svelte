@@ -100,8 +100,7 @@
 							{:else if !canAfford}
 								not enough hours
 							{:else}
-								<span class="price-icon">{@html clockSvg}</span>
-								{formatHours(item.priceSeconds)}
+								buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(item.priceSeconds)}
 							{/if}
 						</button>
 					</div>
@@ -132,17 +131,12 @@
 			<div class="modal-body">
 				<div class="modal-title-row">
 					<h2 class="modal-title">{modalItem.name}</h2>
-					<span class="modal-price-display">
-						<span class="price-icon">{@html clockSvg}</span>
-						{formatHours(modalItem.priceSeconds)}
-					</span>
 				</div>
 				{#if modalItem.description}
 					<p class="modal-desc">{modalItem.description}</p>
 				{/if}
-				<p class="modal-balance-note">you have {formatHours(data.availableSeconds)} available</p>
 
-				<form method="POST" action="?/buy" use:enhance={() => () => closeModal()} class="modal-form">
+				<form method="POST" action="?/buy" use:enhance={() => async ({ update }) => { await update(); closeModal(); }} class="modal-form">
 					<input type="hidden" name="item_id" value={modalItem.id} />
 
 					{#if modalOptions.length > 0}
@@ -165,9 +159,10 @@
 					{/if}
 
 					<div class="modal-actions">
-						<button type="submit" class="btn-confirm">confirm order</button>
+						<button type="submit" class="btn-confirm">buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(modalItem.priceSeconds)}</button>
 						<button type="button" class="btn-cancel-modal" onclick={closeModal}>cancel</button>
 					</div>
+					<p class="modal-balance-note">current balance: {formatHours(data.availableSeconds)}</p>
 				</form>
 			</div>
 		</div>
@@ -217,6 +212,12 @@
 		width: 1em;
 		height: 1em;
 		flex-shrink: 0;
+	}
+
+	.btn-order .price-icon,
+	.btn-confirm .price-icon {
+		margin-left: 0.22rem;
+		margin-right: 0.15rem;
 	}
 
 	.balance-icon :global(svg),
@@ -382,7 +383,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.4rem;
+		gap: 0;
 		transition: opacity 0.1s;
 		margin: auto 0.75rem 0.75rem;
 	}
@@ -486,34 +487,25 @@
 		line-height: 1.2;
 	}
 
-	.modal-price-display {
-		font-size: 1.3rem;
-		font-weight: bold;
-		letter-spacing: -0.02em;
-		color: var(--color-text-soft);
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		gap: 0.3rem;
-	}
-
 	.modal-desc {
-		margin: 0;
+		margin: -0.4rem 0 0;
 		font-size: 1.05rem;
 		color: var(--color-text-soft);
 	}
 
 	.modal-balance-note {
-		margin: 0;
+		margin: 0.5rem 0 0;
 		font-size: 0.85rem;
 		color: var(--color-text-soft);
+		text-align: center;
+		width: 100%;
 	}
 
 	.modal-form {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-		margin-top: 0.25rem;
+		margin-top: 1.25rem;
 	}
 
 	.modal-options {
@@ -525,7 +517,7 @@
 	.opt-field {
 		display: flex;
 		flex-direction: column;
-		gap: 0.4rem;
+		gap: 0.65rem;
 	}
 
 	.opt-field-label {
@@ -589,10 +581,14 @@
 		font-size: 0.9rem;
 		font-weight: bold;
 		border-radius: var(--radius-pill);
-		padding: 0.5rem 1.1rem;
+		padding: 0.5rem 1rem;
 		cursor: pointer;
 		border: solid var(--border-width);
 		font-family: inherit;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		white-space: nowrap;
 	}
 
 	.btn-confirm {

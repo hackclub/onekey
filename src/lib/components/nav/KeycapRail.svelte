@@ -86,7 +86,7 @@
 
 	<div class="bottom">
 		<div class="divider"></div>
-		<div class="hours-label"><span class="clock-icon">{@html clockSvg}</span>{formatHours(userAvailableSeconds)}</div>
+		<div class="hours-label"><span class="clock-icon">{@html clockSvg}</span>{Math.floor(userAvailableSeconds / 360) / 10}h</div>
 		<a href="/account" class="avatar" aria-label="account" draggable="false">
 			{#if page.data.user?.avatar_url}
 				<img src={page.data.user.avatar_url} alt="avatar" draggable="false" />
