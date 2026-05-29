@@ -83,10 +83,11 @@ export async function load({ locals, params }) {
 		.where(eq(projectApprovals.projectId, id))
 		.orderBy(asc(projectApprovals.submittedAt));
 
-	const approvalsWithDelta = approvals.map((a, i) => ({
-		...a,
-		newSeconds: i === 0 ? a.submittedSeconds : a.submittedSeconds - approvals[i - 1].submittedSeconds
-	}));
+	const approvalsWithDelta = approvals.map((a, i) => {
+		const lastApproved = approvals.slice(0, i).reverse().find(prev => prev.status === 'approved');
+		const baseline = lastApproved?.submittedSeconds ?? 0;
+		return { ...a, newSeconds: a.submittedSeconds - baseline };
+	});
 
 	const latestApproval = approvalsWithDelta.length > 0 ? approvalsWithDelta[approvalsWithDelta.length - 1] : null;
 	const derivedStatus: string | null = latestApproval?.status ?? null;
@@ -112,7 +113,13 @@ export async function load({ locals, params }) {
 		const ownerUser = await db.select().from(users).where(eq(users.id, project.userId)).limit(1).then(r => r[0]);
 		const projectNames = (project.hackatimeProject ?? '').split(',').map((s) => s.trim()).filter(Boolean);
 		const currentSeconds = await getHackatimeSeconds(ownerUser, projectNames);
-		availableSeconds = currentSeconds - latestApproval.submittedSeconds;
+		// After a rejection, measure new work against the last *approved* submission so
+		// the rejected hours remain available for resubmission.
+		const lastApproved = [...approvalsWithDelta].reverse().find(a => a.status === 'approved');
+		const baselineSeconds = derivedStatus === 'rejected'
+			? (lastApproved?.submittedSeconds ?? 0)
+			: latestApproval.submittedSeconds;
+		availableSeconds = currentSeconds - baselineSeconds;
 	}
 
 	return {
@@ -144,6 +151,7 @@ export const actions = {
 		const repoUrl = (form.get('repo_url') as string)?.trim() || null;
 		const demoUrl = (form.get('demo_url') as string)?.trim() || null;
 		const hackatimeProject = (form.get('hackatime_project') as string)?.trim() || null;
+		const aiDeclaration = (form.get('ai_declaration') as string)?.trim() || null;
 
 		if (!name) return fail(400, { error: 'project name is required' });
 
@@ -160,7 +168,7 @@ export const actions = {
 
 		const [updated] = await db
 			.update(projects)
-			.set({ name, description, screenshotUrl, repoUrl, demoUrl, hackatimeProject, updatedAt: new Date() })
+			.set({ name, description, screenshotUrl, repoUrl, demoUrl, hackatimeProject, aiDeclaration, updatedAt: new Date() })
 			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id)))
 			.returning({ id: projects.id });
 
@@ -223,12 +231,12 @@ export const actions = {
 		const totalSeconds = await getHackatimeSeconds(dbUser, projectNames);
 		if (totalSeconds < 3600) return fail(400, { error: `at least 1 hour of hackatime required (you have ${Math.floor(totalSeconds / 60)}m)` });
 
+		const aiDeclaration = (form.get('ai_declaration') as string)?.trim() || null;
+
 		await db
 			.update(projects)
-			.set({ name, description, screenshotUrl, repoUrl, demoUrl, hackatimeProject, updatedAt: new Date() })
+			.set({ name, description, screenshotUrl, repoUrl, demoUrl, hackatimeProject, aiDeclaration, updatedAt: new Date() })
 			.where(eq(projects.id, id));
-
-		const aiDeclaration = (form.get('ai_declaration') as string)?.trim() || null;
 
 		await db.insert(projectApprovals).values({
 			projectId: id,
@@ -241,7 +249,7 @@ export const actions = {
 		return { success: true };
 	},
 
-	reship: async ({ request, locals, params }) => {
+	reship: async ({ locals, params }) => {
 		if (!locals.user) redirect(302, '/login');
 
 		const id = parseInt(params.id, 10);
@@ -266,20 +274,19 @@ export const actions = {
 		const currentSeconds = await getHackatimeSeconds(dbUser, projectNames);
 		const availableSeconds = currentSeconds - latestApproval.submittedSeconds;
 
-		if (availableSeconds < 3600) {
+		// After rejection, users can reship with the same hours — no new work required
+		const isRejection = latestApproval.status === 'rejected';
+		if (!isRejection && availableSeconds < 3600) {
 			const mins = Math.max(0, Math.floor(availableSeconds / 60));
 			return fail(400, { error: `need at least 1 new hour since your last submission (you have ${mins}m of new work)` });
 		}
-
-		const reshipForm = await request.formData();
-		const aiDeclaration = (reshipForm.get('ai_declaration') as string)?.trim() || null;
 
 		await db.insert(projectApprovals).values({
 			projectId: id,
 			submittedById: dbUser.id,
 			submittedSeconds: currentSeconds,
 			status: 'pending',
-			aiDeclaration
+			aiDeclaration: projectRow.aiDeclaration ?? null
 		});
 
 		return { success: true };

@@ -30,11 +30,23 @@
 		}, CLOSE_MS);
 	}
 
-	function ensureProtocol(e: Event) {
+	function handleUrlBlur(e: Event) {
 		const input = e.currentTarget as HTMLInputElement;
 		const val = input.value.trim();
-		if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
-			input.value = 'https://' + val;
+		if (!val) { input.setCustomValidity(''); return; }
+		const withProtocol = val.startsWith('http://') || val.startsWith('https://') ? val : 'https://' + val;
+		input.value = withProtocol;
+		try {
+			const url = new URL(withProtocol);
+			if (!url.hostname.includes('.')) {
+				input.setCustomValidity('please enter a valid url (e.g. https://example.com)');
+				input.reportValidity();
+			} else {
+				input.setCustomValidity('');
+			}
+		} catch {
+			input.setCustomValidity('please enter a valid url');
+			input.reportValidity();
 		}
 	}
 </script>
@@ -137,17 +149,17 @@
 							type="url"
 							name="repo_url"
 							placeholder="https://github.com/..."
-							onblur={ensureProtocol}
+							onblur={handleUrlBlur}
 						/>
 					</label>
 					<label class="edit-field">
 						<span class="edit-field-label">demo url</span>
-						<input class="edit-input" type="url" name="demo_url" placeholder="https://..." onblur={ensureProtocol} />
+						<input class="edit-input" type="url" name="demo_url" placeholder="https://..." onblur={handleUrlBlur} />
 					</label>
 				</div>
 				<div class="edit-actions">
-					<button type="submit" class="btn-save">create</button>
 					<button type="button" class="btn-cancel" onclick={closeModal}>cancel</button>
+					<button type="submit" class="btn-save">create</button>
 				</div>
 			</form>
 		</div>
@@ -413,6 +425,7 @@
 	.edit-actions {
 		display: flex;
 		gap: 0.6rem;
+		justify-content: flex-end;
 		margin-top: 2rem;
 	}
 

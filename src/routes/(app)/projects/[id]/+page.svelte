@@ -46,11 +46,23 @@
 		return `${hrs}h ${mins}m`;
 	});
 
-	function ensureProtocol(e: Event) {
+	function handleUrlBlur(e: Event) {
 		const input = e.currentTarget as HTMLInputElement;
 		const val = input.value.trim();
-		if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
-			input.value = 'https://' + val;
+		if (!val) { input.setCustomValidity(''); return; }
+		const withProtocol = val.startsWith('http://') || val.startsWith('https://') ? val : 'https://' + val;
+		input.value = withProtocol;
+		try {
+			const url = new URL(withProtocol);
+			if (!url.hostname.includes('.')) {
+				input.setCustomValidity('please enter a valid url (e.g. https://example.com)');
+				input.reportValidity();
+			} else {
+				input.setCustomValidity('');
+			}
+		} catch {
+			input.setCustomValidity('please enter a valid url');
+			input.reportValidity();
 		}
 	}
 
@@ -63,17 +75,12 @@
 	let showCheckModal = $state(false);
 	let checkModalAction = $state<'submit' | 'reship'>('submit');
 	let modalChecks = $state([false, false, false]);
-	let modalAiDeclaration = $state('');
 	let actualSubmitBtnEl = $state<HTMLButtonElement | null>(null);
-	let reshipFormEl = $state<HTMLFormElement | null>(null);
-	let saveFormAiInput = $state<HTMLInputElement | null>(null);
-	let reshipAiInput = $state<HTMLInputElement | null>(null);
 
 	const allChecked = $derived(modalChecks.every(Boolean));
 
 	function openCheckModal(action: 'submit' | 'reship') {
 		modalChecks = [false, false, false];
-		modalAiDeclaration = '';
 		checkModalAction = action;
 		showCheckModal = true;
 	}
@@ -84,13 +91,7 @@
 
 	function confirmCheckModal() {
 		showCheckModal = false;
-		if (checkModalAction === 'submit') {
-			if (saveFormAiInput) saveFormAiInput.value = modalAiDeclaration;
-			actualSubmitBtnEl?.click();
-		} else {
-			if (reshipAiInput) reshipAiInput.value = modalAiDeclaration;
-			reshipFormEl?.requestSubmit();
-		}
+		actualSubmitBtnEl?.click();
 	}
 
 	function formatDate(d: Date | string) {
@@ -320,7 +321,7 @@
 							name="repo_url"
 							value={project.repoUrl ?? ''}
 							placeholder="https://github.com/..."
-							onblur={ensureProtocol}
+							onblur={handleUrlBlur}
 						/>
 					</label>
 					<label class="edit-field">
@@ -331,7 +332,7 @@
 							name="demo_url"
 							value={project.demoUrl ?? ''}
 							placeholder="https://..."
-							onblur={ensureProtocol}
+							onblur={handleUrlBlur}
 						/>
 					</label>
 					<div class="edit-field edit-field-full">
@@ -379,11 +380,16 @@
 							{/if}
 						</div>
 					</div>
+				<label class="edit-field edit-field-full">
+					<span class="edit-field-label">AI declaration</span>
+					<textarea class="edit-input edit-textarea" name="ai_declaration"
+						>{project.aiDeclaration ?? ''}</textarea
+					>
+				</label>
 				</div>
 				<div class="edit-actions">
 					<button type="submit" class="btn-save">save</button>
 				</div>
-				<input type="hidden" name="ai_declaration" bind:this={saveFormAiInput} />
 				<button
 					type="submit"
 					formaction="?/submit"
@@ -438,6 +444,12 @@
 						</div>
 					</div>
 				{/if}
+				{#if project.aiDeclaration}
+					<div class="field">
+						<span class="field-key">AI use</span>
+						<span class="field-val">{project.aiDeclaration}</span>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>
@@ -473,11 +485,8 @@
 				{#if form?.error && !form?.success}
 					<p class="form-error">{form.error}</p>
 				{/if}
-				<form method="POST" action="?/reship" use:enhance bind:this={reshipFormEl}>
-					<input type="hidden" name="ai_declaration" bind:this={reshipAiInput} />
-					<button type="button" class="btn-submit" onclick={() => openCheckModal('reship')}
-						>ship again</button
-					>
+				<form method="POST" action="?/reship" use:enhance>
+					<button type="submit" class="btn-submit">ship again</button>
 				</form>
 			{:else}
 				<p class="danger-desc">
@@ -660,15 +669,6 @@
 					</label>
 				{/each}
 			</div>
-			<label class="ai-label">
-				<span class="ai-label-text">AI declaration</span>
-				<span class="ai-label-hint">explain if and how you used AI in building this project</span>
-				<textarea
-					class="ai-textarea"
-					placeholder="ex: i used copilot for autocomplete and chatgpt to help debug, but most of the code and design is by me."
-					bind:value={modalAiDeclaration}
-				></textarea>
-			</label>
 			<div class="modal-actions">
 				<button type="button" class="btn-modal-cancel" onclick={closeCheckModal}>cancel</button>
 				<button
