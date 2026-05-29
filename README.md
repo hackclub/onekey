@@ -13,7 +13,7 @@
 - connection to hackatime
 - submit projects
 - explore others' projects
-- purchase accessories from a shop - coming soon!
+- purchase accessories and other goodies from a shop
 - customize your macropad - coming soon!
 
 ## stack

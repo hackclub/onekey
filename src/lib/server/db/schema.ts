@@ -56,11 +56,27 @@ export const projects = pgTable('projects', {
 	screenshotUrl: text('screenshot_url'),
 	repoUrl: text('repo_url'),
 	demoUrl: text('demo_url'),
-	status: text('status'),
-	approvedSeconds: integer('approved_seconds'),
 	hackatimeProject: text('hackatime_project'),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+});
+
+export const projectApprovals = pgTable('project_approvals', {
+	id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+	projectId: integer('project_id')
+		.notNull()
+		.references(() => projects.id, { onDelete: 'cascade' }),
+	submittedById: uuid('submitted_by_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	reviewerId: uuid('reviewer_id').references(() => users.id, { onDelete: 'set null' }),
+	submittedSeconds: integer('submitted_seconds').notNull(),
+	approvedSeconds: integer('approved_seconds'),
+	status: text('status').notNull().default('pending'),
+	publicMessage: text('public_message'),
+	internalNote: text('internal_note'),
+	submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().default(sql`now()`),
+	reviewedAt: timestamp('reviewed_at', { withTimezone: true })
 });
 
 export const projectEvents = pgTable('project_events', {
@@ -75,4 +91,54 @@ export const projectEvents = pgTable('project_events', {
 	message: text('message'),
 	internalNote: text('internal_note'),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
+});
+
+export const projectExploreSnapshots = pgTable('project_explore_snapshots', {
+	projectId: integer('project_id').primaryKey().references(() => projects.id, { onDelete: 'cascade' }),
+	name: text('name').notNull(),
+	description: text('description'),
+	screenshotUrl: text('screenshot_url'),
+	demoUrl: text('demo_url'),
+	totalApprovedSeconds: integer('total_approved_seconds').notNull().default(0),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+});
+
+export const shopCategories = pgTable('shop_categories', {
+	id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+	name: text('name').notNull(),
+	slug: text('slug').notNull().unique(),
+	description: text('description'),
+	sortOrder: integer('sort_order').notNull().default(0),
+	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
+});
+
+export const shopItems = pgTable('shop_items', {
+	id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+	categoryId: integer('category_id')
+		.notNull()
+		.references(() => shopCategories.id, { onDelete: 'cascade' }),
+	name: text('name').notNull(),
+	description: text('description'),
+	priceSeconds: integer('price_seconds').notNull(),
+	imageUrl: text('image_url'),
+	stock: integer('stock').notNull().default(-1), // -1 = unlimited
+	available: boolean('available').notNull().default(true),
+	options: text('options').notNull().default('[]'), // JSON: Array<{label: string, choices: string[]}>
+	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+});
+
+export const shopOrders = pgTable('shop_orders', {
+	id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+	userId: uuid('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	itemId: integer('item_id')
+		.notNull()
+		.references(() => shopItems.id, { onDelete: 'restrict' }),
+	priceSeconds: integer('price_seconds').notNull(),
+	status: text('status').notNull().default('ordered'), // ordered | packed | shipped | delivered | refunded
+	selectedOptions: text('selected_options').notNull().default('{}'), // JSON: Record<string, string>
+	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
 });

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
+	import { formatHours } from '$lib/format';
 
 	let { data, form } = $props();
 
@@ -14,14 +15,6 @@
 			return () => clearTimeout(errorToastTimer);
 		}
 	});
-
-	function formatHours(seconds: number) {
-		const h = Math.floor(seconds / 3600);
-		const m = Math.floor((seconds % 3600) / 60);
-		if (h === 0) return `${m}m`;
-		if (m === 0) return `${h}h`;
-		return `${h}h ${m}m`;
-	}
 
 	let creating = $state(false);
 	let closing = $state(false);

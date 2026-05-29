@@ -17,6 +17,14 @@
 			<span class="card-label">users</span>
 			<p class="card-desc">view all registered users and their data</p>
 		</a>
+		<a href="/admin/shop" class="card">
+			<span class="card-label">shop</span>
+			<p class="card-desc">manage shop categories and items</p>
+		</a>
+		<a href="/admin/orders" class="card">
+			<span class="card-label">orders</span>
+			<p class="card-desc">view and fulfill orders (oldest first)</p>
+		</a>
 	</div>
 </div>
 

@@ -2,8 +2,8 @@ import { redirect, error, fail } from '@sveltejs/kit';
 import { TOKEN_ENCRYPTION_KEY } from '$env/static/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
-import { projects, users, projectEvents } from '$lib/server/db/schema';
-import { eq, and, isNull, asc } from 'drizzle-orm';
+import { projects, users, projectEvents, projectApprovals, projectExploreSnapshots } from '$lib/server/db/schema';
+import { eq, and, asc, desc, count, notExists, gt, sql, sum } from 'drizzle-orm';
 import { uploadImageBlob } from '$lib/server/cdn';
 import { decryptToken } from '$lib/server/session';
 
@@ -35,6 +35,16 @@ async function getHackatimeSeconds(dbUser: typeof users.$inferSelect, projectNam
 		.reduce((sum: number, p: any) => sum + Number(p.total_seconds ?? p.totalSeconds ?? 0), 0);
 }
 
+async function getLatestApproval(projectId: number) {
+	const [row] = await db
+		.select()
+		.from(projectApprovals)
+		.where(eq(projectApprovals.projectId, projectId))
+		.orderBy(desc(projectApprovals.submittedAt))
+		.limit(1);
+	return row ?? null;
+}
+
 export async function load({ locals, params }) {
 	if (!locals.user) redirect(302, '/login');
 
@@ -54,6 +64,33 @@ export async function load({ locals, params }) {
 		redirect(302, '/projects?error=not_found');
 	}
 
+	const approvals = await db
+		.select({
+			id: projectApprovals.id,
+			status: projectApprovals.status,
+			submittedSeconds: projectApprovals.submittedSeconds,
+			approvedSeconds: projectApprovals.approvedSeconds,
+			publicMessage: projectApprovals.publicMessage,
+			internalNote: projectApprovals.internalNote,
+			submittedAt: projectApprovals.submittedAt,
+			reviewedAt: projectApprovals.reviewedAt,
+			reviewerName: users.name,
+			reviewerNickname: users.nickname,
+			reviewerAvatar: users.slackAvatarUrl
+		})
+		.from(projectApprovals)
+		.leftJoin(users, eq(projectApprovals.reviewerId, users.id))
+		.where(eq(projectApprovals.projectId, id))
+		.orderBy(asc(projectApprovals.submittedAt));
+
+	const approvalsWithDelta = approvals.map((a, i) => ({
+		...a,
+		newSeconds: i === 0 ? a.submittedSeconds : a.submittedSeconds - approvals[i - 1].submittedSeconds
+	}));
+
+	const latestApproval = approvalsWithDelta.length > 0 ? approvalsWithDelta[approvalsWithDelta.length - 1] : null;
+	const derivedStatus: string | null = latestApproval?.status ?? null;
+
 	const events = await db
 		.select({
 			id: projectEvents.id,
@@ -70,9 +107,21 @@ export async function load({ locals, params }) {
 		.where(eq(projectEvents.projectId, id))
 		.orderBy(asc(projectEvents.createdAt));
 
+	let availableSeconds = 0;
+	if ((derivedStatus === 'approved' || derivedStatus === 'rejected') && latestApproval && project.userId === dbUser.id) {
+		const ownerUser = await db.select().from(users).where(eq(users.id, project.userId)).limit(1).then(r => r[0]);
+		const projectNames = (project.hackatimeProject ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+		const currentSeconds = await getHackatimeSeconds(ownerUser, projectNames);
+		availableSeconds = currentSeconds - latestApproval.submittedSeconds;
+	}
+
 	return {
 		project,
+		approvals: approvalsWithDelta,
 		events,
+		latestApproval,
+		derivedStatus,
+		availableSeconds,
 		isReviewer: locals.isReviewer,
 		isAdmin: locals.isAdmin,
 		isOwnProject: project.userId === dbUser.id
@@ -129,13 +178,20 @@ export const actions = {
 		const dbUser = await getDbUser(locals.user.sub);
 		if (!dbUser) redirect(302, '/login');
 
-		const [existing] = await db
-			.select({ id: projects.id })
+		const [projectRow] = await db
+			.select()
 			.from(projects)
-			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id), isNull(projects.status)))
+			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id)))
 			.limit(1);
 
-		if (!existing) return fail(400, { error: 'project not found or already submitted' });
+		if (!projectRow) return fail(400, { error: 'project not found' });
+
+		const [{ total: approvalCount }] = await db
+			.select({ total: count() })
+			.from(projectApprovals)
+			.where(eq(projectApprovals.projectId, id));
+
+		if (approvalCount > 0) return fail(400, { error: 'project already submitted — use reship to submit new work' });
 
 		const form = await request.formData();
 		const name = (form.get('name') as string)?.trim();
@@ -169,10 +225,55 @@ export const actions = {
 
 		await db
 			.update(projects)
-			.set({ name, description, screenshotUrl, repoUrl, demoUrl, hackatimeProject, status: 'pending', updatedAt: new Date() })
+			.set({ name, description, screenshotUrl, repoUrl, demoUrl, hackatimeProject, updatedAt: new Date() })
 			.where(eq(projects.id, id));
 
-		await db.insert(projectEvents).values({ projectId: id, actorId: dbUser.id, action: 'submitted' });
+		await db.insert(projectApprovals).values({
+			projectId: id,
+			submittedById: dbUser.id,
+			submittedSeconds: totalSeconds,
+			status: 'pending'
+		});
+
+		return { success: true };
+	},
+
+	reship: async ({ locals, params }) => {
+		if (!locals.user) redirect(302, '/login');
+
+		const id = parseInt(params.id, 10);
+		if (isNaN(id)) error(404, 'project not found');
+
+		const dbUser = await getDbUser(locals.user.sub);
+		if (!dbUser) redirect(302, '/login');
+
+		const [projectRow] = await db
+			.select()
+			.from(projects)
+			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id)))
+			.limit(1);
+
+		if (!projectRow) return fail(404, { error: 'project not found' });
+
+		const latestApproval = await getLatestApproval(id);
+		if (!latestApproval) return fail(400, { error: 'no prior submission found' });
+		if (latestApproval.status === 'pending') return fail(400, { error: 'a review is already pending for this project' });
+
+		const projectNames = (projectRow.hackatimeProject ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+		const currentSeconds = await getHackatimeSeconds(dbUser, projectNames);
+		const availableSeconds = currentSeconds - latestApproval.submittedSeconds;
+
+		if (availableSeconds < 3600) {
+			const mins = Math.max(0, Math.floor(availableSeconds / 60));
+			return fail(400, { error: `need at least 1 new hour since your last submission (you have ${mins}m of new work)` });
+		}
+
+		await db.insert(projectApprovals).values({
+			projectId: id,
+			submittedById: dbUser.id,
+			submittedSeconds: currentSeconds,
+			status: 'pending'
+		});
 
 		return { success: true };
 	},
@@ -186,12 +287,19 @@ export const actions = {
 		const dbUser = await getDbUser(locals.user.sub);
 		if (!dbUser) redirect(302, '/login');
 
+		const [{ total: approvalCount }] = await db
+			.select({ total: count() })
+			.from(projectApprovals)
+			.where(eq(projectApprovals.projectId, id));
+
+		if (approvalCount > 0) return fail(403, { error: 'cannot delete a submitted or approved project' });
+
 		const [deleted] = await db
 			.delete(projects)
-			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id), isNull(projects.status)))
+			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id)))
 			.returning({ id: projects.id });
 
-		if (!deleted) return fail(403, { error: 'cannot delete a submitted or approved project' });
+		if (!deleted) return fail(403, { error: 'project not found' });
 
 		redirect(302, '/projects');
 	},
@@ -212,15 +320,15 @@ export const actions = {
 		if (!message) return fail(400, { error: 'message to author is required' });
 		if (!internalNote) return fail(400, { error: 'internal note is required' });
 
-		const [updated] = await db
-			.update(projects)
-			.set({ status: null, updatedAt: new Date() })
-			.where(and(eq(projects.id, id), eq(projects.status, 'pending')))
-			.returning({ id: projects.id });
+		const latestApproval = await getLatestApproval(id);
+		if (!latestApproval || latestApproval.status !== 'pending') {
+			return fail(400, { error: 'can only reject pending projects' });
+		}
 
-		if (!updated) return fail(400, { error: 'can only reject pending projects' });
-
-		await db.insert(projectEvents).values({ projectId: id, actorId: reviewerDbUser.id, action: 'rejected', message, internalNote });
+		await db
+			.update(projectApprovals)
+			.set({ status: 'rejected', reviewerId: reviewerDbUser.id, publicMessage: message, internalNote, reviewedAt: new Date() })
+			.where(eq(projectApprovals.id, latestApproval.id));
 
 		return { success: true };
 	},
@@ -237,33 +345,83 @@ export const actions = {
 		const form = await request.formData();
 		const message = (form.get('message') as string)?.trim() || null;
 		const internalNote = (form.get('internal_note') as string)?.trim() || null;
+		const approvedHoursRaw = form.get('approved_hours');
 
 		if (!message) return fail(400, { error: 'message to author is required' });
 		if (!internalNote) return fail(400, { error: 'internal note is required' });
 
-		const [project] = await db
-			.select()
-			.from(projects)
-			.where(eq(projects.id, id))
-			.limit(1);
+		const latestApproval = await getLatestApproval(id);
+		if (!latestApproval || latestApproval.status !== 'pending') {
+			return fail(400, { error: 'can only approve pending projects' });
+		}
 
-		if (!project) error(404, 'project not found');
-
-		if (project.userId === reviewerDbUser.id) {
+		if (latestApproval.submittedById === reviewerDbUser.id) {
 			return fail(403, { error: "you can't approve your own project" });
 		}
 
-		const [ownerUser] = await db.select().from(users).where(eq(users.id, project.userId)).limit(1);
+		// Compute delta: new hours since the previous submission
+		const allApprovals = await db
+			.select({ submittedSeconds: projectApprovals.submittedSeconds })
+			.from(projectApprovals)
+			.where(eq(projectApprovals.projectId, id))
+			.orderBy(asc(projectApprovals.submittedAt));
+		const prevIndex = allApprovals.findIndex(a => a.submittedSeconds === latestApproval.submittedSeconds) - 1;
+		const prevSubmittedSeconds = prevIndex >= 0 ? allApprovals[prevIndex].submittedSeconds : 0;
+		const newSeconds = latestApproval.submittedSeconds - prevSubmittedSeconds;
 
-		const projectNames = (project.hackatimeProject ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-		const approvedSeconds = await getHackatimeSeconds(ownerUser, projectNames);
+		const approvedHours = approvedHoursRaw !== null && approvedHoursRaw !== ''
+			? Number(approvedHoursRaw)
+			: Math.ceil((newSeconds / 3600) * 100) / 100;
+
+		if (isNaN(approvedHours) || approvedHours <= 0) {
+			return fail(400, { error: 'approved hours must be greater than 0' });
+		}
+
+		const approvedSeconds = Math.floor(approvedHours * 3600);
+
+		// Allow a tiny ceiling so rounding up to 2dp doesn't get blocked
+		const maxAllowed = newSeconds + 36; // +36s ≈ 0.01h tolerance
+		if (approvedSeconds > maxAllowed) {
+			return fail(400, { error: `approved hours cannot exceed new hours since last submission (${(newSeconds / 3600).toFixed(2)}h)` });
+		}
 
 		await db
-			.update(projects)
-			.set({ status: 'approved', approvedSeconds, updatedAt: new Date() })
-			.where(eq(projects.id, id));
+			.update(projectApprovals)
+			.set({ status: 'approved', reviewerId: reviewerDbUser.id, approvedSeconds, publicMessage: message, internalNote, reviewedAt: new Date() })
+			.where(eq(projectApprovals.id, latestApproval.id));
 
-		await db.insert(projectEvents).values({ projectId: id, actorId: reviewerDbUser.id, action: 'approved', message, internalNote });
+		// Upsert explore snapshot with project state at time of approval
+		const [[projectData], [totalRow]] = await Promise.all([
+			db.select().from(projects).where(eq(projects.id, id)).limit(1),
+			db.select({ total: sum(projectApprovals.approvedSeconds) })
+				.from(projectApprovals)
+				.where(and(eq(projectApprovals.projectId, id), eq(projectApprovals.status, 'approved')))
+		]);
+
+		if (projectData) {
+			const totalApprovedSeconds = Number(totalRow?.total ?? 0);
+			await db.insert(projectExploreSnapshots)
+				.values({
+					projectId: id,
+					name: projectData.name,
+					description: projectData.description,
+					screenshotUrl: projectData.screenshotUrl,
+					demoUrl: projectData.demoUrl,
+					totalApprovedSeconds,
+					updatedAt: new Date()
+				})
+				.onConflictDoUpdate({
+					target: projectExploreSnapshots.projectId,
+					set: {
+						name: projectData.name,
+						description: projectData.description,
+						screenshotUrl: projectData.screenshotUrl,
+						demoUrl: projectData.demoUrl,
+						totalApprovedSeconds,
+						updatedAt: new Date()
+					}
+				});
+		}
 
 		return { success: true };
 	},

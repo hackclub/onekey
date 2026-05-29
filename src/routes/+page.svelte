@@ -350,6 +350,7 @@
 		margin-right: 3rem;
 	}
 
+
 	.cta {
 		display: inline-block;
 		font-size: 1.8rem;

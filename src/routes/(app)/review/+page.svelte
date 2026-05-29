@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { formatHours } from '$lib/format';
+
 	let { data } = $props();
 </script>
 
@@ -29,6 +31,7 @@
 				<span class="col-name">project</span>
 				<span class="col-desc">description</span>
 				<span class="col-author">author</span>
+				<span class="col-hours">hours</span>
 				<span class="col-submitted">submitted</span>
 			</div>
 			{#each data.submitted as project (project.id)}
@@ -36,7 +39,8 @@
 					<span class="col-name">{project.name}</span>
 					<span class="col-desc">{project.description ?? '—'}</span>
 					<span class="col-author">{project.submitterSlack ?? project.submitterName ?? project.submitterEmail ?? 'unknown'}</span>
-					<span class="col-submitted">{new Date(project.updatedAt).toLocaleDateString()}</span>
+					<span class="col-hours">{formatHours(project.submittedSeconds)}</span>
+					<span class="col-submitted">{new Date(project.submittedAt).toLocaleDateString()}</span>
 				</a>
 			{/each}
 		</div>
@@ -89,7 +93,7 @@
 	.table-header,
 	.table-row {
 		display: grid;
-		grid-template-columns: 1.2fr 2fr 1fr 1fr;
+		grid-template-columns: 1.2fr 2fr 1fr 0.6fr 0.8fr;
 		align-items: center;
 		padding: 0.6rem 1.25rem;
 		gap: 1rem;
@@ -132,6 +136,7 @@
 
 	.col-desc,
 	.col-author,
+	.col-hours,
 	.col-submitted {
 		color: var(--color-text-soft);
 		overflow: hidden;

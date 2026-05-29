@@ -43,6 +43,27 @@
       "when": 1748217600000,
       "tag": "0005_add_approved_seconds",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1748304000000,
+      "tag": "0006_add_dark_mode",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1748390400000,
+      "tag": "0007_add_project_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1748476800000,
+      "tag": "0008_add_project_approvals",
+      "breakpoints": true
     }
   ]
 }
