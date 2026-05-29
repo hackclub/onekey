@@ -1647,16 +1647,12 @@
 		cursor: pointer;
 		border: solid var(--border-width);
 		font-family: inherit;
-		background: transparent;
-		color: var(--color-text-soft);
-		transition:
-			color 0.1s,
-			border-color 0.1s;
+		background: var(--color-bg);
+		color: var(--color-text);
 	}
 
 	.btn-modal-cancel:hover {
-		color: var(--color-text);
-		border-color: var(--color-text);
+		border-style: dotted;
 	}
 
 	.btn-modal-confirm {
