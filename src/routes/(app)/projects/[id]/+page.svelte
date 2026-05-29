@@ -269,12 +269,6 @@
 
 <div class="bento">
 	<div class="card card-wide" class:card-full={!isDraft && !canReship}>
-		{#if derivedStatus && derivedStatus !== 'approved'}
-			<div class="card-header">
-				<span class="status-badge status-{derivedStatus}">{derivedStatus}</span>
-			</div>
-		{/if}
-
 		{#if canEdit}
 			{#if form?.error}
 				<p class="form-error">{form.error}</p>
@@ -843,14 +837,6 @@
 		gap: 0;
 	}
 
-	.card-header {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		margin-bottom: 1.25rem;
-		gap: 1rem;
-	}
-
 	.card-label {
 		display: block;
 		font-size: clamp(0.8rem, 0.9vw, 1.1rem);
@@ -859,29 +845,6 @@
 		color: var(--color-text-soft);
 		font-weight: bold;
 		flex-shrink: 0;
-	}
-
-	.status-badge {
-		font-size: 0.6rem;
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		border-radius: var(--radius-pill);
-		padding: 0.2em 0.55em;
-		flex-shrink: 0;
-	}
-
-	.status-pending {
-		background: #2a2620;
-		color: #c9a84c;
-	}
-	.status-approved {
-		background: #1a2a1a;
-		color: #6abf6a;
-	}
-	.status-rejected {
-		background: #2a1a1a;
-		color: #c96a6a;
 	}
 
 	.field-list {
