@@ -73,59 +73,59 @@
 	<div class="card">
 		<span class="card-label">settings</span>
 		<div class="settings-list">
-		<form method="POST" action="?/saveDarkMode" bind:this={darkForm} use:enhance>
-			<input
-				type="hidden"
-				name="dark_mode_enabled"
-				bind:this={darkInput}
-				value={darkEnabled ? 'true' : 'false'}
-			/>
-			<label class="toggle-row">
-				<span class="toggle-label">dark mode</span>
-				<button
-					type="button"
-					class="toggle"
-					class:on={darkEnabled}
-					role="switch"
-					aria-checked={darkEnabled}
-					aria-label="dark mode"
-					onclick={() => {
-						darkEnabled = !darkEnabled;
-						darkInput.value = darkEnabled ? 'true' : 'false';
-						document.querySelector('.dashboard')?.classList.toggle('dark', darkEnabled);
-						darkForm.requestSubmit();
-					}}
-				>
-					<span class="toggle-thumb"></span>
-				</button>
-			</label>
-		</form>
-		<form method="POST" action="?/saveSfx" bind:this={sfxForm} use:enhance>
-			<input
-				type="hidden"
-				name="key_sfx_enabled"
-				bind:this={sfxInput}
-				value={sfxEnabled ? 'true' : 'false'}
-			/>
-			<label class="toggle-row">
-				<span class="toggle-label">sidebar key sfx</span>
-				<button
-					type="button"
-					class="toggle"
-					class:on={sfxEnabled}
-					role="switch"
-					aria-checked={sfxEnabled}
-					aria-label="sidebar key sfx"
-					onclick={() => {
-						sfxEnabled = !sfxEnabled;
-						sfxInput.value = sfxEnabled ? 'true' : 'false';
-						sfxForm.requestSubmit();
-					}}
-				>
-					<span class="toggle-thumb"></span>
-				</button>
-			</label>
-		</form>
+			<form method="POST" action="?/saveDarkMode" bind:this={darkForm} use:enhance>
+				<input
+					type="hidden"
+					name="dark_mode_enabled"
+					bind:this={darkInput}
+					value={darkEnabled ? 'true' : 'false'}
+				/>
+				<label class="toggle-row">
+					<span class="toggle-label">dark mode</span>
+					<button
+						type="button"
+						class="toggle"
+						class:on={darkEnabled}
+						role="switch"
+						aria-checked={darkEnabled}
+						aria-label="dark mode"
+						onclick={() => {
+							darkEnabled = !darkEnabled;
+							darkInput.value = darkEnabled ? 'true' : 'false';
+							document.querySelector('.dashboard')?.classList.toggle('dark', darkEnabled);
+							darkForm.requestSubmit();
+						}}
+					>
+						<span class="toggle-thumb"></span>
+					</button>
+				</label>
+			</form>
+			<form method="POST" action="?/saveSfx" bind:this={sfxForm} use:enhance>
+				<input
+					type="hidden"
+					name="key_sfx_enabled"
+					bind:this={sfxInput}
+					value={sfxEnabled ? 'true' : 'false'}
+				/>
+				<label class="toggle-row">
+					<span class="toggle-label">sidebar key sfx</span>
+					<button
+						type="button"
+						class="toggle"
+						class:on={sfxEnabled}
+						role="switch"
+						aria-checked={sfxEnabled}
+						aria-label="sidebar key sfx"
+						onclick={() => {
+							sfxEnabled = !sfxEnabled;
+							sfxInput.value = sfxEnabled ? 'true' : 'false';
+							sfxForm.requestSubmit();
+						}}
+					>
+						<span class="toggle-thumb"></span>
+					</button>
+				</label>
+			</form>
 		</div>
 	</div>
 
@@ -167,7 +167,7 @@
 							type="text"
 							name="address_line_2"
 							value={data.user?.address_line_2 ?? ''}
-							placeholder="Unit 3"
+							placeholder="Suite 3"
 						/>
 					</label>
 					<label class="edit-field">
