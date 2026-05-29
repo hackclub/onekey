@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	let { data } = $props();
 
+	// svelte-ignore state_referenced_locally
 	let showToast = $state(data.needsAuth);
 	let toastTimer: ReturnType<typeof setTimeout>;
 
@@ -37,7 +39,7 @@
 
 	onMount(() => {
 		if (showToast) {
-			replaceState('/', {});
+			replaceState(resolve('/'), {});
 			toastTimer = setTimeout(() => (showToast = false), 4000);
 		}
 
@@ -77,7 +79,13 @@
 {#if showToast}
 	<div class="toast" role="alert">
 		you need to be logged in to access this!
-		<button class="toast-close" onclick={() => { showToast = false; clearTimeout(toastTimer); }}>✕</button>
+		<button
+			class="toast-close"
+			onclick={() => {
+				showToast = false;
+				clearTimeout(toastTimer);
+			}}>✕</button
+		>
 	</div>
 {/if}
 
@@ -302,7 +310,7 @@
 		align-items: center;
 		gap: clamp(0.5rem, 0.8vw, 0.75rem);
 		white-space: nowrap;
-		box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 	}
 
 	.toast-close {
@@ -317,9 +325,10 @@
 		border-radius: 0;
 	}
 
-	.toast-close:hover { opacity: 1; }
+	.toast-close:hover {
+		opacity: 1;
+	}
 
-	/* ---------- landing ---------- */
 	.panel {
 		margin-top: 20vh;
 		margin-left: 7rem;
@@ -350,7 +359,6 @@
 		margin-right: 3rem;
 	}
 
-
 	.cta {
 		display: inline-block;
 		font-size: 1.8rem;
@@ -361,14 +369,12 @@
 		font-size: 1.13rem;
 	}
 
-	/* ---------- about section ---------- */
 	.about-section {
 		background-color: var(--color-bg-soft);
 		margin-top: 15rem;
 		color: var(--color-text-soft);
 	}
 
-	/* ---------- example cards ---------- */
 	.example-card {
 		width: 30%;
 	}
@@ -378,7 +384,6 @@
 		width: 10rem;
 	}
 
-	/* ---------- faq ---------- */
 	.faq-section {
 		color: var(--color-text-soft);
 	}
@@ -392,7 +397,6 @@
 		width: calc(86.61% + 3.5rem);
 	}
 
-	/* ---------- mobile ---------- */
 	@media only screen and (max-width: 767px) {
 		.logo {
 			width: auto;

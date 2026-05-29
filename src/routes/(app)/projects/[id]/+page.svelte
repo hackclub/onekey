@@ -30,6 +30,7 @@
 
 	const canEdit = $derived(isDraft || canReship);
 
+	// svelte-ignore state_referenced_locally
 	let approvedHoursInput = $state(
 		data.latestApproval
 			? (Math.ceil((data.latestApproval.newSeconds / 3600) * 100) / 100).toFixed(2)
@@ -49,8 +50,12 @@
 	function handleUrlBlur(e: Event) {
 		const input = e.currentTarget as HTMLInputElement;
 		const val = input.value.trim();
-		if (!val) { input.setCustomValidity(''); return; }
-		const withProtocol = val.startsWith('http://') || val.startsWith('https://') ? val : 'https://' + val;
+		if (!val) {
+			input.setCustomValidity('');
+			return;
+		}
+		const withProtocol =
+			val.startsWith('http://') || val.startsWith('https://') ? val : 'https://' + val;
 		input.value = withProtocol;
 		try {
 			const url = new URL(withProtocol);
@@ -116,6 +121,7 @@
 
 	const MAX_HT_PROJECTS = 3;
 
+	// eslint-disable-next-line svelte/prefer-writable-derived
 	let selectedHtProjects = $state<string[]>([]);
 
 	$effect(() => {
@@ -221,6 +227,7 @@
 	back to projects
 </a>
 
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
 	class="banner"
 	role={canEdit ? 'button' : undefined}
@@ -374,12 +381,12 @@
 							{/if}
 						</div>
 					</div>
-				<label class="edit-field edit-field-full">
-					<span class="edit-field-label">AI declaration</span>
-					<textarea class="edit-input edit-textarea" name="ai_declaration"
-						>{project.aiDeclaration ?? ''}</textarea
-					>
-				</label>
+					<label class="edit-field edit-field-full">
+						<span class="edit-field-label">AI declaration</span>
+						<textarea class="edit-input edit-textarea" name="ai_declaration"
+							>{project.aiDeclaration ?? ''}</textarea
+						>
+					</label>
 				</div>
 				<div class="edit-actions">
 					<button type="submit" class="btn-save">save</button>

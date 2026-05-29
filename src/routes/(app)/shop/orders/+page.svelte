@@ -12,7 +12,11 @@
 	};
 
 	function parseOptions(json: string): Record<string, string> {
-		try { return JSON.parse(json); } catch { return {}; }
+		try {
+			return JSON.parse(json);
+		} catch {
+			return {};
+		}
 	}
 </script>
 
@@ -23,12 +27,28 @@
 <div class="orders-page">
 	<div class="page-header">
 		<h1>your orders</h1>
-		<a href="/shop" class="back-link">← shop</a>
+		<a href="/shop" class="back-link"
+			><svg
+				fill-rule="evenodd"
+				clip-rule="evenodd"
+				stroke-linejoin="round"
+				stroke-miterlimit="1.414"
+				xmlns="http://www.w3.org/2000/svg"
+				aria-hidden="true"
+				viewBox="0 0 32 32"
+				preserveAspectRatio="xMidYMid meet"
+				fill="currentColor"
+				class="btn-icon"
+				><path
+					d="M19.768,23.89c0.354,-0.424 0.296,-1.055 -0.128,-1.408c-1.645,-1.377 -5.465,-4.762 -6.774,-6.482c1.331,-1.749 5.1,-5.085 6.774,-6.482c0.424,-0.353 0.482,-0.984 0.128,-1.408c-0.353,-0.425 -0.984,-0.482 -1.409,-0.128c-1.839,1.532 -5.799,4.993 -7.2,6.964c-0.219,0.312 -0.409,0.664 -0.409,1.054c0,0.39 0.19,0.742 0.409,1.053c1.373,1.932 5.399,5.462 7.2,6.964l0.001,0.001c0.424,0.354 1.055,0.296 1.408,-0.128Z"
+				/></svg
+			> shop</a
+		>
 	</div>
 
 	{#if data.orders.length === 0}
 		<div class="empty-state">
-			<p>no orders yet. <a href="/shop">browse the shop →</a></p>
+			<p>no orders yet. <a href="/shop" class="shop-link">browse the shop</a></p>
 		</div>
 	{:else}
 		<div class="order-list">
@@ -44,7 +64,7 @@
 							<span class="order-item">{order.itemName}</span>
 							{#if optEntries.length > 0}
 								<div class="opt-tags">
-									{#each optEntries as [label, value]}
+									{#each optEntries as [label, value] (label)}
 										<span class="opt-tag"><span class="opt-label">{label}:</span> {value}</span>
 									{/each}
 								</div>
@@ -56,7 +76,8 @@
 						<span class="order-price">{formatHours(order.priceSeconds)}</span>
 						<span class="order-date">{new Date(order.createdAt).toLocaleDateString()}</span>
 						<span class="status-badge">
-							<span class="status-dot" style="background: {statusDot[order.status] ?? '#6b7280'}"></span>
+							<span class="status-dot" style="background: {statusDot[order.status] ?? '#6b7280'}"
+							></span>
 							{order.status}
 						</span>
 					</div>
@@ -90,8 +111,19 @@
 		border: solid var(--border-width);
 		padding: 0.4rem 1rem;
 		transition: border-style 0.1s;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
 	}
-	.back-link:hover { border-style: dotted; }
+	.back-link:hover {
+		border-style: dotted;
+	}
+
+	.btn-icon {
+		width: 1.1rem;
+		height: 1.1rem;
+		flex-shrink: 0;
+	}
 
 	h1 {
 		font-size: clamp(2.5rem, 3.5vw, 3.5rem);
