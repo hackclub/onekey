@@ -26,4 +26,10 @@
 	<meta name="twitter:image:src" content="https://maxstellar.github.io/onekey/img/og-banner.png" />
 </svelte:head>
 
+<!-- BETA BANNER: remove this block when out of beta -->
+<div style="background:black;color:white;text-align:center;padding:10px 16px;font-size:0.875rem;font-weight:600;letter-spacing:0.02em;position:sticky;top:0;z-index:15;">
+	BETA &mdash; this is a testing environment, projects will not be submitted to unified db and prizes will not be paid out.
+</div>
+<!-- END BETA BANNER -->
+
 {@render children()}
