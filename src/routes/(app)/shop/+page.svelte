@@ -84,10 +84,13 @@
 						<div class="item-body">
 							<div class="item-top">
 								<span class="item-name">{item.name}</span>
-								{#if item.stock !== -1 && item.stock > 0}
-									<span class="stock-badge">{item.stock} left</span>
-								{/if}
+								<span class="item-price">
+									<span class="price-icon">{@html clockSvg}</span>{formatHours(item.priceSeconds)}
+								</span>
 							</div>
+							{#if item.stock !== -1 && item.stock > 0}
+								<span class="stock-badge">{item.stock} left</span>
+							{/if}
 							{#if item.description}
 								<p class="item-desc">{item.description}</p>
 							{/if}
@@ -356,6 +359,21 @@
 		font-size: 1.05rem;
 		letter-spacing: -0.01em;
 		line-height: 1.2;
+	}
+
+	.item-price {
+		font-size: 1.05rem;
+		font-weight: bold;
+		letter-spacing: -0.02em;
+		color: var(--color-text-soft);
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	.item-price .price-icon {
+		margin: 0;
 	}
 
 
