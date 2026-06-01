@@ -74,7 +74,7 @@
 	const CHECKLIST_ITEMS = [
 		'my project is open-source and has clean, frequent commits',
 		'my project has a detailed README.md that was not written by an AI',
-		'my project is experienceable without needing to build it from source'
+		'my project does not use any buttons other than a single key as input'
 	];
 
 	let showCheckModal = $state(false);
