@@ -9,15 +9,18 @@
 		{ pct: 12.5, label: 'i want to cheese', hours: '250 hours' },
 		{ pct: 25, label: "dye max's hair", hours: '500 hours' },
 		{ pct: 37.5, label: "bleach [redacted]'s hair", hours: '750 hours' },
-		{ pct: 50, label: "dye jenin's hair", hours: '1000 hours' },
+		{ pct: 50, label: 'locked on the roof stream', hours: '1000 hours' },
 		{ pct: 75, label: 'tiktok dance', hours: '1500 hours' },
 		{ pct: 100, label: 'catmaid for a day', hours: '2000 hours' }
 	];
 
 	const barSegments = Array.from({ length: 20 }, (_, i) => i);
 	const allCompleted = communityProgress >= 100;
-	const prevGoal =
-		goals.findLast((g) => g.pct <= communityProgress) ?? { pct: 0, label: 'start', hours: '0 hours' };
+	const prevGoal = goals.findLast((g) => g.pct <= communityProgress) ?? {
+		pct: 0,
+		label: 'start',
+		hours: '0 hours'
+	};
 	const nextGoal = goals.find((g) => g.pct > communityProgress) ?? goals[goals.length - 1];
 	const segmentProgress = allCompleted
 		? 100
