@@ -1,8 +1,10 @@
+import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/db/schema';
 import { desc } from 'drizzle-orm';
 
-export async function load() {
+export async function load({ locals }) {
+	if (!locals.isAdmin) error(403, 'Forbidden');
 	const allUsers = await db
 		.select({
 			id: users.id,

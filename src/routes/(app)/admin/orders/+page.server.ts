@@ -1,10 +1,11 @@
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { shopOrders, shopItems, shopCategories, users } from '$lib/server/db/schema';
 import { eq, asc, notInArray } from 'drizzle-orm';
 import { sendSlackDM } from '$lib/server/slack';
 
-export async function load() {
+export async function load({ locals }) {
+	if (!locals.isAdmin) error(403, 'Forbidden');
 	const orders = await db
 		.select({
 			id: shopOrders.id,
@@ -34,7 +35,8 @@ export async function load() {
 }
 
 export const actions = {
-	updateStatus: async ({ request }) => {
+	updateStatus: async ({ request, locals }) => {
+		if (!locals.isAdmin) return fail(403, { error: 'forbidden' });
 		const form = await request.formData();
 		const id = parseInt(form.get('order_id') as string);
 		const status = (form.get('status') as string)?.trim();
@@ -50,7 +52,8 @@ export const actions = {
 		return { success: true };
 	},
 
-	refund: async ({ request }) => {
+	refund: async ({ request, locals }) => {
+		if (!locals.isAdmin) return fail(403, { error: 'forbidden' });
 		const form = await request.formData();
 		const id = parseInt(form.get('order_id') as string);
 		if (!id || isNaN(id)) return fail(400, { error: 'invalid order id' });

@@ -1,4 +1,4 @@
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { shopCategories, shopItems, shopOrders } from '$lib/server/db/schema';
 import { eq, asc, count } from 'drizzle-orm';
@@ -18,7 +18,8 @@ function parseOptionsText(raw: string): Array<{ label: string; choices: string[]
 		.filter(Boolean) as Array<{ label: string; choices: string[] }>;
 }
 
-export async function load() {
+export async function load({ locals }) {
+	if (!locals.isAdmin) error(403, 'Forbidden');
 	const categories = await db
 		.select()
 		.from(shopCategories)
@@ -38,7 +39,8 @@ export async function load() {
 }
 
 export const actions = {
-	createCategory: async ({ request }) => {
+	createCategory: async ({ request, locals }) => {
+		if (!locals.isAdmin) return fail(403, { error: 'forbidden' });
 		const form = await request.formData();
 		const name = (form.get('name') as string)?.trim();
 		const description = (form.get('description') as string)?.trim() || null;
@@ -57,7 +59,8 @@ export const actions = {
 		return { success: true };
 	},
 
-	updateCategory: async ({ request }) => {
+	updateCategory: async ({ request, locals }) => {
+		if (!locals.isAdmin) return fail(403, { error: 'forbidden' });
 		const form = await request.formData();
 		const id = parseInt(form.get('id') as string);
 		const name = (form.get('name') as string)?.trim();
@@ -77,7 +80,8 @@ export const actions = {
 		return { success: true };
 	},
 
-	deleteCategory: async ({ request }) => {
+	deleteCategory: async ({ request, locals }) => {
+		if (!locals.isAdmin) return fail(403, { error: 'forbidden' });
 		const form = await request.formData();
 		const id = parseInt(form.get('id') as string);
 		if (!id) return fail(400, { error: 'id is required' });
@@ -95,7 +99,8 @@ export const actions = {
 		return { success: true };
 	},
 
-	createItem: async ({ request }) => {
+	createItem: async ({ request, locals }) => {
+		if (!locals.isAdmin) return fail(403, { error: 'forbidden' });
 		const form = await request.formData();
 		const categoryId = parseInt(form.get('category_id') as string);
 		const name = (form.get('name') as string)?.trim();
@@ -116,7 +121,8 @@ export const actions = {
 		return { success: true };
 	},
 
-	updateItem: async ({ request }) => {
+	updateItem: async ({ request, locals }) => {
+		if (!locals.isAdmin) return fail(403, { error: 'forbidden' });
 		const form = await request.formData();
 		const id = parseInt(form.get('id') as string);
 		const categoryId = parseInt(form.get('category_id') as string);
@@ -141,7 +147,8 @@ export const actions = {
 		return { success: true };
 	},
 
-	deleteItem: async ({ request }) => {
+	deleteItem: async ({ request, locals }) => {
+		if (!locals.isAdmin) return fail(403, { error: 'forbidden' });
 		const form = await request.formData();
 		const id = parseInt(form.get('id') as string);
 		if (!id) return fail(400, { error: 'id is required' });
