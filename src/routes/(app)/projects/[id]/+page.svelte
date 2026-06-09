@@ -31,17 +31,14 @@
 	const canEdit = $derived(isDraft || canReship);
 
 	// svelte-ignore state_referenced_locally
-	let approvedHoursInput = $state(
-		data.latestApproval
-			? (Math.ceil((data.latestApproval.newSeconds / 3600) * 100) / 100).toFixed(2)
-			: ''
+	let approvedMinutesInput = $state(
+		data.latestApproval ? String(Math.floor(data.latestApproval.newSeconds / 60)) : ''
 	);
-	const approvedHoursConverted = $derived(() => {
-		const h = parseFloat(approvedHoursInput);
-		if (!isFinite(h) || h <= 0) return null;
-		const totalSeconds = Math.floor(h * 3600);
-		const hrs = Math.floor(totalSeconds / 3600);
-		const mins = Math.floor((totalSeconds % 3600) / 60);
+	const approvedMinutesConverted = $derived(() => {
+		const m = parseInt(approvedMinutesInput, 10);
+		if (!isFinite(m) || m <= 0) return null;
+		const hrs = Math.floor(m / 60);
+		const mins = m % 60;
 		if (hrs === 0) return `${mins}m`;
 		if (mins === 0) return `${hrs}h`;
 		return `${hrs}h ${mins}m`;
@@ -594,22 +591,22 @@
 				</div>
 				{#if reviewAction === 'approve'}
 					<label class="review-hours-label">
-						<span class="review-hours-text">hours to approve</span>
+						<span class="review-hours-text">minutes to approve</span>
 						<input
 							type="number"
-							name="approved_hours"
+							name="approved_minutes"
 							class="review-input"
-							min="0.01"
+							min="1"
 							max={data.latestApproval
-								? Math.ceil((data.latestApproval.newSeconds / 3600) * 100) / 100
+								? Math.floor(data.latestApproval.newSeconds / 60)
 								: undefined}
-							bind:value={approvedHoursInput}
-							step="0.01"
+							bind:value={approvedMinutesInput}
+							step="1"
 							required
 						/>
 						<span class="review-hours-hint">
-							{#if approvedHoursConverted()}
-								= {approvedHoursConverted()} ·
+							{#if approvedMinutesConverted()}
+								= {approvedMinutesConverted()} ·
 							{/if}
 							submitted: {data.latestApproval ? formatHours(data.latestApproval.newSeconds) : '—'}
 						</span>

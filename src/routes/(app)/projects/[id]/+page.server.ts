@@ -455,7 +455,7 @@ export const actions = {
 		const form = await request.formData();
 		const message = (form.get('message') as string)?.trim() || null;
 		const internalNote = (form.get('internal_note') as string)?.trim() || null;
-		const approvedHoursRaw = form.get('approved_hours');
+		const approvedMinutesRaw = form.get('approved_minutes');
 
 		if (!message) return fail(400, { error: 'message to author is required' });
 		if (!internalNote) return fail(400, { error: 'internal note is required' });
@@ -488,22 +488,21 @@ export const actions = {
 		const prevSubmittedSeconds = lastApproved?.submittedSeconds ?? 0;
 		const newSeconds = latestApproval.submittedSeconds - prevSubmittedSeconds;
 
-		const approvedHours =
-			approvedHoursRaw !== null && approvedHoursRaw !== ''
-				? Number(approvedHoursRaw)
-				: Math.ceil((newSeconds / 3600) * 100) / 100;
+		const approvedMinutes =
+			approvedMinutesRaw !== null && approvedMinutesRaw !== ''
+				? Math.floor(Number(approvedMinutesRaw))
+				: Math.floor(newSeconds / 60);
 
-		if (isNaN(approvedHours) || approvedHours <= 0) {
-			return fail(400, { error: 'approved hours must be greater than 0' });
+		if (isNaN(approvedMinutes) || approvedMinutes <= 0) {
+			return fail(400, { error: 'approved minutes must be greater than 0' });
 		}
 
-		const approvedSeconds = Math.floor(approvedHours * 3600);
+		const approvedSeconds = approvedMinutes * 60;
 
-		// Allow a tiny ceiling so rounding up to 2dp doesn't get blocked
-		const maxAllowed = newSeconds + 36; // +36s ≈ 0.01h tolerance
-		if (approvedSeconds > maxAllowed) {
+		const maxAllowedMinutes = Math.floor(newSeconds / 60);
+		if (approvedMinutes > maxAllowedMinutes) {
 			return fail(400, {
-				error: `approved hours cannot exceed new hours since last submission (${(newSeconds / 3600).toFixed(2)}h)`
+				error: `approved minutes cannot exceed submitted time (${maxAllowedMinutes}m)`
 			});
 		}
 
