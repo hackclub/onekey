@@ -3,7 +3,10 @@ import { db } from '$lib/server/db';
 import { shopCategories, shopItems, shopOrders } from '$lib/server/db/schema';
 import { eq, asc, count } from 'drizzle-orm';
 
-function parseOptionsText(raw: string): Array<{ label: string; choices: string[] }> {
+type Choice = { name: string; imageUrl?: string };
+type OptionGroup = { label: string; choices: Choice[] };
+
+function parseOptionsText(raw: string): OptionGroup[] {
 	return raw
 		.split('\n')
 		.map((line) => line.trim())
@@ -12,10 +15,22 @@ function parseOptionsText(raw: string): Array<{ label: string; choices: string[]
 			const colonIdx = line.indexOf(':');
 			if (colonIdx === -1) return null;
 			const label = line.slice(0, colonIdx).trim();
-			const choices = line.slice(colonIdx + 1).split(',').map((c) => c.trim()).filter(Boolean);
+			const choices = line
+				.slice(colonIdx + 1)
+				.split(',')
+				.map((c) => c.trim())
+				.filter(Boolean)
+				.map((c): Choice => {
+					const pipeIdx = c.indexOf('|');
+					if (pipeIdx === -1) return { name: c };
+					const name = c.slice(0, pipeIdx).trim();
+					const imageUrl = c.slice(pipeIdx + 1).trim();
+					return imageUrl ? { name, imageUrl } : { name };
+				})
+				.filter((c) => c.name);
 			return label && choices.length ? { label, choices } : null;
 		})
-		.filter(Boolean) as Array<{ label: string; choices: string[] }>;
+		.filter(Boolean) as OptionGroup[];
 }
 
 export async function load({ locals }) {

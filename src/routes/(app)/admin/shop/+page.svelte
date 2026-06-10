@@ -12,8 +12,21 @@
 
 	function optionsToText(optionsJson: string): string {
 		try {
-			const opts = JSON.parse(optionsJson) as Array<{ label: string; choices: string[] }>;
-			return opts.map((o) => `${o.label}: ${o.choices.join(', ')}`).join('\n');
+			const opts = JSON.parse(optionsJson) as Array<{
+				label: string;
+				choices: Array<string | { name: string; imageUrl?: string }>;
+			}>;
+			return opts
+				.map((o) => {
+					const choices = o.choices
+						.map((c) => {
+							if (typeof c === 'string') return c;
+							return c.imageUrl ? `${c.name}|${c.imageUrl}` : c.name;
+						})
+						.join(', ');
+					return `${o.label}: ${choices}`;
+				})
+				.join('\n');
 		} catch {
 			return '';
 		}
@@ -98,7 +111,7 @@
 										<input class="input input-sm" type="number" name="price_hours" value={(item.priceSeconds / 3600).toFixed(1)} step="0.5" min="0.5" placeholder="price (hours)" required />
 										<input class="input" type="url" name="image_url" value={item.imageUrl ?? ''} placeholder="image url (optional)" />
 										<input class="input input-sm" type="number" name="stock" value={item.stock} placeholder="stock (-1 = unlimited)" />
-										<textarea class="input input-textarea" name="options" placeholder={"options (one per line):\nColor: red, blue, black\nSize: S, M, L"}>{optionsToText(item.options)}</textarea>
+										<textarea class="input input-textarea" name="options" placeholder={"options (one per line):\nColor: red|https://cdn.../red.png, blue|https://cdn.../blue.png, black\nSize: S, M, L"}>{optionsToText(item.options)}</textarea>
 										<label class="check-label">
 											<input type="hidden" name="available" value="false" disabled={item.available} />
 											<input type="checkbox" name="available" value="true" checked={item.available} onchange={(e) => { const hidden = e.currentTarget.form?.querySelector('input[name="available"][type="hidden"]') as HTMLInputElement; if (hidden) hidden.disabled = e.currentTarget.checked; }} />
@@ -150,7 +163,7 @@
 					<input class="input input-sm" type="number" name="price_hours" step="0.5" min="0.5" placeholder="price in hours (e.g. 2)" required />
 					<input class="input" type="url" name="image_url" placeholder="image url (optional)" />
 					<input class="input input-sm" type="number" name="stock" placeholder="stock (-1 = unlimited)" value="-1" />
-					<textarea class="input input-textarea" name="options" placeholder={"options (one per line):\nColor: red, blue, black\nSize: S, M, L"}></textarea>
+					<textarea class="input input-textarea" name="options" placeholder={"options (one per line):\nColor: red|https://cdn.../red.png, blue|https://cdn.../blue.png, black\nSize: S, M, L"}></textarea>
 					<button type="submit" class="btn btn-add">add item</button>
 				</form>
 			{/if}

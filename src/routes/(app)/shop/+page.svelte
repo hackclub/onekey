@@ -5,18 +5,37 @@
 	let { data, form } = $props();
 
 	type Item = typeof data.categories[number]['items'][number];
-	type ItemOption = { label: string; choices: string[] };
+	type Choice = { name: string; imageUrl?: string };
+	type ItemOption = { label: string; choices: Choice[] };
 
 	let modalItem = $state<Item | null>(null);
 	let modalOptions = $state<ItemOption[]>([]);
 	let modalClosing = $state(false);
+	let displayedImageUrl = $state<string | null>(null);
 	const CLOSE_MS = 160;
 
 	function openModal(item: Item) {
-		try { modalOptions = JSON.parse(item.options) as ItemOption[]; }
-		catch { modalOptions = []; }
+		try {
+			const raw = JSON.parse(item.options) as Array<{
+				label: string;
+				choices: Array<string | { name: string; imageUrl?: string }>;
+			}>;
+			modalOptions = raw.map((o) => ({
+				label: o.label,
+				choices: o.choices.map((c) => (typeof c === 'string' ? { name: c } : c))
+			}));
+		} catch {
+			modalOptions = [];
+		}
+		displayedImageUrl = null;
 		modalItem = item;
 		modalClosing = false;
+	}
+
+	function handleChoiceChange(label: string, choiceName: string) {
+		const grp = modalOptions.find((g) => g.label === label);
+		const choice = grp?.choices.find((c) => c.name === choiceName);
+		if (choice?.imageUrl) displayedImageUrl = choice.imageUrl;
 	}
 
 	function closeModal() {
@@ -125,9 +144,10 @@
 		tabindex="-1"
 	>
 		<div class="modal-box" class:closing={modalClosing}>
-			{#if modalItem.imageUrl}
+			{@const currentImg = displayedImageUrl ?? modalItem.imageUrl}
+			{#if currentImg}
 				<div class="modal-img-wrap">
-					<img src={modalItem.imageUrl} alt={modalItem.name} class="modal-img" />
+					<img src={currentImg} alt={modalItem.name} class="modal-img" />
 				</div>
 			{/if}
 
@@ -148,10 +168,15 @@
 								<label class="opt-field">
 									<span class="opt-field-label">{opt.label}</span>
 									<div class="select-wrap">
-										<select name="option_{opt.label}" class="opt-select" required>
+										<select
+											name="option_{opt.label}"
+											class="opt-select"
+											required
+											onchange={(e) => handleChoiceChange(opt.label, e.currentTarget.value)}
+										>
 											<option value="" disabled selected>select {opt.label.toLowerCase()}</option>
 											{#each opt.choices as choice}
-												<option value={choice}>{choice}</option>
+												<option value={choice.name}>{choice.name}</option>
 											{/each}
 										</select>
 										<span class="select-caret">{@html caretSvg}</span>
