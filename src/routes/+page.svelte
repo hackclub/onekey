@@ -188,10 +188,10 @@
 			{#if data.user}
 				<a href="/home" class="button filled cta">go to dashboard</a>
 			{:else}
-				<a href="/login" class="button filled cta">log in with hack club</a>
+				<a href="/login" class="button filled cta">get started</a>
 			{/if}
 		{:else}
-			<a href="https://onekey.fillout.com/rsvp" target="_blank" rel="noopener noreferrer" class="button filled cta">rsvp</a>
+			<a href="https://onekey.fillout.com/rsvp" target="_blank" rel="noopener noreferrer" class="button filled cta">RSVP!</a>
 		{/if}
 	</div>
 </div>

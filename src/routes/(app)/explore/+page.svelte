@@ -47,7 +47,7 @@
 
 {#if visibleProjects.length === 0}
 	<div class="placeholder">
-		<p><strong>no projects here yet. <a href="/projects">be the first one!</a></strong></p>
+		<p>no projects here yet. <strong><a href="/projects">be the first one!</a></strong></p>
 	</div>
 {:else}
 	<div class="project-grid">
