@@ -109,10 +109,9 @@
 							<button type="submit" class="adjust-btn">apply adjustment</button>
 						</form>
 
-						{@const userAdjs = data.adjustments.filter((a) => a.userId === user.id)}
-						{#if userAdjs.length > 0}
+						{#if data.adjustments.some((a) => a.userId === user.id)}
 							<div class="adj-log">
-								{#each userAdjs as adj (adj.id)}
+								{#each data.adjustments.filter((a) => a.userId === user.id) as adj (adj.id)}
 									<div class="adj-row" class:adj-positive={adj.seconds > 0} class:adj-negative={adj.seconds < 0}>
 										<span class="adj-amount">{adj.seconds > 0 ? '+' : '−'}{formatHours(Math.abs(adj.seconds))}</span>
 										<span class="adj-msg">"{adj.message}"</span>
