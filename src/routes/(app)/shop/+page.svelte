@@ -314,6 +314,7 @@
 		flex-direction: column;
 		gap: 1.25rem;
 		margin-bottom: 0.5rem;
+		margin-top: 1.5rem;
 	}
 
 	.cat-header {
