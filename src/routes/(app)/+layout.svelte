@@ -5,6 +5,11 @@
 
 	let { children, data } = $props();
 
+	// Synchronous init — runs during SSR and initial hydration so the dark class
+	// is present from the very first render with no flash.
+	darkMode.set(data.user?.dark_mode_enabled ?? false);
+
+	// Re-sync on navigation (layout doesn't remount, so data prop change is the trigger).
 	$effect(() => {
 		darkMode.set(data.user?.dark_mode_enabled ?? false);
 	});
