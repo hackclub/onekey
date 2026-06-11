@@ -134,6 +134,7 @@
 
 <!-- ORDER CONFIRMATION MODAL -->
 {#if modalItem}
+	{@const currentImg = displayedImageUrl ?? modalItem.imageUrl}
 	<div
 		class="modal-backdrop"
 		class:closing={modalClosing}
@@ -144,7 +145,6 @@
 		tabindex="-1"
 	>
 		<div class="modal-box" class:closing={modalClosing}>
-			{@const currentImg = displayedImageUrl ?? modalItem.imageUrl}
 			{#if currentImg}
 				<div class="modal-img-wrap">
 					<img src={currentImg} alt={modalItem.name} class="modal-img" />

@@ -350,10 +350,6 @@
 		gap: 0.4rem;
 	}
 
-	.refund-form {
-		display: contents;
-	}
-
 	.status-dot-inline {
 		width: 8px;
 		height: 8px;
