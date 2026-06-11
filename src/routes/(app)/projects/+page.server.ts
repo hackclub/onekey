@@ -1,5 +1,5 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { TOKEN_ENCRYPTION_KEY } from '$env/static/private';
+import { TOKEN_ENCRYPTION_KEY } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
 import { projects, users } from '$lib/server/db/schema';

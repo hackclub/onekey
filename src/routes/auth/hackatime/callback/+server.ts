@@ -4,7 +4,7 @@ import {
 	HACKATIME_CLIENT_SECRET,
 	HACKATIME_REDIRECT_URI,
 	TOKEN_ENCRYPTION_KEY
-} from '$env/static/private';
+} from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
 import { sessions, users } from '$lib/server/db/schema';

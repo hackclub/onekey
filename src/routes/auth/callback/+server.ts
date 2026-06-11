@@ -6,7 +6,7 @@ import {
 	SLACK_BOT_TOKEN,
 	TOKEN_ENCRYPTION_KEY,
 	ADMIN_IDS
-} from '$env/static/private';
+} from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
 import { sessions, users } from '$lib/server/db/schema';
