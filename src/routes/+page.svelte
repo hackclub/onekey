@@ -62,6 +62,7 @@
 			animateFrames(framesUp);
 		};
 		document.addEventListener('mouseup', handleMouseUp);
+		document.addEventListener('touchend', handleMouseUp);
 
 		const observer = new IntersectionObserver(
 			(entries) => {
@@ -80,6 +81,7 @@
 
 		return () => {
 			document.removeEventListener('mouseup', handleMouseUp);
+			document.removeEventListener('touchend', handleMouseUp);
 			observer.disconnect();
 		};
 	});
@@ -175,6 +177,7 @@
 		<img
 			draggable="false"
 			onmousedown={handleKeyDown}
+			ontouchstart={(e) => { e.preventDefault(); handleKeyDown(); }}
 			class="key-img"
 			src={keyFrame}
 			alt="duct-taped one-key macropad"

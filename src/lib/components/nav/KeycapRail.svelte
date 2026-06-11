@@ -88,7 +88,7 @@
 				onmousedown={() => handlePress(item.href)}
 				onmouseup={handleRelease}
 				onmouseleave={handleRelease}
-				ontouchstart={() => handlePress(item.href)}
+				ontouchstart={(e) => { e.preventDefault(); handlePress(item.href); }}
 				ontouchend={handleRelease}
 			>
 				<Keycap
