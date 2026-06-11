@@ -1,11 +1,16 @@
 <script lang="ts">
 	import KeycapRail from '$lib/components/nav/KeycapRail.svelte';
 	import { page } from '$app/state';
+	import { darkMode } from '$lib/stores/theme';
 
 	let { children, data } = $props();
+
+	$effect(() => {
+		darkMode.set(data.user?.dark_mode_enabled ?? false);
+	});
 </script>
 
-<div class="dashboard" class:dark={data.user?.dark_mode_enabled}>
+<div class="dashboard" class:dark={$darkMode}>
 	<KeycapRail />
 	<div class="work">
 		{#if page.data.isAdmin || page.data.isReviewer}

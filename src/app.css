@@ -244,7 +244,8 @@ header {
 		border-color var(--transition-med);
 }
 
-.nav-btn img {
+.nav-btn img,
+.nav-btn svg {
 	width: clamp(22px, 2.5vw, 34px);
 	height: auto;
 	transition: filter var(--transition-med);
@@ -256,7 +257,8 @@ header {
 	border-color: var(--color-text);
 }
 
-.nav-active img {
+.nav-active img,
+.nav-active svg {
 	filter: invert(1);
 }
 

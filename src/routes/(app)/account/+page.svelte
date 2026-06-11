@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { untrack } from 'svelte';
+	import { darkMode } from '$lib/stores/theme';
 
 	let { data } = $props();
 
 	let editingAddress = $state(false);
 	let sfxEnabled = $state(untrack(() => data.user?.key_sfx_enabled ?? true));
-	let darkEnabled = $state(untrack(() => data.user?.dark_mode_enabled ?? false));
 
 	let sfxForm: HTMLFormElement;
 	let sfxInput: HTMLInputElement;
@@ -70,26 +70,26 @@
 	<div class="card">
 		<span class="card-label">settings</span>
 		<div class="settings-list">
-			<form method="POST" action="?/saveDarkMode" bind:this={darkForm} use:enhance>
+			<form method="POST" action="?/saveDarkMode" bind:this={darkForm} use:enhance={() => () => {}}>
 				<input
 					type="hidden"
 					name="dark_mode_enabled"
 					bind:this={darkInput}
-					value={darkEnabled ? 'true' : 'false'}
+					value={$darkMode ? 'true' : 'false'}
 				/>
 				<label class="toggle-row">
 					<span class="toggle-label">dark mode</span>
 					<button
 						type="button"
 						class="toggle"
-						class:on={darkEnabled}
+						class:on={$darkMode}
 						role="switch"
-						aria-checked={darkEnabled}
+						aria-checked={$darkMode}
 						aria-label="dark mode"
 						onclick={() => {
-							darkEnabled = !darkEnabled;
-							darkInput.value = darkEnabled ? 'true' : 'false';
-							document.querySelector('.dashboard')?.classList.toggle('dark', darkEnabled);
+							const next = !$darkMode;
+							darkMode.set(next);
+							darkInput.value = next ? 'true' : 'false';
 							darkForm.requestSubmit();
 						}}
 					>
