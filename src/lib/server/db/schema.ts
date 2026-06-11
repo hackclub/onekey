@@ -150,3 +150,12 @@ export const siteSettings = pgTable('site_settings', {
 	key: text('key').primaryKey(),
 	value: text('value').notNull()
 });
+
+export const balanceAdjustments = pgTable('balance_adjustments', {
+	id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+	userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+	adminId: uuid('admin_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+	seconds: integer('seconds').notNull(),
+	message: text('message').notNull(),
+	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
+});

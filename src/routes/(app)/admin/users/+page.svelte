@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+	import { formatHours } from '$lib/format';
+
 	let { data } = $props();
 
 	let query = $state('');
@@ -26,6 +29,10 @@
 	function bool(val: boolean | null) {
 		if (val === null || val === undefined) return '—';
 		return val ? 'yes' : 'no';
+	}
+
+	function adminName(adj: typeof data.adjustments[number]) {
+		return adj.adminName ?? adj.adminNickname ?? adj.adminRealName ?? 'admin';
 	}
 </script>
 
@@ -79,6 +86,42 @@
 						<dt>joined</dt><dd>{fmt(user.createdAt)}</dd>
 						<dt>last login</dt><dd>{fmt(user.updatedAt)}</dd>
 					</dl>
+
+					<div class="adjust-section">
+						<p class="adjust-heading">adjust balance</p>
+						<form method="POST" action="?/adjustBalance" use:enhance class="adjust-form">
+							<input type="hidden" name="user_id" value={user.id} />
+							<input
+								type="number"
+								name="minutes"
+								class="adjust-input"
+								placeholder="minutes (negative to deduct)"
+								step="1"
+								required
+							/>
+							<textarea
+								name="message"
+								class="adjust-msg"
+								placeholder="reason / message to user…"
+								rows="2"
+								required
+							></textarea>
+							<button type="submit" class="adjust-btn">apply adjustment</button>
+						</form>
+
+						{@const userAdjs = data.adjustments.filter((a) => a.userId === user.id)}
+						{#if userAdjs.length > 0}
+							<div class="adj-log">
+								{#each userAdjs as adj (adj.id)}
+									<div class="adj-row" class:adj-positive={adj.seconds > 0} class:adj-negative={adj.seconds < 0}>
+										<span class="adj-amount">{adj.seconds > 0 ? '+' : '−'}{formatHours(Math.abs(adj.seconds))}</span>
+										<span class="adj-msg">"{adj.message}"</span>
+										<span class="adj-meta">by @{adminName(adj)} · {fmt(adj.createdAt)}</span>
+									</div>
+								{/each}
+							</div>
+						{/if}
+					</div>
 				</div>
 			</details>
 		{:else}
@@ -240,5 +283,100 @@
 		text-align: center;
 		color: #555b66;
 		margin: 0;
+	}
+
+	.adjust-section {
+		margin-top: 1rem;
+		padding-top: 1rem;
+		border-top: 1px solid #1e2229;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.adjust-heading {
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.07em;
+		color: #8a8f99;
+		margin: 0;
+	}
+
+	.adjust-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		max-width: 420px;
+	}
+
+	.adjust-input,
+	.adjust-msg {
+		background: var(--color-bg);
+		color: var(--color-text);
+		border: 1px solid #2a2f38;
+		border-radius: 6px;
+		padding: 0.4rem 0.65rem;
+		font-family: inherit;
+		font-size: 0.82rem;
+		outline: none;
+		resize: vertical;
+	}
+
+	.adjust-input:focus,
+	.adjust-msg:focus {
+		border-color: #555b66;
+	}
+
+	.adjust-btn {
+		align-self: flex-start;
+		background: #1e2229;
+		color: var(--color-text);
+		border: 1px solid #2a2f38;
+		border-radius: 6px;
+		padding: 0.35rem 0.85rem;
+		font-family: inherit;
+		font-size: 0.82rem;
+		cursor: pointer;
+	}
+
+	.adjust-btn:hover {
+		border-color: #555b66;
+	}
+
+	.adj-log {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.adj-row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		padding: 0.5rem 0.65rem;
+		border-radius: 6px;
+		border-left: 3px solid #2a2f38;
+		background: #0d0f12;
+		font-size: 0.8rem;
+	}
+
+	.adj-positive { border-left-color: #22c55e; }
+	.adj-negative { border-left-color: #ef4444; }
+
+	.adj-amount {
+		font-weight: 700;
+		font-family: monospace;
+	}
+
+	.adj-positive .adj-amount { color: #22c55e; }
+	.adj-negative .adj-amount { color: #ef4444; }
+
+	.adj-msg {
+		color: #cdd0d6;
+	}
+
+	.adj-meta {
+		color: #555b66;
+		font-size: 0.73rem;
 	}
 </style>

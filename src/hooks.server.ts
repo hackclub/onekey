@@ -29,7 +29,13 @@ function isPublicPath(pathname: string): boolean {
 const staticPrefixes = ['/_app/', '/img/', '/audio/'];
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const { pathname } = event.url;
+	const { pathname, search } = event.url;
+
+	if (pathname.includes('//')) {
+		const clean = pathname.replace(/\/+/g, '/');
+		return Response.redirect(`${event.url.origin}${clean}${search}`, 301);
+	}
+
 	if (staticPrefixes.some((p) => pathname.startsWith(p))) return resolve(event);
 
 	const rawToken = event.cookies.get('hca_session');

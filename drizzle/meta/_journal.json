@@ -113,6 +113,13 @@
       "when": 1749081600000,
       "tag": "0015_add_site_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1749168000000,
+      "tag": "0016_balance_adjustments",
+      "breakpoints": true
     }
   ]
 }

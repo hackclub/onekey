@@ -1,6 +1,6 @@
 import { redirect, fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { users, projects, projectApprovals, shopCategories, shopItems, shopOrders } from '$lib/server/db/schema';
+import { users, projects, projectApprovals, shopCategories, shopItems, shopOrders, balanceAdjustments } from '$lib/server/db/schema';
 import { eq, and, sum, notInArray, asc } from 'drizzle-orm';
 
 async function getDbUser(hcaId: string) {
@@ -8,7 +8,7 @@ async function getDbUser(hcaId: string) {
 	return u ?? null;
 }
 
-async function getAvailableSeconds(dbUserId: string) {
+export async function getAvailableSeconds(dbUserId: string) {
 	const [r] = await db
 		.select({ total: sum(projectApprovals.approvedSeconds) })
 		.from(projectApprovals)
@@ -22,7 +22,13 @@ async function getAvailableSeconds(dbUserId: string) {
 		.where(and(eq(shopOrders.userId, dbUserId), notInArray(shopOrders.status, ['cancelled', 'refunded'])));
 	const spent = Number(s?.total ?? 0);
 
-	return approved - spent;
+	const [a] = await db
+		.select({ total: sum(balanceAdjustments.seconds) })
+		.from(balanceAdjustments)
+		.where(eq(balanceAdjustments.userId, dbUserId));
+	const adjusted = Number(a?.total ?? 0);
+
+	return approved - spent + adjusted;
 }
 
 export async function load({ locals }) {
@@ -90,7 +96,13 @@ export const actions = {
 					.where(and(eq(shopOrders.userId, dbUser.id), notInArray(shopOrders.status, ['cancelled', 'refunded'])));
 				const spent = Number(s?.total ?? 0);
 
-				if (approved - spent < item.priceSeconds) throw new Error('not enough hours available');
+				const [adj] = await tx
+					.select({ total: sum(balanceAdjustments.seconds) })
+					.from(balanceAdjustments)
+					.where(eq(balanceAdjustments.userId, dbUser.id));
+				const adjusted = Number(adj?.total ?? 0);
+
+				if (approved - spent + adjusted < item.priceSeconds) throw new Error('not enough hours available');
 
 				await tx.insert(shopOrders).values({
 					userId: dbUser.id,

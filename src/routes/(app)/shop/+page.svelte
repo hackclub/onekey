@@ -27,6 +27,15 @@
 		} catch {
 			modalOptions = [];
 		}
+		// Preload all variant images so swaps are instant
+		for (const opt of modalOptions) {
+			for (const choice of opt.choices) {
+				if (choice.imageUrl) {
+					const img = new Image();
+					img.src = choice.imageUrl;
+				}
+			}
+		}
 		displayedImageUrl = null;
 		modalItem = item;
 		modalClosing = false;
@@ -190,9 +199,6 @@
 						<button type="submit" class="btn-confirm" disabled={data.availableSeconds < modalItem.priceSeconds}>buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(modalItem.priceSeconds)}</button>
 						<button type="button" class="btn-cancel-modal" onclick={closeModal}>cancel</button>
 					</div>
-					<p class="modal-balance-note">
-						{#if data.availableSeconds < modalItem.priceSeconds}not enough hours — {/if}current balance: {formatHours(data.availableSeconds)}
-					</p>
 				</form>
 			</div>
 		</div>
@@ -505,7 +511,7 @@
 
 	.modal-img-wrap {
 		width: 100%;
-		height: 200px;
+		height: 320px;
 		flex-shrink: 0;
 		border-bottom: calc(var(--border-width) / 2) solid;
 	}
