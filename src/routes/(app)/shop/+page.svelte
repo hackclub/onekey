@@ -551,14 +551,6 @@
 		color: var(--color-text-soft);
 	}
 
-	.modal-balance-note {
-		margin: 0.5rem 0 0;
-		font-size: 0.85rem;
-		color: var(--color-text-soft);
-		text-align: center;
-		width: 100%;
-	}
-
 	.modal-form {
 		display: flex;
 		flex-direction: column;
