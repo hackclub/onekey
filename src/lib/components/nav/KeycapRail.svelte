@@ -1,7 +1,15 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import Keycap from '../Keycap.svelte';
 	import { formatHours } from '$lib/format';
+
+	let isMobile = $state(false);
+	onMount(() => {
+		const mq = window.matchMedia('(max-width: 767px)');
+		isMobile = mq.matches;
+		mq.addEventListener('change', (e) => { isMobile = e.matches; });
+	});
 
 	const projectsSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" aria-label="grid" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor"><path d="M12.862 12.776c.072-.302.138-.842.138-1.776s-.066-1.474-.138-1.776a2.012 2.012 0 0 0-.017-.069 2.103 2.103 0 0 0-.069-.017C12.474 9.066 11.934 9 11 9s-1.474.066-1.776.138a2.08 2.08 0 0 0-.069.017 2.08 2.08 0 0 0-.017.069C9.066 9.526 9 10.066 9 11s.066 1.474.138 1.776l.017.069.069.017c.302.072.842.138 1.776.138s1.474-.066 1.776-.138l.069-.017.017-.069zm10 0c.072-.302.138-.842.138-1.776s-.066-1.474-.138-1.776a2.012 2.012 0 0 0-.017-.069 2.103 2.103 0 0 0-.069-.017C22.474 9.066 21.934 9 21 9s-1.474.066-1.776.138a2.103 2.103 0 0 0-.069.017l-.017.069C19.066 9.526 19 10.066 19 11s.066 1.474.138 1.776l.017.069.069.017c.302.072.842.138 1.776.138s1.474-.066 1.776-.138l.069-.017.017-.069zm-10 10c.072-.302.138-.842.138-1.776s-.066-1.474-.138-1.776a2.034 2.034 0 0 0-.017-.069 2.034 2.034 0 0 0-.069-.017C12.474 19.066 11.934 19 11 19s-1.474.066-1.776.138a2.012 2.012 0 0 0-.069.017l-.017.069C9.066 19.526 9 20.066 9 21s.066 1.474.138 1.776l.017.069.069.017c.302.072.842.138 1.776.138s1.474-.066 1.776-.138l.069-.017.017-.069zm10 0c.072-.302.138-.842.138-1.776s-.066-1.474-.138-1.776a2.034 2.034 0 0 0-.017-.069 2.034 2.034 0 0 0-.069-.017C22.474 19.066 21.934 19 21 19s-1.474.066-1.776.138a2.034 2.034 0 0 0-.069.017l-.017.069c-.072.302-.138.842-.138 1.776s.066 1.474.138 1.776l.017.069.069.017c.302.072.842.138 1.776.138s1.474-.066 1.776-.138l.069-.017.017-.069zM15 11c0 2.007-.275 2.861-.707 3.293-.432.432-1.286.707-3.293.707s-2.861-.275-3.293-.707C7.275 13.861 7 13.007 7 11s.275-2.861.707-3.293C8.139 7.275 8.993 7 11 7s2.861.275 3.293.707C14.725 8.139 15 8.993 15 11zm10 0c0 2.007-.275 2.861-.707 3.293-.432.432-1.286.707-3.293.707s-2.861-.275-3.293-.707C17.275 13.861 17 13.007 17 11s.275-2.861.707-3.293C18.139 7.275 18.993 7 21 7s2.861.275 3.293.707C24.725 8.139 25 8.993 25 11zM14.293 24.293c.432-.432.707-1.286.707-3.293s-.275-2.861-.707-3.293C13.861 17.275 13.007 17 11 17s-2.861.275-3.293.707C7.275 18.139 7 18.993 7 21s.275 2.861.707 3.293C8.139 24.725 8.993 25 11 25s2.861-.275 3.293-.707zM25 21c0 2.007-.275 2.861-.707 3.293-.432.432-1.286.707-3.293.707s-2.861-.275-3.293-.707C17.275 23.861 17 23.007 17 21s.275-2.861.707-3.293C18.139 17.275 18.993 17 21 17s2.861.275 3.293.707c.432.432.707 1.286.707 3.293z"/></svg>`;
 
@@ -45,6 +53,18 @@
 	}
 </script>
 
+<div class="mobile-topbar">
+	<div class="hours-label">
+		<span class="clock-icon">{@html clockSvg}</span>
+		{Math.floor(userAvailableSeconds / 360) / 10}h
+	</div>
+	<a href="/account" class="avatar" aria-label="account" draggable="false">
+		{#if page.data.user?.avatar_url}
+			<img src={page.data.user.avatar_url} alt="avatar" draggable="false" />
+		{/if}
+	</a>
+</div>
+
 <aside class="rail">
 	<a href="/" class="brand" aria-label="onekey landing" draggable="false">
 		<img
@@ -72,7 +92,7 @@
 				ontouchend={handleRelease}
 			>
 				<Keycap
-					size="max(55px, 9vh)"
+					size={isMobile ? 'calc(16vw)' : 'max(55px, 9vh)'}
 					color={active ? 'var(--keycap-active, var(--keycap-border))' : 'var(--keycap-color)'}
 					dark={active}
 					pressed={pressedHref === item.href}
@@ -260,5 +280,78 @@
 
 	.logout:hover {
 		color: white;
+	}
+
+	.mobile-topbar {
+		display: none;
+	}
+
+	@media (max-width: 767px) {
+		.mobile-topbar {
+			display: flex;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 52px;
+			background-color: var(--rail-bg);
+			z-index: 20;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0 16px;
+			box-sizing: border-box;
+			border-bottom: 1px solid var(--rail-line);
+		}
+
+		.mobile-topbar .hours-label {
+			font-size: 14px;
+		}
+
+		.mobile-topbar .avatar {
+			width: 32px;
+			height: 32px;
+			border-width: 2px;
+		}
+
+		.rail {
+			top: auto;
+			bottom: 0;
+			width: 100%;
+			height: auto;
+			flex-direction: row;
+			justify-content: center;
+			padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+			gap: 0;
+		}
+
+		.brand,
+		.divider,
+		.bottom {
+			display: none;
+		}
+
+		.nav {
+			flex-direction: row;
+			gap: 0;
+			padding: 8px 4px;
+			border-radius: 14px;
+			margin-block: 0;
+			width: 100%;
+		}
+
+		.item {
+			flex: 1;
+			justify-content: center;
+			gap: 7px;
+		}
+
+		.label {
+			font-size: 10px;
+		}
+
+		.svg-icon {
+			width: 20px;
+			height: 20px;
+		}
 	}
 </style>

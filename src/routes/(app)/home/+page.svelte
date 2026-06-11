@@ -496,4 +496,58 @@
 		margin-bottom: 1.25rem;
 		font-weight: bold;
 	}
+
+	@media (max-width: 767px) {
+		.greeting {
+			font-size: 1.8rem;
+		}
+
+		.greeting-avatar {
+			width: 2.5rem;
+			height: 2.5rem;
+		}
+
+		.bento {
+			grid-template-columns: 1fr;
+		}
+
+		.card.card-full {
+			grid-column: span 1;
+		}
+
+		.goals-card {
+			flex-direction: column;
+		}
+
+		.goals-milestones-section {
+			width: 100%;
+			padding-left: 0;
+			padding-top: clamp(1rem, 2vw, 2rem);
+		}
+
+		.goals-milestones-section::before {
+			left: calc(-1 * clamp(1rem, 1.5vw, 1.75rem));
+			right: calc(-1 * clamp(1rem, 1.5vw, 1.75rem));
+			top: 0;
+			bottom: auto;
+			width: auto;
+			height: 0.15rem;
+		}
+
+		.card-hero-label {
+			font-size: 2rem;
+		}
+
+		.goals-callout-value {
+			font-size: 1.4rem;
+		}
+
+		.goals-callouts {
+			margin-bottom: 1.25rem;
+		}
+
+		.goal-seg {
+			height: 2.5rem;
+		}
+	}
 </style>

@@ -574,4 +574,27 @@
 		border-style: dotted;
 		border-color: var(--color-text);
 	}
+
+	@media (max-width: 767px) {
+		.heading {
+			font-size: 1.8rem;
+		}
+
+		.bento {
+			grid-template-columns: 1fr;
+		}
+
+		.card.card-wide,
+		.card.card-full {
+			grid-column: span 1;
+		}
+
+		.edit-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.edit-field.edit-field-full {
+			grid-column: span 1;
+		}
+	}
 </style>

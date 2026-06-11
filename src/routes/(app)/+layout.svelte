@@ -153,4 +153,16 @@
 		background: #2a2f38;
 		border-color: #3a3f48;
 	}
+
+	@media (max-width: 767px) {
+		.work {
+			margin-left: 0;
+			margin-top: 52px;
+			margin-bottom: 80px;
+		}
+
+		.content {
+			padding: 1.25rem 1rem;
+		}
+	}
 </style>
