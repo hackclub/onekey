@@ -12,5 +12,6 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY drizzle.config.ts ./
 COPY drizzle ./drizzle
+COPY src ./src
 EXPOSE 3000
 CMD ["sh", "-c", "npx drizzle-kit migrate && node build/index.js"]

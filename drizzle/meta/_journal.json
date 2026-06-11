@@ -64,6 +64,55 @@
       "when": 1748476800000,
       "tag": "0008_add_project_approvals",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1748563200000,
+      "tag": "0009_add_shop",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1748649600000,
+      "tag": "0010_shop_options",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1748736000000,
+      "tag": "0011_project_snapshots",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1748822400000,
+      "tag": "0012_add_address_line2",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1748908800000,
+      "tag": "0013_add_ai_declaration",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1748995200000,
+      "tag": "0014_add_project_ai_declaration",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1749081600000,
+      "tag": "0015_add_site_settings",
+      "breakpoints": true
     }
   ]
 }
