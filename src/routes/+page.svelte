@@ -410,12 +410,6 @@
 		width: 37rem;
 	}
 
-	@media screen and (max-width: 1350px) {
-		.logo {
-			width: 31rem;
-		}
-	}
-
 	.key-img {
 		margin-left: 3rem;
 		margin-top: 15vh;
@@ -491,6 +485,32 @@
 		width: calc(86.61% + 3.5rem);
 	}
 
+	@media screen and (max-width: 1400px) {
+		.logo {
+			width: 31rem;
+		}
+
+		.tagline {
+			font-size: 1.6rem;
+		}
+
+		.cta {
+			font-size: 1.4rem;
+			padding: 1.05rem 1.9rem;
+		}
+
+		.email-input {
+			font-size: 1.2rem;
+			padding: 1.05rem 1.5rem;
+			width: 17rem;
+		}
+
+		.key-img {
+			height: 24rem;
+			width: 28rem;
+		}
+	}
+
 	@media only screen and (max-width: 767px) {
 		.logo {
 			width: auto;
@@ -517,10 +537,11 @@
 		}
 
 		.tagline {
-			font-size: 3vw;
+			font-size: 4.3vw;
 			margin-left: auto;
 			margin-right: auto;
 			text-align: center;
+			padding: 0 1.5rem;
 		}
 
 		.cta-row {
