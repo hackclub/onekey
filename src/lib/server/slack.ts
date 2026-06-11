@@ -1,4 +1,4 @@
-import { SLACK_BOT_TOKEN } from '$env/dynamic/private';
+import { SLACK_BOT_TOKEN } from '$env/static/private';
 
 export async function sendSlackDM(slackUserId: string, text: string): Promise<void> {
 	if (!SLACK_BOT_TOKEN) return;

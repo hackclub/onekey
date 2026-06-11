@@ -1,5 +1,5 @@
 import type { Handle } from '@sveltejs/kit';
-import { ADMIN_IDS, REVIEWER_IDS } from '$env/dynamic/private';
+import { ADMIN_IDS, REVIEWER_IDS } from '$env/static/private';
 import { db } from '$lib/server/db';
 import { sessions, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';

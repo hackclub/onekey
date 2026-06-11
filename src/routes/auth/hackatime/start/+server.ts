@@ -1,5 +1,5 @@
 import { redirect, error } from '@sveltejs/kit';
-import { HACKATIME_CLIENT_ID, HACKATIME_REDIRECT_URI } from '$env/dynamic/private';
+import { HACKATIME_CLIENT_ID, HACKATIME_REDIRECT_URI } from '$env/static/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
 import { sessions, users } from '$lib/server/db/schema';
