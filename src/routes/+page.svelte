@@ -80,7 +80,7 @@
 
 		return () => {
 			document.removeEventListener('mouseup', handleMouseUp);
-observer.disconnect();
+			observer.disconnect();
 		};
 	});
 </script>
@@ -319,7 +319,7 @@ observer.disconnect();
 					<p>
 						yes, sort of... when claiming your prize, you can choose between a variety of different
 						options, like case color, keycap design, and key switch. you'll be able to unlock more
-						options by completing sidequests!
+						accessories for more hours!
 					</p>
 				</div>
 			</div>
@@ -334,8 +334,8 @@ observer.disconnect();
 				<div class="card faq-card bordered">
 					<p class="subhead"><strong>how many projects can i make?</strong></p>
 					<p>
-						as many as you'd like! there's no limit, but once you finish all side quests and meet
-						all milestones, you'll have already unlocked all unique prizes.
+						as many as you'd like! there's no limit, so keep building interesting, creative, and
+						unique things to your heart's content!
 					</p>
 				</div>
 			</div>
@@ -523,6 +523,18 @@ observer.disconnect();
 			height: 10vh;
 		}
 
+		#landing {
+			height: 100svh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 10vw;
+			box-sizing: border-box;
+			padding-top: 7rem;
+			padding-bottom: 2rem;
+		}
+
 		.display {
 			width: 100%;
 			display: flex;
@@ -530,16 +542,16 @@ observer.disconnect();
 		}
 
 		.key-img {
-			height: 40vh;
-			width: 45vh;
-			margin-top: 15vh;
+			height: 34svh;
+			width: 38svh;
+			margin-top: 0;
 			margin-left: 0;
 		}
 
 		.panel {
 			text-align: center;
 			margin-left: 0;
-			margin-top: 10vh;
+			margin-top: 0;
 		}
 
 		.tagline {
@@ -558,8 +570,8 @@ observer.disconnect();
 			display: none;
 		}
 
-		#landing {
-			height: 75vh;
+		.about-section {
+			margin-top: 0;
 		}
 
 		.faq-card p {
