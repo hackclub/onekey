@@ -87,10 +87,10 @@
 					<div
 						class="item-card"
 						role="button"
-						tabindex={canAfford && !outOfStock ? 0 : -1}
-						aria-disabled={!canAfford || outOfStock}
-						onclick={() => canAfford && !outOfStock && openModal(item)}
-						onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && canAfford && !outOfStock && openModal(item)}
+						tabindex={!outOfStock ? 0 : -1}
+						aria-disabled={outOfStock}
+						onclick={() => !outOfStock && openModal(item)}
+						onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && !outOfStock && openModal(item)}
 					>
 						<div class="item-img-wrap">
 							{#if item.imageUrl}
@@ -113,8 +113,8 @@
 						</div>
 						<button
 							class="btn-order"
-							class:btn-order-disabled={!canAfford || outOfStock}
-							disabled={!canAfford || outOfStock}
+							class:btn-order-disabled={outOfStock}
+							disabled={outOfStock}
 							tabindex="-1"
 						>
 							{#if outOfStock}
@@ -186,11 +186,14 @@
 						</div>
 					{/if}
 
+					{@const canAfford = data.availableSeconds >= modalItem.priceSeconds}
 					<div class="modal-actions">
-						<button type="submit" class="btn-confirm">buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(modalItem.priceSeconds)}</button>
+						<button type="submit" class="btn-confirm" disabled={!canAfford}>buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(modalItem.priceSeconds)}</button>
 						<button type="button" class="btn-cancel-modal" onclick={closeModal}>cancel</button>
 					</div>
-					<p class="modal-balance-note">current balance: {formatHours(data.availableSeconds)}</p>
+					<p class="modal-balance-note">
+						{#if !canAfford}not enough hours — {/if}current balance: {formatHours(data.availableSeconds)}
+					</p>
 				</form>
 			</div>
 		</div>
