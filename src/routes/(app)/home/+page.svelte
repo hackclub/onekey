@@ -2,6 +2,7 @@
 	let { data } = $props();
 
 	const communityGoalHours = 2000;
+	// svelte-ignore state_referenced_locally
 	const communityHours = Math.floor((data.communityApprovedSeconds ?? 0) / 3600);
 	const communityProgress = (communityHours / communityGoalHours) * 100;
 	const goals = [

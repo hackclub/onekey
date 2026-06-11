@@ -1,34 +1,13 @@
 import { redirect, fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { users, projects, projectApprovals, shopCategories, shopItems, shopOrders, balanceAdjustments } from '$lib/server/db/schema';
+import { users, projects, projectApprovals, shopItems, shopOrders, balanceAdjustments } from '$lib/server/db/schema';
 import { eq, and, sum, notInArray, asc } from 'drizzle-orm';
+import { shopCategories } from '$lib/server/db/schema';
+import { getAvailableSeconds } from '$lib/server/balance';
 
 async function getDbUser(hcaId: string) {
 	const [u] = await db.select({ id: users.id }).from(users).where(eq(users.hcaId, hcaId)).limit(1);
 	return u ?? null;
-}
-
-export async function getAvailableSeconds(dbUserId: string) {
-	const [r] = await db
-		.select({ total: sum(projectApprovals.approvedSeconds) })
-		.from(projectApprovals)
-		.innerJoin(projects, eq(projectApprovals.projectId, projects.id))
-		.where(and(eq(projects.userId, dbUserId), eq(projectApprovals.status, 'approved')));
-	const approved = Number(r?.total ?? 0);
-
-	const [s] = await db
-		.select({ total: sum(shopOrders.priceSeconds) })
-		.from(shopOrders)
-		.where(and(eq(shopOrders.userId, dbUserId), notInArray(shopOrders.status, ['cancelled', 'refunded'])));
-	const spent = Number(s?.total ?? 0);
-
-	const [a] = await db
-		.select({ total: sum(balanceAdjustments.seconds) })
-		.from(balanceAdjustments)
-		.where(eq(balanceAdjustments.userId, dbUserId));
-	const adjusted = Number(a?.total ?? 0);
-
-	return approved - spent + adjusted;
 }
 
 export async function load({ locals }) {
