@@ -197,7 +197,9 @@ export const actions = {
 
 		if (!name) return fail(400, { error: 'project name is required' });
 
-		const keepUrl = (form.get('screenshot_keep') as string)?.trim() || null;
+		const rawKeepUrl = (form.get('screenshot_keep') as string)?.trim() || null;
+		const keepUrl =
+			rawKeepUrl?.startsWith('https://cdn.hackclub.com/') ? rawKeepUrl : null;
 		let screenshotUrl: string | null = keepUrl;
 		const file = form.get('screenshot1');
 		if (file instanceof File && file.size > 0) {
@@ -263,7 +265,9 @@ export const actions = {
 
 		if (!name) return fail(400, { error: 'project name is required' });
 
-		const keepUrl = (form.get('screenshot_keep') as string)?.trim() || null;
+		const rawKeepUrl = (form.get('screenshot_keep') as string)?.trim() || null;
+		const keepUrl =
+			rawKeepUrl?.startsWith('https://cdn.hackclub.com/') ? rawKeepUrl : null;
 		let screenshotUrl: string | null = keepUrl;
 		const file = form.get('screenshot1');
 		if (file instanceof File && file.size > 0) {

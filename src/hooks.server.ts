@@ -26,7 +26,12 @@ function isPublicPath(pathname: string): boolean {
 	);
 }
 
+const staticPrefixes = ['/_app/', '/img/', '/audio/'];
+
 export const handle: Handle = async ({ event, resolve }) => {
+	const { pathname } = event.url;
+	if (staticPrefixes.some((p) => pathname.startsWith(p))) return resolve(event);
+
 	const rawToken = event.cookies.get('hca_session');
 
 	if (rawToken) {
