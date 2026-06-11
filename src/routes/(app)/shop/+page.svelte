@@ -246,8 +246,7 @@
 		align-items: center;
 		gap: 0.3rem;
 		flex-shrink: 0;
-		align-self: flex-end;
-		margin-bottom: 0.15rem;
+		align-self: baseline;
 	}
 
 	.dot-sep {

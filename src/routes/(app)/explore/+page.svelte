@@ -113,7 +113,7 @@
 		align-items: center;
 		justify-content: center;
 		border: dotted var(--border-width) var(--color-text);
-		border-radius: 12px;
+		border-radius: var(--radius-card);
 		padding: 4rem 2rem;
 		color: var(--color-text-soft);
 		font-size: 0.95rem;
