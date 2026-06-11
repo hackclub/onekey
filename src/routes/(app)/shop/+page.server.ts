@@ -1,7 +1,7 @@
 import { redirect, fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { users, projects, projectApprovals, shopItems, shopOrders, balanceAdjustments } from '$lib/server/db/schema';
-import { eq, and, sum, notInArray, asc } from 'drizzle-orm';
+import { eq, and, sum, notInArray, asc, sql } from 'drizzle-orm';
 import { shopCategories } from '$lib/server/db/schema';
 import { getAvailableSeconds } from '$lib/server/balance';
 
@@ -25,7 +25,7 @@ export async function load({ locals }) {
 		.select()
 		.from(shopItems)
 		.where(eq(shopItems.available, true))
-		.orderBy(asc(shopItems.categoryId), asc(shopItems.priceSeconds));
+		.orderBy(asc(shopItems.categoryId), asc(shopItems.priceSeconds), sql`lower(${shopItems.name})`);
 
 	const categoriesWithItems = categories
 		.map((cat) => ({ ...cat, items: items.filter((i) => i.categoryId === cat.id) }))
