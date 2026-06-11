@@ -1,5 +1,5 @@
 import { redirect, fail } from '@sveltejs/kit';
-import { TOKEN_ENCRYPTION_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
 import { projects, users } from '$lib/server/db/schema';
@@ -31,7 +31,7 @@ export async function load({ locals }) {
 	let htSecondsMap: Record<string, number> = {};
 	if (dbUser.hackatimeTokenCt && dbUser.hackatimeTokenIv && dbUser.hackatimeTokenTag) {
 		try {
-			const encKey = Buffer.from(TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');
+			const encKey = Buffer.from(env.TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');
 			const accessToken = decryptToken(dbUser.hackatimeTokenCt, dbUser.hackatimeTokenIv, dbUser.hackatimeTokenTag, encKey);
 			const res = await fetch(`${HACKATIME_BASE_URL}/api/v1/authenticated/projects?include_archived=true`, {
 				headers: { Authorization: `Bearer ${accessToken}` }

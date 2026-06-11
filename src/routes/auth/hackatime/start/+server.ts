@@ -1,5 +1,5 @@
 import { redirect, error } from '@sveltejs/kit';
-import { HACKATIME_CLIENT_ID, HACKATIME_REDIRECT_URI } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
 import { sessions, users } from '$lib/server/db/schema';
@@ -32,10 +32,10 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		maxAge: 60 * 10
 	});
 
-	const redirectUri = HACKATIME_REDIRECT_URI || `${url.origin}/auth/hackatime/callback`;
+	const redirectUri = env.HACKATIME_REDIRECT_URI || `${url.origin}/auth/hackatime/callback`;
 
 	const params = new URLSearchParams({
-		client_id: HACKATIME_CLIENT_ID,
+		client_id: env.HACKATIME_CLIENT_ID,
 		redirect_uri: redirectUri,
 		response_type: 'code',
 		scope: 'profile read',

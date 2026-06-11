@@ -1,5 +1,5 @@
 import type { Handle } from '@sveltejs/kit';
-import { ADMIN_IDS, REVIEWER_IDS } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { db } from '$lib/server/db';
 import { sessions, users } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
@@ -7,11 +7,11 @@ import { hashToken } from '$lib/server/session';
 import { getLaunched } from '$lib/server/launch';
 
 const adminSet = new Set(
-	(ADMIN_IDS || '').split(' ').map((id) => id.trim()).filter(Boolean)
+	(env.ADMIN_IDS || '').split(' ').map((id) => id.trim()).filter(Boolean)
 );
 
 const reviewerSet = new Set(
-	(REVIEWER_IDS || '').split(' ').map((id) => id.trim()).filter(Boolean)
+	(env.REVIEWER_IDS || '').split(' ').map((id) => id.trim()).filter(Boolean)
 );
 
 // Paths always accessible regardless of launch state

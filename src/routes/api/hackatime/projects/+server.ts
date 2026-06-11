@@ -1,5 +1,5 @@
 import { json, error } from '@sveltejs/kit';
-import { TOKEN_ENCRYPTION_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
 import { sessions, users } from '$lib/server/db/schema';
@@ -29,7 +29,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 		error(403, 'hackatime not linked');
 	}
 
-	const encKey = Buffer.from(TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');
+	const encKey = Buffer.from(env.TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');
 	const accessToken = decryptToken(u.hackatimeTokenCt, u.hackatimeTokenIv, u.hackatimeTokenTag, encKey);
 
 	const res = await fetch(`${HACKATIME_BASE_URL}/api/v1/authenticated/projects`, {

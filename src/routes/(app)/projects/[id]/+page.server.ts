@@ -1,5 +1,5 @@
 import { redirect, error, fail } from '@sveltejs/kit';
-import { TOKEN_ENCRYPTION_KEY } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
 import {
@@ -29,7 +29,7 @@ async function getHackatimeSeconds(
 	if (!projectNames.length) return 0;
 	if (!dbUser.hackatimeTokenCt || !dbUser.hackatimeTokenIv || !dbUser.hackatimeTokenTag) return 0;
 
-	const encKey = Buffer.from(TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');
+	const encKey = Buffer.from(env.TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');
 	const accessToken = decryptToken(
 		dbUser.hackatimeTokenCt,
 		dbUser.hackatimeTokenIv,

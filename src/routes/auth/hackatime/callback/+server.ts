@@ -1,10 +1,5 @@
 import { redirect, error } from '@sveltejs/kit';
-import {
-	HACKATIME_CLIENT_ID,
-	HACKATIME_CLIENT_SECRET,
-	HACKATIME_REDIRECT_URI,
-	TOKEN_ENCRYPTION_KEY
-} from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
 import { sessions, users } from '$lib/server/db/schema';
@@ -38,15 +33,15 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
 	if (!row || row.sessions.expiresAt <= new Date()) redirect(302, '/?needs_auth=1');
 
-	const redirectUri = HACKATIME_REDIRECT_URI || `${url.origin}/auth/hackatime/callback`;
+	const redirectUri = env.HACKATIME_REDIRECT_URI || `${url.origin}/auth/hackatime/callback`;
 
 	const tokenRes = await fetch(`${HACKATIME_BASE_URL}/oauth/token`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 		body: new URLSearchParams({
 			grant_type: 'authorization_code',
-			client_id: HACKATIME_CLIENT_ID,
-			client_secret: HACKATIME_CLIENT_SECRET,
+			client_id: env.HACKATIME_CLIENT_ID,
+			client_secret: env.HACKATIME_CLIENT_SECRET,
 			redirect_uri: redirectUri,
 			code
 		})
@@ -63,7 +58,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	const hackatimeUser = await meRes.json();
 	const hackatimeUserId = String(hackatimeUser.data?.id ?? hackatimeUser.id ?? '');
 
-	const encKey = Buffer.from(TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');
+	const encKey = Buffer.from(env.TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');
 	const { ct, iv, tag } = encryptToken(access_token, encKey);
 
 	await db
