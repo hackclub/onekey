@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { navigating } from '$app/stores';
+	import { navigating } from '$app/state';
 
 	let visible = $state(false);
 	let progress = $state(0);
@@ -9,7 +9,7 @@
 	let tick: ReturnType<typeof setInterval> | undefined;
 
 	$effect(() => {
-		if ($navigating) {
+		if (navigating) {
 			clearTimeout(showTimer);
 			clearTimeout(hideTimer);
 			clearInterval(tick);

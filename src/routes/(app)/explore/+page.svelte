@@ -47,7 +47,7 @@
 
 {#if visibleProjects.length === 0}
 	<div class="placeholder">
-		<p>no approved projects yet.</p>
+		<p>no projects here yet. <a href="/projects">be the first one!</a></p>
 	</div>
 {:else}
 	<div class="project-grid">
@@ -112,7 +112,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border: 1.5px dashed #2a2f38;
+		border: dotted var(--border-width) var(--color-text);
 		border-radius: 12px;
 		padding: 4rem 2rem;
 		color: var(--color-text-soft);

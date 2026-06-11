@@ -64,6 +64,8 @@
 	<div class="heading-row">
 		<h1 class="heading">shop</h1>
 		<span class="balance-display">
+			<span class="dot-sep">·</span>
+			<span class="balance-label">balance:</span>
 			<span class="balance-icon">{@html clockSvg}</span>
 			{formatHours(data.availableSeconds)}
 		</span>
@@ -244,6 +246,18 @@
 		align-items: center;
 		gap: 0.3rem;
 		flex-shrink: 0;
+	}
+
+	.dot-sep {
+		opacity: 0.35;
+		font-weight: normal;
+	}
+
+	.balance-label {
+		font-size: 0.75em;
+		font-weight: normal;
+		opacity: 0.6;
+		letter-spacing: 0;
 	}
 
 	.balance-icon,
