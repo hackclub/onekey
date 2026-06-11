@@ -16,11 +16,16 @@ export async function getAvailableSeconds(dbUserId: string): Promise<number> {
 		.where(and(eq(shopOrders.userId, dbUserId), notInArray(shopOrders.status, ['cancelled', 'refunded'])));
 	const spent = Number(s?.total ?? 0);
 
-	const [a] = await db
-		.select({ total: sum(balanceAdjustments.seconds) })
-		.from(balanceAdjustments)
-		.where(eq(balanceAdjustments.userId, dbUserId));
-	const adjusted = Number(a?.total ?? 0);
+	let adjusted = 0;
+	try {
+		const [a] = await db
+			.select({ total: sum(balanceAdjustments.seconds) })
+			.from(balanceAdjustments)
+			.where(eq(balanceAdjustments.userId, dbUserId));
+		adjusted = Number(a?.total ?? 0);
+	} catch {
+		// table may not exist yet before migration runs
+	}
 
 	return approved - spent + adjusted;
 }
