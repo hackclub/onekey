@@ -16,6 +16,7 @@
 
 	let keyFrame = $state(framesDown[0]);
 	let isPressed = false;
+	let email = $state('');
 
 	function animateFrames(frames: string[]) {
 		let i = 0;
@@ -105,7 +106,6 @@
 	<meta name="twitter:image:src" content="https://maxstellar.github.io/onekey/img/og-banner.png" />
 </svelte:head>
 
-
 {#if showToast}
 	<div class="toast" role="alert">
 		you need to be logged in to access this!
@@ -188,10 +188,29 @@
 			{#if data.user}
 				<a href="/home" class="button filled cta">go to dashboard</a>
 			{:else}
-				<a href="/login" class="button filled cta">get started</a>
+				<form
+					class="cta-row"
+					onsubmit={(e) => {
+						e.preventDefault();
+						window.location.href = `/login${email ? `?email=${encodeURIComponent(email)}` : ''}`;
+					}}
+				>
+					<input
+						type="email"
+						class="email-input bordered"
+						placeholder="your@email.com"
+						bind:value={email}
+					/>
+					<button type="submit" class="button filled cta">get started</button>
+				</form>
 			{/if}
 		{:else}
-			<a href="https://onekey.fillout.com/rsvp" target="_blank" rel="noopener noreferrer" class="button filled cta">RSVP!</a>
+			<a
+				href="https://onekey.fillout.com/rsvp"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="button filled cta">RSVP!</a
+			>
 		{/if}
 	</div>
 </div>
@@ -411,10 +430,33 @@
 		margin-right: 3rem;
 	}
 
+	.cta-row {
+		display: flex;
+		align-items: center;
+		gap: 1.25rem;
+		flex-wrap: wrap;
+	}
+
+	.email-input {
+		font-family: 'Phantom Sans', sans-serif;
+		font-size: 1.6rem;
+		padding: 1.275rem 1.8rem;
+		background: var(--color-bg);
+		color: var(--color-text);
+		border-radius: var(--radius-pill);
+		width: 21.5rem;
+		outline: none;
+	}
+
+	.email-input::placeholder {
+		color: var(--color-text-soft);
+		opacity: 0.7;
+	}
+
 	.cta {
 		display: inline-block;
 		font-size: 1.8rem;
-		padding: 1.2rem 2.4rem;
+		padding: 1.35rem 2.4rem;
 	}
 
 	.tldr {
@@ -479,6 +521,14 @@
 			margin-left: auto;
 			margin-right: auto;
 			text-align: center;
+		}
+
+		.cta-row {
+			justify-content: center;
+		}
+
+		.email-input {
+			display: none;
 		}
 
 		#landing {
