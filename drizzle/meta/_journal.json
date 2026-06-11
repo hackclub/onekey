@@ -120,6 +120,13 @@
       "when": 1749168000000,
       "tag": "0016_balance_adjustments",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1749254400000,
+      "tag": "0017_shop_item_image_padding",
+      "breakpoints": true
     }
   ]
 }

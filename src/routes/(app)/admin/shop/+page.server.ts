@@ -124,6 +124,7 @@ export const actions = {
 		const imageUrl = (form.get('image_url') as string)?.trim() || null;
 		const stock = parseInt(form.get('stock') as string);
 		const optionsRaw = (form.get('options') as string)?.trim() || '';
+		const imagePadding = Math.max(0, parseInt(form.get('image_padding') as string) || 0);
 
 		if (!categoryId || !name) return fail(400, { error: 'category and name are required' });
 		if (isNaN(priceHours) || priceHours <= 0) return fail(400, { error: 'price must be a positive number' });
@@ -132,7 +133,7 @@ export const actions = {
 		const stockVal = isNaN(stock) ? -1 : stock;
 		const options = parseOptionsText(optionsRaw);
 
-		await db.insert(shopItems).values({ categoryId, name, description, priceSeconds, imageUrl, stock: stockVal, options: JSON.stringify(options) });
+		await db.insert(shopItems).values({ categoryId, name, description, priceSeconds, imageUrl, stock: stockVal, options: JSON.stringify(options), imagePadding });
 		return { success: true };
 	},
 
@@ -148,6 +149,7 @@ export const actions = {
 		const stock = parseInt(form.get('stock') as string);
 		const available = form.get('available') === 'true';
 		const optionsRaw = (form.get('options') as string)?.trim() || '';
+		const imagePadding = Math.max(0, parseInt(form.get('image_padding') as string) || 0);
 
 		if (!id || !categoryId || !name) return fail(400, { error: 'id, category, and name are required' });
 		if (isNaN(priceHours) || priceHours <= 0) return fail(400, { error: 'price must be a positive number' });
@@ -157,7 +159,7 @@ export const actions = {
 		const options = parseOptionsText(optionsRaw);
 
 		await db.update(shopItems)
-			.set({ categoryId, name, description, priceSeconds, imageUrl, stock: stockVal, available, options: JSON.stringify(options), updatedAt: new Date() })
+			.set({ categoryId, name, description, priceSeconds, imageUrl, stock: stockVal, available, options: JSON.stringify(options), imagePadding, updatedAt: new Date() })
 			.where(eq(shopItems.id, id));
 		return { success: true };
 	},

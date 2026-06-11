@@ -101,9 +101,9 @@
 						onclick={() => !outOfStock && openModal(item)}
 						onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && !outOfStock && openModal(item)}
 					>
-						<div class="item-img-wrap">
+						<div class="item-img-wrap" style={item.imagePadding ? `padding: ${item.imagePadding}px; background: #fff;` : ''}>
 							{#if item.imageUrl}
-								<img src={item.imageUrl} alt={item.name} class="item-img" />
+								<img src={item.imageUrl} alt={item.name} class="item-img" style={item.imagePadding ? 'object-fit: contain;' : ''} />
 							{/if}
 						</div>
 						<div class="item-body">
@@ -128,8 +128,6 @@
 						>
 							{#if outOfStock}
 								out of stock
-							{:else if !canAfford}
-								not enough hours
 							{:else}
 								buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(item.priceSeconds)}
 							{/if}
@@ -155,8 +153,8 @@
 	>
 		<div class="modal-box" class:closing={modalClosing}>
 			{#if currentImg}
-				<div class="modal-img-wrap">
-					<img src={currentImg} alt={modalItem.name} class="modal-img" />
+				<div class="modal-img-wrap" style={modalItem.imagePadding ? `padding: ${modalItem.imagePadding}px; background: #fff;` : ''}>
+					<img src={currentImg} alt={modalItem.name} class="modal-img" style={modalItem.imagePadding ? 'object-fit: contain;' : ''} />
 				</div>
 			{/if}
 
@@ -196,7 +194,13 @@
 					{/if}
 
 					<div class="modal-actions">
-						<button type="submit" class="btn-confirm" disabled={data.availableSeconds < modalItem.priceSeconds}>buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(modalItem.priceSeconds)}</button>
+						<button type="submit" class="btn-confirm" disabled={data.availableSeconds < modalItem.priceSeconds}>
+							{#if data.availableSeconds < modalItem.priceSeconds}
+								not enough hours
+							{:else}
+								buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(modalItem.priceSeconds)}
+							{/if}
+						</button>
 						<button type="button" class="btn-cancel-modal" onclick={closeModal}>cancel</button>
 					</div>
 				</form>
