@@ -28,7 +28,6 @@
 		: ((communityProgress - prevGoal.pct) / (nextGoal.pct - prevGoal.pct)) * 100;
 </script>
 
-
 <div class="greeting-row">
 	{#if data.user?.avatar_url}
 		<img class="greeting-avatar" src={data.user.avatar_url} alt="avatar" />
@@ -165,9 +164,9 @@
 <style>
 	.greeting-row {
 		display: flex;
-		align-items: flex-end;
+		align-items: center;
 		gap: 0.85rem;
-		margin: 1rem 0 1.25rem;
+		margin: -0.49rem 0 1.25rem;
 	}
 
 	.greeting-avatar {
@@ -180,7 +179,7 @@
 	}
 
 	.greeting {
-		font-size: clamp(2.5rem, 3.5vw, 3.5rem);
+		font-size: clamp(2rem, 2.8vw, 2.85rem);
 		font-weight: bold;
 		letter-spacing: -0.03em;
 		line-height: 1;
@@ -205,7 +204,7 @@
 		border-radius: var(--radius-card);
 		border: solid var(--border-width);
 		padding: clamp(1rem, 1.5vw, 1.75rem) clamp(1.1rem, 1.5vw, 1.75rem);
-		min-height: clamp(8rem, 12vh, 16rem);
+		min-height: clamp(6.5rem, 9vh, 12rem);
 		box-sizing: border-box;
 	}
 
@@ -423,7 +422,7 @@
 	}
 
 	.started-title {
-		font-size: clamp(1.2rem, 1.6vw, 1.85rem);
+		font-size: clamp(1.05rem, 1.35vw, 1.55rem);
 		font-weight: bold;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;

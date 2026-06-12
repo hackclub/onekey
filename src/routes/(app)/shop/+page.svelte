@@ -386,7 +386,10 @@
 
 	.item-img {
 		position: absolute;
-		inset: var(--img-pad, 0);
+		top: var(--img-pad, 0px);
+		left: var(--img-pad, 0px);
+		width: calc(100% - 2 * var(--img-pad, 0px));
+		height: calc(100% - 2 * var(--img-pad, 0px));
 		object-fit: cover;
 		display: block;
 	}
@@ -543,7 +546,10 @@
 
 	.modal-img {
 		position: absolute;
-		inset: var(--img-pad, 0);
+		top: var(--img-pad, 0px);
+		left: var(--img-pad, 0px);
+		width: calc(100% - 2 * var(--img-pad, 0px));
+		height: calc(100% - 2 * var(--img-pad, 0px));
 		object-fit: cover;
 		display: block;
 	}
