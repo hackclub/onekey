@@ -121,7 +121,7 @@
 										<span class="item-price-original">
 											<span class="price-icon">{@html clockSvg}</span>{formatHours(item.priceSeconds)}
 											<svg class="price-strike" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-												<line x1="3" y1="92" x2="97" y2="8" vector-effect="non-scaling-stroke" />
+												<line x1="2" y1="45" x2="98" y2="9" vector-effect="non-scaling-stroke" />
 											</svg>
 										</span>
 										<span class="item-price-sale"
@@ -483,7 +483,7 @@
 	   regardless of the (variable-width) price text it crosses. */
 	.item-price-original .price-strike {
 		position: absolute;
-		inset: -1px -2px;
+		inset: 0 -2px;
 		overflow: visible;
 		pointer-events: none;
 	}
