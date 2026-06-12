@@ -405,7 +405,9 @@
 										{:else if hackatimeError}
 											<span class="ht-dropdown-item ht-dropdown-muted">{hackatimeError}</span>
 										{:else if hackatimeProjects.filter((p) => !selectedHtProjects.includes(p.name) && !data.linkedHackatimeProjects.includes(p.name)).length === 0}
-											<span class="ht-dropdown-item ht-dropdown-muted">no valid hackatime projects</span>
+											<span class="ht-dropdown-item ht-dropdown-muted"
+												>no valid hackatime projects</span
+											>
 										{:else}
 											{#each hackatimeProjects.filter((p) => !selectedHtProjects.includes(p.name) && !data.linkedHackatimeProjects.includes(p.name)) as hp (hp.name)}
 												<button
@@ -745,7 +747,7 @@
 			<h2 class="modal-title" id="address-modal-title">shipping address required</h2>
 			<p class="address-modal-desc">
 				we mail prizes for approved projects, so we need your shipping address on file before you
-				submit. as a bonus, you'll get some free stickers sent to you too!
+				submit!
 			</p>
 			<div class="modal-actions">
 				<button type="button" class="btn-modal-cancel" onclick={closeAddressModal}>
