@@ -116,12 +116,19 @@
 						<div class="item-body">
 							<div class="item-top">
 								<span class="item-name">{item.name}</span>
-								<span class="item-price" class:item-price-discounted={isDiscounted}>
-									<span class="price-icon">{@html clockSvg}</span>{formatHours(effectivePrice)}
+								<span class="item-price">
 									{#if isDiscounted}
-										<span class="item-price-original"
-											><span class="price-icon">{@html clockSvg}</span>{formatHours(item.priceSeconds)}</span
+										<span class="item-price-original">
+											<span class="price-icon">{@html clockSvg}</span>{formatHours(item.priceSeconds)}
+											<svg class="price-strike" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+												<line x1="3" y1="92" x2="97" y2="8" vector-effect="non-scaling-stroke" />
+											</svg>
+										</span>
+										<span class="item-price-sale"
+											><span class="price-icon">{@html clockSvg}</span>{formatHours(effectivePrice)}</span
 										>
+									{:else}
+										<span class="price-icon">{@html clockSvg}</span>{formatHours(effectivePrice)}
 									{/if}
 								</span>
 							</div>
@@ -455,19 +462,36 @@
 		margin: 0;
 	}
 
-	.item-price-discounted {
+	.item-price-sale {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.18rem;
 		color: #d64545;
 	}
 
 	.item-price-original {
+		position: relative;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.18rem;
 		font-size: 0.82em;
 		color: var(--color-text-soft);
-		text-decoration: line-through;
-		text-decoration-thickness: 1.5px;
 		font-weight: 600;
+	}
+
+	/* Diagonal strike drawn as an SVG so the thickness stays crisp and constant
+	   regardless of the (variable-width) price text it crosses. */
+	.item-price-original .price-strike {
+		position: absolute;
+		inset: -1px -2px;
+		overflow: visible;
+		pointer-events: none;
+	}
+
+	.item-price-original .price-strike line {
+		stroke: #d64545;
+		stroke-width: 2.5;
+		stroke-linecap: round;
 	}
 
 	.discount-flag {
