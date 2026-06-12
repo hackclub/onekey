@@ -103,9 +103,9 @@
 						onclick={() => !outOfStock && openModal(item)}
 						onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && !outOfStock && openModal(item)}
 					>
-						<div class="item-img-wrap">
+						<div class="item-img-wrap" style={item.imagePadding ? `--img-pad: ${item.imagePadding}px;` : ''}>
 							{#if item.imageUrl}
-								<img src={item.imageUrl} alt={item.name} class="item-img" style={item.imagePadding ? `padding: ${item.imagePadding}px; object-fit: contain;` : ''} />
+								<img src={item.imageUrl} alt={item.name} class="item-img" style={item.imagePadding ? 'object-fit: contain;' : ''} />
 							{/if}
 						</div>
 						<div class="item-body">
@@ -155,8 +155,8 @@
 	>
 		<div class="modal-box" class:closing={modalClosing}>
 			{#if currentImg}
-				<div class="modal-img-wrap">
-					<img src={currentImg} alt={modalItem.name} class="modal-img" style={modalItem.imagePadding ? `padding: ${modalItem.imagePadding}px; object-fit: contain;` : ''} />
+				<div class="modal-img-wrap" style={modalItem.imagePadding ? `--img-pad: ${modalItem.imagePadding}px; background: #fff;` : ''}>
+					<img src={currentImg} alt={modalItem.name} class="modal-img" style={modalItem.imagePadding ? 'object-fit: contain;' : ''} />
 				</div>
 			{/if}
 
@@ -380,14 +380,15 @@
 		background: #fff;
 		border-bottom: calc(var(--border-width) / 2) solid;
 		box-sizing: border-box;
+		overflow: hidden;
+		position: relative;
 	}
 
 	.item-img {
-		width: 100%;
-		height: 100%;
+		position: absolute;
+		inset: var(--img-pad, 0);
 		object-fit: cover;
 		display: block;
-		box-sizing: border-box;
 	}
 
 	.item-body {
@@ -534,17 +535,17 @@
 		width: 100%;
 		aspect-ratio: 16 / 9;
 		flex-shrink: 0;
-		background: #fff;
 		border-bottom: calc(var(--border-width) / 2) solid;
 		box-sizing: border-box;
+		overflow: hidden;
+		position: relative;
 	}
 
 	.modal-img {
-		width: 100%;
-		height: 100%;
+		position: absolute;
+		inset: var(--img-pad, 0);
 		object-fit: cover;
 		display: block;
-		box-sizing: border-box;
 	}
 
 	.modal-body {
