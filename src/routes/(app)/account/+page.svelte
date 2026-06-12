@@ -1,12 +1,27 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { untrack } from 'svelte';
+	import { onMount, untrack } from 'svelte';
+	import { page } from '$app/state';
 	import { darkMode } from '$lib/stores/theme';
 
 	let { data } = $props();
 
-	let editingAddress = $state(false);
+	let editingAddress = $state(
+		untrack(() => page.url.searchParams.get('edit') === 'address')
+	);
 	let sfxEnabled = $state(untrack(() => data.user?.key_sfx_enabled ?? true));
+
+	let addressCardEl = $state<HTMLDivElement | null>(null);
+
+	onMount(() => {
+		if (editingAddress) {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					addressCardEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				});
+			});
+		}
+	});
 
 	let sfxForm: HTMLFormElement;
 	let sfxInput: HTMLInputElement;
@@ -126,7 +141,7 @@
 		</div>
 	</div>
 
-	<div class="card card-full">
+	<div class="card card-full" bind:this={addressCardEl}>
 		<div class="address-header">
 			<span class="card-label">address</span>
 			{#if !editingAddress}

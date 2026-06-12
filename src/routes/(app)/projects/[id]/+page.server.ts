@@ -254,7 +254,12 @@ export const actions = {
 			.where(eq(projectApprovals.projectId, id));
 
 		if (approvalCount > 0)
-			return fail(400, { error: 'project already submitted — use reship to submit new work' });
+			return fail(400, { error: 'project already submitted, use reship to submit new work' });
+
+		if (!dbUser.streetAddress || !dbUser.locality || !dbUser.country)
+			return fail(400, {
+				error: 'set your shipping address in account settings before submitting'
+			});
 
 		const form = await request.formData();
 		const name = (form.get('name') as string)?.trim();
@@ -343,6 +348,11 @@ export const actions = {
 		if (!latestApproval) return fail(400, { error: 'no prior submission found' });
 		if (latestApproval.status === 'pending')
 			return fail(400, { error: 'a review is already pending for this project' });
+
+		if (!dbUser.streetAddress || !dbUser.locality || !dbUser.country)
+			return fail(400, {
+				error: 'set your shipping address in account settings before submitting'
+			});
 
 		const projectNames = (projectRow.hackatimeProject ?? '')
 			.split(',')

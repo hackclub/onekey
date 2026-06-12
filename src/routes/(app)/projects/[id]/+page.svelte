@@ -78,8 +78,41 @@
 	let checkModalAction = $state<'submit' | 'reship'>('submit');
 	let modalChecks = $state([false, false, false]);
 	let actualSubmitBtnEl = $state<HTMLButtonElement | null>(null);
+	let reshipFormEl = $state<HTMLFormElement | null>(null);
 
 	const allChecked = $derived(modalChecks.every(Boolean));
+
+	const hasShippingAddress = $derived(
+		!!(data.user?.street_address && data.user?.locality && data.user?.country)
+	);
+	let showAddressModal = $state(false);
+	let addressModalClosing = $state(false);
+	const ADDRESS_MODAL_CLOSE_MS = 160;
+
+	function closeAddressModal() {
+		if (addressModalClosing) return;
+		addressModalClosing = true;
+		setTimeout(() => {
+			showAddressModal = false;
+			addressModalClosing = false;
+		}, ADDRESS_MODAL_CLOSE_MS);
+	}
+
+	function tryOpenSubmit() {
+		if (!hasShippingAddress) {
+			showAddressModal = true;
+			return;
+		}
+		openCheckModal('submit');
+	}
+
+	function tryReship() {
+		if (!hasShippingAddress) {
+			showAddressModal = true;
+			return;
+		}
+		reshipFormEl?.requestSubmit();
+	}
 
 	function openCheckModal(action: 'submit' | 'reship') {
 		modalChecks = [false, false, false];
@@ -200,7 +233,6 @@
 		}
 	});
 </script>
-
 
 <a href="/projects" class="back">
 	<svg
@@ -456,9 +488,7 @@
 			{#if form?.error && !form?.success}
 				<p class="form-error">{form.error}</p>
 			{/if}
-			<button type="button" class="btn-submit" onclick={() => openCheckModal('submit')}
-				>submit for review</button
-			>
+			<button type="button" class="btn-submit" onclick={tryOpenSubmit}>submit for review</button>
 
 			<div class="danger-section has-top">
 				<span class="card-label">danger zone</span>
@@ -480,8 +510,8 @@
 				{#if form?.error && !form?.success}
 					<p class="form-error">{form.error}</p>
 				{/if}
-				<form method="POST" action="?/reship" use:enhance>
-					<button type="submit" class="btn-submit">ship again</button>
+				<form method="POST" action="?/reship" use:enhance bind:this={reshipFormEl}>
+					<button type="button" class="btn-submit" onclick={tryReship}>ship again</button>
 				</form>
 			{:else}
 				<p class="danger-desc">
@@ -635,6 +665,54 @@
 				<button type="submit" class={reviewActionClass}>{reviewActionLabel}</button>
 			</form>
 		{/if}
+	</div>
+{/if}
+
+{#if showAddressModal}
+	<div
+		class="modal-backdrop"
+		class:closing={addressModalClosing}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="address-modal-title"
+		onclick={(e) => e.target === e.currentTarget && closeAddressModal()}
+		onkeydown={(e) => e.key === 'Escape' && closeAddressModal()}
+		tabindex="-1"
+	>
+		<div class="modal-box address-modal" class:closing={addressModalClosing}>
+			<span class="address-modal-icon" aria-hidden="true">
+				<svg
+					fill-rule="evenodd"
+					clip-rule="evenodd"
+					stroke-linejoin="round"
+					stroke-miterlimit="1.414"
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 32 32"
+					preserveAspectRatio="xMidYMid meet"
+					fill="currentColor"
+					stroke="currentColor"
+					stroke-width="1.3"
+					paint-order="stroke fill"
+				>
+					<path d="M16 14C16.5523 14 17 13.5523 17 13C17 12.4477 16.5523 12 16 12C15.4477 12 15 12.4477 15 13C15 13.5523 15.4477 14 16 14ZM16 16C17.6569 16 19 14.6569 19 13C19 11.3431 17.6569 10 16 10C14.3431 10 13 11.3431 13 13C13 14.6569 14.3431 16 16 16Z" />
+					<circle cx="16" cy="13" r="1.4" fill-opacity="0.35" stroke="none" />
+					<path d="M16 6C12.134 6 9 9.13401 9 13C9 15.7939 10.0663 18.365 11.442 20.514C12.8161 22.6604 14.4624 24.3281 15.529 25.2945C15.8067 25.5461 16.1933 25.5461 16.471 25.2945C17.5376 24.3281 19.1839 22.6604 20.558 20.514C21.9337 18.365 23 15.7939 23 13C23 9.13401 19.866 6 16 6ZM7 13C7 8.02944 11.0294 4 16 4C20.9706 4 25 8.02944 25 13C25 16.3034 23.7427 19.2486 22.2424 21.5923C20.7403 23.9387 18.9578 25.7402 17.8138 26.7766C16.7741 27.7187 15.2259 27.7187 14.1862 26.7766C13.0422 25.7402 11.2597 23.9387 9.75764 21.5923C8.25725 19.2486 7 16.3034 7 13Z" />
+				</svg>
+			</span>
+			<h2 class="modal-title" id="address-modal-title">shipping address required</h2>
+			<p class="address-modal-desc">
+				we mail prizes for approved projects, so we need your shipping address on file before you
+				submit. as a bonus, you'll get some free stickers sent to you too!
+			</p>
+			<div class="modal-actions">
+				<button type="button" class="btn-modal-cancel" onclick={closeAddressModal}>
+					not yet
+				</button>
+				<a href="/account?edit=address" class="btn-modal-confirm address-modal-cta">
+					set address
+				</a>
+			</div>
+		</div>
 	</div>
 {/if}
 
@@ -1638,5 +1716,104 @@
 
 	.req {
 		color: #c96a6a;
+	}
+
+	/* address-required modal */
+
+	.modal-backdrop:has(.address-modal) {
+		animation: address-modal-fade-in 0.18s ease both;
+	}
+
+	.modal-backdrop:has(.address-modal.closing) {
+		animation: address-modal-fade-out 0.16s ease forwards;
+	}
+
+	.address-modal {
+		text-align: center;
+		align-items: center;
+		gap: 0.85rem;
+		animation: address-modal-slide-up 0.22s ease both;
+	}
+
+	.address-modal.closing {
+		animation: address-modal-slide-down 0.16s ease forwards;
+	}
+
+	@keyframes address-modal-fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes address-modal-fade-out {
+		from {
+			opacity: 1;
+		}
+		to {
+			opacity: 0;
+		}
+	}
+
+	@keyframes address-modal-slide-up {
+		from {
+			transform: translateY(14px);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
+	}
+
+	@keyframes address-modal-slide-down {
+		from {
+			transform: translateY(0);
+			opacity: 1;
+		}
+		to {
+			transform: translateY(14px);
+			opacity: 0;
+		}
+	}
+
+	.address-modal-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 4.25rem;
+		height: 4.25rem;
+		border-radius: 50%;
+		background: color-mix(in srgb, var(--color-text) 8%, transparent);
+		color: var(--color-text);
+		margin-bottom: 0.1rem;
+	}
+
+	.address-modal-icon svg {
+		width: 2.5rem;
+		height: 2.5rem;
+	}
+
+	.address-modal-desc {
+		font-size: 0.95rem;
+		line-height: 1.5;
+		color: var(--color-text-soft);
+		margin: 0;
+		max-width: 32rem;
+	}
+
+	.address-modal .modal-actions {
+		justify-content: center;
+		margin-top: 0.4rem;
+		width: 100%;
+	}
+
+	.address-modal-cta {
+		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 </style>
