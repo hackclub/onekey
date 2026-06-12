@@ -19,6 +19,7 @@ export async function load({ locals }) {
 			userNickname: users.nickname,
 			userAvatar: users.slackAvatarUrl,
 			userStreet: users.streetAddress,
+			userAddressLine2: users.addressLine2,
 			userLocality: users.locality,
 			userRegion: users.region,
 			userPostal: users.postalCode,

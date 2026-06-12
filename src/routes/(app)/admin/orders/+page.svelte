@@ -24,7 +24,7 @@
 	};
 
 	function formatAddress(order: typeof data.orders[number]) {
-		const parts = [order.userStreet, order.userLocality, order.userRegion, order.userPostal, order.userCountry];
+		const parts = [order.userStreet, order.userAddressLine2, order.userLocality, order.userRegion, order.userPostal, order.userCountry];
 		return parts.filter(Boolean).join(', ') || null;
 	}
 
