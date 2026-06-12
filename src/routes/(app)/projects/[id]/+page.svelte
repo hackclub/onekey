@@ -555,9 +555,9 @@
 						type: 'approval' as const,
 						action: 'submitted',
 						time: a.submittedAt,
-						actorAvatar: null as string | null,
-						actorName: null as string | null,
-						actorNickname: null as string | null,
+						actorAvatar: data.projectOwner?.avatar ?? null,
+						actorName: data.projectOwner?.name ?? null,
+						actorNickname: data.projectOwner?.nickname ?? null,
 						message: null as string | null,
 						internalNote: null as string | null,
 						submittedSeconds: a.submittedSeconds,
@@ -614,13 +614,9 @@
 							{:else}
 								<div class="event-avatar event-avatar-placeholder"></div>
 							{/if}
-							{#if event.isSubmission}
-								<span class="event-actor">you</span>
-							{:else}
-								<span class="event-actor"
-									>{event.actorNickname ?? event.actorName ?? 'reviewer'}</span
-								>
-							{/if}
+							<span class="event-actor"
+								>{event.actorNickname ?? event.actorName ?? (event.isSubmission ? 'submitter' : 'reviewer')}</span
+							>
 							<span class="event-action event-action-{event.action}">{event.action}</span>
 							{#if event.isSubmission && event.newSeconds}
 								<span class="event-hours">{formatHours(event.newSeconds)} submitted</span>

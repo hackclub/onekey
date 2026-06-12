@@ -93,7 +93,9 @@
 			</div>
 			<div class="item-grid">
 				{#each cat.items as item (item.id)}
-					{@const canAfford = data.availableSeconds >= item.priceSeconds}
+					{@const effectivePrice = item.discountSeconds ?? item.priceSeconds}
+					{@const isDiscounted = item.discountSeconds != null}
+					{@const canAfford = data.availableSeconds >= effectivePrice}
 					{@const outOfStock = item.stock === 0}
 					<div
 						class="item-card"
@@ -107,12 +109,20 @@
 							{#if item.imageUrl}
 								<img src={item.imageUrl} alt={item.name} class="item-img" style={item.imagePadding ? 'object-fit: contain;' : ''} />
 							{/if}
+							{#if isDiscounted}
+								<span class="discount-flag">sale</span>
+							{/if}
 						</div>
 						<div class="item-body">
 							<div class="item-top">
 								<span class="item-name">{item.name}</span>
-								<span class="item-price">
-									<span class="price-icon">{@html clockSvg}</span>{formatHours(item.priceSeconds)}
+								<span class="item-price" class:item-price-discounted={isDiscounted}>
+									<span class="price-icon">{@html clockSvg}</span>{formatHours(effectivePrice)}
+									{#if isDiscounted}
+										<span class="item-price-original"
+											><span class="price-icon">{@html clockSvg}</span>{formatHours(item.priceSeconds)}</span
+										>
+									{/if}
 								</span>
 							</div>
 							{#if item.stock !== -1 && item.stock > 0}
@@ -125,13 +135,14 @@
 						<button
 							class="btn-order"
 							class:btn-order-disabled={outOfStock}
+							class:btn-order-discounted={isDiscounted && !outOfStock}
 							disabled={outOfStock}
 							tabindex="-1"
 						>
 							{#if outOfStock}
 								out of stock
 							{:else}
-								buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(item.priceSeconds)}
+								buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(effectivePrice)}
 							{/if}
 						</button>
 					</div>
@@ -195,12 +206,25 @@
 						</div>
 					{/if}
 
+					{@const modalEffective = modalItem.discountSeconds ?? modalItem.priceSeconds}
+					{@const modalDiscounted = modalItem.discountSeconds != null}
 					<div class="modal-actions">
-						<button type="submit" class="btn-confirm" disabled={data.availableSeconds < modalItem.priceSeconds}>
-							{#if data.availableSeconds < modalItem.priceSeconds}
+						<button
+							type="submit"
+							class="btn-confirm"
+							class:btn-confirm-discounted={modalDiscounted &&
+								data.availableSeconds >= modalEffective}
+							disabled={data.availableSeconds < modalEffective}
+						>
+							{#if data.availableSeconds < modalEffective}
 								not enough hours
 							{:else}
-								buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(modalItem.priceSeconds)}
+								buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(modalEffective)}
+								{#if modalDiscounted}
+									<span class="btn-confirm-original"
+										><span class="price-icon">{@html clockSvg}</span>{formatHours(modalItem.priceSeconds)}</span
+									>
+								{/if}
 							{/if}
 						</button>
 						<button type="button" class="btn-cancel-modal" onclick={closeModal}>cancel</button>
@@ -424,11 +448,64 @@
 		flex-shrink: 0;
 		display: flex;
 		align-items: center;
-		gap: 0.3rem;
+		gap: 0.45rem;
 	}
 
 	.item-price .price-icon {
 		margin: 0;
+	}
+
+	.item-price-discounted {
+		color: #d64545;
+	}
+
+	.item-price-original {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.18rem;
+		font-size: 0.82em;
+		color: var(--color-text-soft);
+		text-decoration: line-through;
+		text-decoration-thickness: 1.5px;
+		font-weight: 600;
+	}
+
+	.discount-flag {
+		position: absolute;
+		top: 0.55rem;
+		left: 0.55rem;
+		z-index: 2;
+		font-size: 0.7rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		background: #d64545;
+		color: #fff;
+		padding: 0.22rem 0.55rem;
+		border-radius: var(--radius-pill);
+	}
+
+	.btn-order-discounted {
+		background: #d64545;
+		border-color: #d64545;
+		color: #fff;
+	}
+
+	.btn-confirm-discounted {
+		background: #d64545;
+		border-color: #d64545;
+	}
+
+	.btn-confirm-original {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.18rem;
+		margin-left: 0.5em;
+		font-size: 0.78em;
+		opacity: 0.7;
+		text-decoration: line-through;
+		text-decoration-thickness: 1.5px;
+		font-weight: 600;
 	}
 
 

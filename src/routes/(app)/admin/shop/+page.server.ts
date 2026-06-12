@@ -121,6 +121,7 @@ export const actions = {
 		const name = (form.get('name') as string)?.trim();
 		const description = (form.get('description') as string)?.trim() || null;
 		const priceHours = parseFloat(form.get('price_hours') as string);
+		const discountHoursRaw = (form.get('discount_hours') as string)?.trim() ?? '';
 		const imageUrl = (form.get('image_url') as string)?.trim() || null;
 		const stock = parseInt(form.get('stock') as string);
 		const optionsRaw = (form.get('options') as string)?.trim() || '';
@@ -130,10 +131,18 @@ export const actions = {
 		if (isNaN(priceHours) || priceHours <= 0) return fail(400, { error: 'price must be a positive number' });
 
 		const priceSeconds = Math.round(priceHours * 3600);
+		let discountSeconds: number | null = null;
+		if (discountHoursRaw !== '') {
+			const dh = parseFloat(discountHoursRaw);
+			if (isNaN(dh) || dh <= 0) return fail(400, { error: 'discount must be a positive number' });
+			discountSeconds = Math.round(dh * 3600);
+			if (discountSeconds >= priceSeconds)
+				return fail(400, { error: 'discount price must be lower than regular price' });
+		}
 		const stockVal = isNaN(stock) ? -1 : stock;
 		const options = parseOptionsText(optionsRaw);
 
-		await db.insert(shopItems).values({ categoryId, name, description, priceSeconds, imageUrl, stock: stockVal, options: JSON.stringify(options), imagePadding });
+		await db.insert(shopItems).values({ categoryId, name, description, priceSeconds, discountSeconds, imageUrl, stock: stockVal, options: JSON.stringify(options), imagePadding });
 		return { success: true };
 	},
 
@@ -145,6 +154,7 @@ export const actions = {
 		const name = (form.get('name') as string)?.trim();
 		const description = (form.get('description') as string)?.trim() || null;
 		const priceHours = parseFloat(form.get('price_hours') as string);
+		const discountHoursRaw = (form.get('discount_hours') as string)?.trim() ?? '';
 		const imageUrl = (form.get('image_url') as string)?.trim() || null;
 		const stock = parseInt(form.get('stock') as string);
 		const available = form.get('available') === 'true';
@@ -155,11 +165,19 @@ export const actions = {
 		if (isNaN(priceHours) || priceHours <= 0) return fail(400, { error: 'price must be a positive number' });
 
 		const priceSeconds = Math.round(priceHours * 3600);
+		let discountSeconds: number | null = null;
+		if (discountHoursRaw !== '') {
+			const dh = parseFloat(discountHoursRaw);
+			if (isNaN(dh) || dh <= 0) return fail(400, { error: 'discount must be a positive number' });
+			discountSeconds = Math.round(dh * 3600);
+			if (discountSeconds >= priceSeconds)
+				return fail(400, { error: 'discount price must be lower than regular price' });
+		}
 		const stockVal = isNaN(stock) ? -1 : stock;
 		const options = parseOptionsText(optionsRaw);
 
 		await db.update(shopItems)
-			.set({ categoryId, name, description, priceSeconds, imageUrl, stock: stockVal, available, options: JSON.stringify(options), imagePadding, updatedAt: new Date() })
+			.set({ categoryId, name, description, priceSeconds, discountSeconds, imageUrl, stock: stockVal, available, options: JSON.stringify(options), imagePadding, updatedAt: new Date() })
 			.where(eq(shopItems.id, id));
 		return { success: true };
 	},

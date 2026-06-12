@@ -81,12 +81,13 @@ export const actions = {
 					.where(eq(balanceAdjustments.userId, dbUser.id));
 				const adjusted = Number(adj?.total ?? 0);
 
-				if (approved - spent + adjusted < item.priceSeconds) throw new Error('not enough hours available');
+				const effectivePrice = item.discountSeconds ?? item.priceSeconds;
+				if (approved - spent + adjusted < effectivePrice) throw new Error('not enough hours available');
 
 				await tx.insert(shopOrders).values({
 					userId: dbUser.id,
 					itemId: item.id,
-					priceSeconds: item.priceSeconds,
+					priceSeconds: effectivePrice,
 					status: 'ordered',
 					selectedOptions: JSON.stringify(selectedOptions)
 				});

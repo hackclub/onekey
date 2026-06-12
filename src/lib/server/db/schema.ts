@@ -123,6 +123,7 @@ export const shopItems = pgTable('shop_items', {
 	name: text('name').notNull(),
 	description: text('description'),
 	priceSeconds: integer('price_seconds').notNull(),
+	discountSeconds: integer('discount_seconds'), // null = no discount
 	imageUrl: text('image_url'),
 	stock: integer('stock').notNull().default(-1), // -1 = unlimited
 	available: boolean('available').notNull().default(true),

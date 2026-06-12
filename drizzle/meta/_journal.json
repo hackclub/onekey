@@ -134,6 +134,13 @@
       "when": 1749340800000,
       "tag": "0018_approved_submissions",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1749427200000,
+      "tag": "0019_shop_discount",
+      "breakpoints": true
     }
   ]
 }

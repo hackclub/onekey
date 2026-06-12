@@ -164,6 +164,16 @@ export async function load({ locals, params }) {
 			: []
 	);
 
+	const [projectOwnerRow] = await db
+		.select({
+			name: users.name,
+			nickname: users.nickname,
+			avatar: users.slackAvatarUrl
+		})
+		.from(users)
+		.where(eq(users.id, project.userId))
+		.limit(1);
+
 	return {
 		project,
 		approvals: approvalsWithDelta,
@@ -172,6 +182,7 @@ export async function load({ locals, params }) {
 		derivedStatus,
 		availableSeconds,
 		linkedHackatimeProjects,
+		projectOwner: projectOwnerRow ?? null,
 		isReviewer: locals.isReviewer,
 		isAdmin: locals.isAdmin,
 		isOwnProject: project.userId === dbUser.id

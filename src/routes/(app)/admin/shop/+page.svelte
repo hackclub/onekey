@@ -109,6 +109,7 @@
 										<input class="input" type="text" name="name" value={item.name} placeholder="name" required />
 										<input class="input" type="text" name="description" value={item.description ?? ''} placeholder="description" />
 										<input class="input input-sm" type="number" name="price_hours" value={(item.priceSeconds / 3600).toFixed(1)} step="0.5" min="0.5" placeholder="price (hours)" required />
+										<input class="input input-sm" type="number" name="discount_hours" value={item.discountSeconds != null ? (item.discountSeconds / 3600).toFixed(1) : ''} step="0.5" min="0" placeholder="discount price (hours, blank = none)" />
 										<input class="input" type="url" name="image_url" value={item.imageUrl ?? ''} placeholder="image url (optional)" />
 										<input class="input input-sm" type="number" name="image_padding" value={item.imagePadding} min="0" max="80" placeholder="image padding px (0)" />
 										<input class="input input-sm" type="number" name="stock" value={item.stock} placeholder="stock (-1 = unlimited)" />
@@ -162,6 +163,7 @@
 					<input class="input" type="text" name="name" placeholder="name" required />
 					<input class="input" type="text" name="description" placeholder="description (optional)" />
 					<input class="input input-sm" type="number" name="price_hours" step="0.5" min="0.5" placeholder="price in hours (e.g. 2)" required />
+					<input class="input input-sm" type="number" name="discount_hours" step="0.5" min="0" placeholder="discount price (hours, blank = none)" />
 					<input class="input" type="url" name="image_url" placeholder="image url (optional)" />
 					<input class="input input-sm" type="number" name="image_padding" min="0" max="80" placeholder="image padding px (0)" value="0" />
 					<input class="input input-sm" type="number" name="stock" placeholder="stock (-1 = unlimited)" value="-1" />
