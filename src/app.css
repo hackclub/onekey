@@ -257,8 +257,7 @@ header {
 	border-color: var(--color-text);
 }
 
-.nav-active img,
-.nav-active svg {
+.nav-active img {
 	filter: invert(1);
 }
 

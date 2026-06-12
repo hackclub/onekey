@@ -67,7 +67,7 @@
 				{#if data.user?.street_address || data.user?.locality || data.user?.country}
 					<span class="started-action">done!</span>
 				{:else}
-					<a href="/account" class="started-action">go</a>
+					<a href="/account?edit=address" class="started-action">go</a>
 				{/if}
 			</li>
 			<li class="started-item" class:done={data.hasProject}>
