@@ -379,6 +379,7 @@
 		flex-shrink: 0;
 		background: #fff;
 		border-bottom: calc(var(--border-width) / 2) solid;
+		box-sizing: border-box;
 	}
 
 	.item-img {
@@ -533,6 +534,7 @@
 		aspect-ratio: 16 / 9;
 		flex-shrink: 0;
 		border-bottom: calc(var(--border-width) / 2) solid;
+		box-sizing: border-box;
 	}
 
 	.modal-img {
