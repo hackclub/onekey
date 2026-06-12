@@ -4,7 +4,7 @@
 
 	let { data, form } = $props();
 
-	type Item = typeof data.categories[number]['items'][number];
+	type Item = (typeof data.categories)[number]['items'][number];
 	type Choice = { name: string; imageUrl?: string };
 	type ItemOption = { label: string; choices: Choice[] };
 
@@ -50,13 +50,15 @@
 	function closeModal() {
 		if (modalClosing) return;
 		modalClosing = true;
-		setTimeout(() => { modalItem = null; modalClosing = false; }, CLOSE_MS);
+		setTimeout(() => {
+			modalItem = null;
+			modalClosing = false;
+		}, CLOSE_MS);
 	}
 
 	const clockSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor" stroke="currentColor" stroke-width="1.5" paint-order="stroke fill"><path d="M26 16c0 5.523-4.477 10-10 10S6 21.523 6 16 10.477 6 16 6s10 4.477 10 10zm2 0c0 6.627-5.373 12-12 12S4 22.627 4 16 9.373 4 16 4s12 5.373 12 12z"/><path d="M15.64 17a1 1 0 0 1-1-1V9a1 1 0 0 1 2 0v7a1 1 0 0 1-1 1z"/><path d="M21.702 19.502a1 1 0 0 1-1.366.366l-5.196-3a1 1 0 0 1 1-1.732l5.196 3a1 1 0 0 1 .366 1.366z"/></svg>`;
 	const caretSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" aria-label="down-caret" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor"><path d="M 0.359841 9.01822C 0.784113 9.37178 1.41467 9.31446 1.76823 8.8902C 3.14518 7.2451 6.52975 3.42464 8.25002 2.11557C 9.99919 3.44663 13.335 7.21555 14.7318 8.8902C 15.0854 9.31446 15.7159 9.37178 16.1402 9.01822C 16.5645 8.66466 16.6215 8.03371 16.2679 7.60943C 14.7363 5.76983 11.2749 1.80977 9.30351 0.408618C 8.99227 0.190441 8.64018 0 8.25002 0C 7.85987 0 7.50778 0.190441 7.19654 0.408618C 5.26486 1.78153 1.73514 5.80788 0.232849 7.60856L 0.231804 7.60982C -0.12176 8.03409 -0.0644362 8.66466 0.359841 9.01822Z" transform="translate(7.12506 20.6251)scale(1 -1)"/></svg>`;
 </script>
-
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && modalItem && closeModal()} />
 
@@ -70,7 +72,23 @@
 			{formatHours(data.availableSeconds)}
 		</span>
 	</div>
-	<a href="/shop/orders" class="orders-btn bordered">your orders <svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor" class="btn-icon"><path d="M11.6068 8.1099C11.2532 8.53417 11.3106 9.16473 11.7348 9.51829C13.3799 10.8952 17.2004 14.2798 18.5095 16.0001C17.1784 17.7493 13.4095 21.0851 11.7348 22.4819C11.3106 22.8355 11.2532 23.466 11.6068 23.8903C11.9604 24.3146 12.5913 24.3716 13.0156 24.018C14.8552 22.4864 18.8153 19.025 20.2164 17.0536C20.4346 16.7423 20.625 16.3902 20.625 16.0001C20.625 15.6099 20.4346 15.2578 20.2164 14.9466C18.8435 13.0149 14.8171 9.4852 13.0165 7.98291L13.0152 7.98186C12.5909 7.6283 11.9604 7.68562 11.6068 8.1099Z"/></svg></a>
+	<a href="/shop/orders" class="orders-btn bordered"
+		>your orders <svg
+			fill-rule="evenodd"
+			clip-rule="evenodd"
+			stroke-linejoin="round"
+			stroke-miterlimit="1.414"
+			xmlns="http://www.w3.org/2000/svg"
+			aria-hidden="true"
+			viewBox="0 0 32 32"
+			preserveAspectRatio="xMidYMid meet"
+			fill="currentColor"
+			class="btn-icon"
+			><path
+				d="M11.6068 8.1099C11.2532 8.53417 11.3106 9.16473 11.7348 9.51829C13.3799 10.8952 17.2004 14.2798 18.5095 16.0001C17.1784 17.7493 13.4095 21.0851 11.7348 22.4819C11.3106 22.8355 11.2532 23.466 11.6068 23.8903C11.9604 24.3146 12.5913 24.3716 13.0156 24.018C14.8552 22.4864 18.8153 19.025 20.2164 17.0536C20.4346 16.7423 20.625 16.3902 20.625 16.0001C20.625 15.6099 20.4346 15.2578 20.2164 14.9466C18.8435 13.0149 14.8171 9.4852 13.0165 7.98291L13.0152 7.98186C12.5909 7.6283 11.9604 7.68562 11.6068 8.1099Z"
+			/></svg
+		></a
+	>
 </div>
 
 {#if form?.error}
@@ -103,11 +121,20 @@
 						tabindex={!outOfStock ? 0 : -1}
 						aria-disabled={outOfStock}
 						onclick={() => !outOfStock && openModal(item)}
-						onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && !outOfStock && openModal(item)}
+						onkeydown={(e) =>
+							(e.key === 'Enter' || e.key === ' ') && !outOfStock && openModal(item)}
 					>
-						<div class="item-img-wrap" style={item.imagePadding ? `--img-pad: ${item.imagePadding}px;` : ''}>
+						<div
+							class="item-img-wrap"
+							style={item.imagePadding ? `--img-pad: ${item.imagePadding}px;` : ''}
+						>
 							{#if item.imageUrl}
-								<img src={item.imageUrl} alt={item.name} class="item-img" style={item.imagePadding ? 'object-fit: contain;' : ''} />
+								<img
+									src={item.imageUrl}
+									alt={item.name}
+									class="item-img"
+									style={item.imagePadding ? 'object-fit: contain;' : ''}
+								/>
 							{/if}
 							{#if isDiscounted}
 								<span class="discount-flag">sale</span>
@@ -119,13 +146,22 @@
 								<span class="item-price">
 									{#if isDiscounted}
 										<span class="item-price-original">
-											<span class="price-icon">{@html clockSvg}</span>{formatHours(item.priceSeconds)}
-											<svg class="price-strike" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-												<line x1="2" y1="45" x2="98" y2="9" vector-effect="non-scaling-stroke" />
+											<span class="price-icon">{@html clockSvg}</span>{formatHours(
+												item.priceSeconds
+											)}
+											<svg
+												class="price-strike"
+												viewBox="0 0 100 100"
+												preserveAspectRatio="none"
+												aria-hidden="true"
+											>
+												<line x1="2" y1="38" x2="98" y2="9" vector-effect="non-scaling-stroke" />
 											</svg>
 										</span>
 										<span class="item-price-sale"
-											><span class="price-icon">{@html clockSvg}</span>{formatHours(effectivePrice)}</span
+											><span class="price-icon">{@html clockSvg}</span>{formatHours(
+												effectivePrice
+											)}</span
 										>
 									{:else}
 										<span class="price-icon">{@html clockSvg}</span>{formatHours(effectivePrice)}
@@ -175,8 +211,18 @@
 	>
 		<div class="modal-box" class:closing={modalClosing}>
 			{#if currentImg}
-				<div class="modal-img-wrap" style={modalItem.imagePadding ? `--img-pad: ${modalItem.imagePadding}px; background: #fff;` : ''}>
-					<img src={currentImg} alt={modalItem.name} class="modal-img" style={modalItem.imagePadding ? 'object-fit: contain;' : ''} />
+				<div
+					class="modal-img-wrap"
+					style={modalItem.imagePadding
+						? `--img-pad: ${modalItem.imagePadding}px; background: #fff;`
+						: ''}
+				>
+					<img
+						src={currentImg}
+						alt={modalItem.name}
+						class="modal-img"
+						style={modalItem.imagePadding ? 'object-fit: contain;' : ''}
+					/>
 				</div>
 			{/if}
 
@@ -188,7 +234,16 @@
 					<p class="modal-desc">{modalItem.description}</p>
 				{/if}
 
-				<form method="POST" action="?/buy" use:enhance={() => async ({ update }) => { await update(); closeModal(); }} class="modal-form">
+				<form
+					method="POST"
+					action="?/buy"
+					use:enhance={() =>
+						async ({ update }) => {
+							await update();
+							closeModal();
+						}}
+					class="modal-form"
+				>
 					<input type="hidden" name="item_id" value={modalItem.id} />
 
 					{#if modalOptions.length > 0}
@@ -229,7 +284,9 @@
 								buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(modalEffective)}
 								{#if modalDiscounted}
 									<span class="btn-confirm-original"
-										><span class="price-icon">{@html clockSvg}</span>{formatHours(modalItem.priceSeconds)}</span
+										><span class="price-icon">{@html clockSvg}</span>{formatHours(
+											modalItem.priceSeconds
+										)}</span
 									>
 								{/if}
 							{/if}
@@ -532,7 +589,6 @@
 		font-weight: 600;
 	}
 
-
 	.item-desc {
 		margin: 0;
 		font-size: 0.88rem;
@@ -549,8 +605,6 @@
 		color: var(--color-text-soft);
 		font-weight: 600;
 	}
-
-
 
 	.btn-order {
 		font-size: 0.9rem;
@@ -606,13 +660,21 @@
 	}
 
 	@keyframes fade-in {
-		from { opacity: 0; }
-		to { opacity: 1; }
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 
 	@keyframes fade-out {
-		from { opacity: 1; }
-		to { opacity: 0; }
+		from {
+			opacity: 1;
+		}
+		to {
+			opacity: 0;
+		}
 	}
 
 	.modal-box {
@@ -626,13 +688,25 @@
 	}
 
 	@keyframes slide-up {
-		from { transform: translateY(12px); opacity: 0; }
-		to { transform: translateY(0); opacity: 1; }
+		from {
+			transform: translateY(12px);
+			opacity: 0;
+		}
+		to {
+			transform: translateY(0);
+			opacity: 1;
+		}
 	}
 
 	@keyframes slide-down {
-		from { transform: translateY(0); opacity: 1; }
-		to { transform: translateY(12px); opacity: 0; }
+		from {
+			transform: translateY(0);
+			opacity: 1;
+		}
+		to {
+			transform: translateY(12px);
+			opacity: 0;
+		}
 	}
 
 	.modal-img-wrap {
