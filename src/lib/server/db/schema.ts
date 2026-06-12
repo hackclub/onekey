@@ -19,6 +19,7 @@ export const users = pgTable('users', {
 	slackDisplayName: text('slack_display_name'),
 	verificationStatus: text('verification_status'),
 	yswsEligible: boolean('ysws_eligible'),
+	birthday: text('birthday'),
 	accessTokenCt: text('access_token_ct'),
 	accessTokenIv: text('access_token_iv'),
 	accessTokenTag: text('access_token_tag'),

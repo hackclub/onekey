@@ -16,7 +16,7 @@ export async function load({ cookies, url }) {
 		client_id: env.HCA_CLIENT_ID,
 		redirect_uri: env.HCA_REDIRECT_URI,
 		response_type: 'code',
-		scope: 'openid profile email slack_id verification_status',
+		scope: 'openid basic_info address',
 		state
 	});
 

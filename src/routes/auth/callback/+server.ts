@@ -3,7 +3,7 @@ import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
 import { sessions, users } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { encryptToken, generateSessionToken, hashToken } from '$lib/server/session';
 import { getLaunched } from '$lib/server/launch';
 import type { RequestHandler } from './$types';
@@ -75,16 +75,38 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		slackDisplayName: slack_display_name ?? null,
 		verificationStatus: user.verification_status ?? null,
 		yswsEligible: user.ysws_eligible ?? null,
+		birthday: user.birthdate ?? null,
 		accessTokenCt: ct,
 		accessTokenIv: iv,
 		accessTokenTag: tag,
 		updatedAt: new Date()
 	};
 
+	// Address comes from the HCA `address` scope. We only autofill blank fields —
+	// never overwrite an address the user has already entered themselves.
+	const addr = user.address ?? {};
+	const addressInsert = {
+		streetAddress: addr.street_address ?? null,
+		locality: addr.locality ?? null,
+		region: addr.region ?? null,
+		postalCode: addr.postal_code ?? null,
+		country: addr.country ?? null
+	};
+
 	const [dbUser] = await db
 		.insert(users)
-		.values(userRow)
-		.onConflictDoUpdate({ target: users.hcaId, set: userRow })
+		.values({ ...userRow, ...addressInsert })
+		.onConflictDoUpdate({
+			target: users.hcaId,
+			set: {
+				...userRow,
+				streetAddress: sql`coalesce(nullif(${users.streetAddress}, ''), ${addressInsert.streetAddress})`,
+				locality: sql`coalesce(nullif(${users.locality}, ''), ${addressInsert.locality})`,
+				region: sql`coalesce(nullif(${users.region}, ''), ${addressInsert.region})`,
+				postalCode: sql`coalesce(nullif(${users.postalCode}, ''), ${addressInsert.postalCode})`,
+				country: sql`coalesce(nullif(${users.country}, ''), ${addressInsert.country})`
+			}
+		})
 		.returning({ id: users.id });
 
 	const rawToken = generateSessionToken();
