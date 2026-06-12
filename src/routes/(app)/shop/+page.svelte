@@ -155,6 +155,8 @@
 <!-- ORDER CONFIRMATION MODAL -->
 {#if modalItem}
 	{@const currentImg = displayedImageUrl ?? modalItem.imageUrl}
+	{@const modalEffective = modalItem.discountSeconds ?? modalItem.priceSeconds}
+	{@const modalDiscounted = modalItem.discountSeconds != null}
 	<div
 		class="modal-backdrop"
 		class:closing={modalClosing}
@@ -206,8 +208,6 @@
 						</div>
 					{/if}
 
-					{@const modalEffective = modalItem.discountSeconds ?? modalItem.priceSeconds}
-					{@const modalDiscounted = modalItem.discountSeconds != null}
 					<div class="modal-actions">
 						<button
 							type="submit"
