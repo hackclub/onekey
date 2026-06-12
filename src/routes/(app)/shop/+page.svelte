@@ -103,9 +103,9 @@
 						onclick={() => !outOfStock && openModal(item)}
 						onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && !outOfStock && openModal(item)}
 					>
-						<div class="item-img-wrap" style={item.imagePadding ? `padding: ${item.imagePadding}px; background: #fff;` : ''}>
+						<div class="item-img-wrap">
 							{#if item.imageUrl}
-								<img src={item.imageUrl} alt={item.name} class="item-img" style={item.imagePadding ? 'object-fit: contain;' : ''} />
+								<img src={item.imageUrl} alt={item.name} class="item-img" style={item.imagePadding ? `padding: ${item.imagePadding}px; object-fit: contain;` : ''} />
 							{/if}
 						</div>
 						<div class="item-body">
@@ -155,8 +155,8 @@
 	>
 		<div class="modal-box" class:closing={modalClosing}>
 			{#if currentImg}
-				<div class="modal-img-wrap" style={modalItem.imagePadding ? `padding: ${modalItem.imagePadding}px; background: #fff;` : ''}>
-					<img src={currentImg} alt={modalItem.name} class="modal-img" style={modalItem.imagePadding ? 'object-fit: contain;' : ''} />
+				<div class="modal-img-wrap">
+					<img src={currentImg} alt={modalItem.name} class="modal-img" style={modalItem.imagePadding ? `padding: ${modalItem.imagePadding}px; object-fit: contain;` : ''} />
 				</div>
 			{/if}
 
@@ -387,6 +387,7 @@
 		height: 100%;
 		object-fit: cover;
 		display: block;
+		box-sizing: border-box;
 	}
 
 	.item-body {
@@ -533,6 +534,7 @@
 		width: 100%;
 		aspect-ratio: 16 / 9;
 		flex-shrink: 0;
+		background: #fff;
 		border-bottom: calc(var(--border-width) / 2) solid;
 		box-sizing: border-box;
 	}
@@ -542,6 +544,7 @@
 		height: 100%;
 		object-fit: cover;
 		display: block;
+		box-sizing: border-box;
 	}
 
 	.modal-body {
