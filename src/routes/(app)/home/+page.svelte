@@ -84,7 +84,7 @@
 	<div class="card card-hero card-hero-right">
 		<img
 			class="hero-bg hero-bg-left"
-			src="https://cdn.hackclub.com/019eb4e2-cc5c-76b5-b685-43f3615ca050/image.png"
+			src="https://cdn.hackclub.com/019ebe1b-a4cb-75d9-86fd-d0c26de4da3e/image.png"
 			alt=""
 			aria-hidden="true"
 		/>
