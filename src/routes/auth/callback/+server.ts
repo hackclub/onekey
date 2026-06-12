@@ -84,9 +84,13 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
 	// Address comes from the HCA `address` scope. We only autofill blank fields —
 	// never overwrite an address the user has already entered themselves.
+	// HCA packs both street lines into `street_address`, newline-separated, so
+	// split the first line into line 1 and fold any remainder into line 2.
 	const addr = user.address ?? {};
+	const [streetLine1, ...streetRest] = (addr.street_address ?? '').split(/\r?\n/);
 	const addressInsert = {
-		streetAddress: addr.street_address ?? null,
+		streetAddress: streetLine1?.trim() || null,
+		addressLine2: streetRest.join(' ').trim() || null,
 		locality: addr.locality ?? null,
 		region: addr.region ?? null,
 		postalCode: addr.postal_code ?? null,
@@ -101,6 +105,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			set: {
 				...userRow,
 				streetAddress: sql`coalesce(nullif(${users.streetAddress}, ''), ${addressInsert.streetAddress})`,
+				addressLine2: sql`coalesce(nullif(${users.addressLine2}, ''), ${addressInsert.addressLine2})`,
 				locality: sql`coalesce(nullif(${users.locality}, ''), ${addressInsert.locality})`,
 				region: sql`coalesce(nullif(${users.region}, ''), ${addressInsert.region})`,
 				postalCode: sql`coalesce(nullif(${users.postalCode}, ''), ${addressInsert.postalCode})`,
