@@ -182,6 +182,18 @@
 		selectedHtProjects = selectedHtProjects.filter((_, i) => i !== idx);
 	}
 
+	function closeOnClickOutside(node: HTMLDetailsElement) {
+		function onClick(e: MouseEvent) {
+			if (node.open && !node.contains(e.target as Node)) node.open = false;
+		}
+		document.addEventListener('click', onClick);
+		return {
+			destroy() {
+				document.removeEventListener('click', onClick);
+			}
+		};
+	}
+
 	async function loadHackatimeProjects() {
 		if (hackatimeLoaded || hackatimeLoading) return;
 		hackatimeLoading = true;
@@ -396,6 +408,7 @@
 							{#if selectedHtProjects.length < MAX_HT_PROJECTS}
 								<details
 									class="ht-dropdown"
+									use:closeOnClickOutside
 									ontoggle={(e) => e.currentTarget.open && loadHackatimeProjects()}
 								>
 									<summary class="ht-add-btn">+ add project</summary>
