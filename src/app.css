@@ -299,6 +299,6 @@ footer {
 @media screen and (min-width: 768px) {
 	.content,
 	footer {
-		min-width: 45rem;
+		min-width: 55rem;
 	}
 }
