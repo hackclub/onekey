@@ -167,7 +167,7 @@
 	});
 
 	$effect(() => {
-		if (isDraft) loadHackatimeProjects();
+		if (canEdit) loadHackatimeProjects();
 	});
 
 	const htValue = $derived(selectedHtProjects.join(', '));
