@@ -148,6 +148,13 @@
       "when": 1781289052868,
       "tag": "0020_add_birthday",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1781727056987,
+      "tag": "0021_shop_item_local_fulfillment",
+      "breakpoints": true
     }
   ]
 }

@@ -119,6 +119,10 @@
 											<input type="checkbox" name="available" value="true" checked={item.available} onchange={(e) => { const hidden = e.currentTarget.form?.querySelector('input[name="available"][type="hidden"]') as HTMLInputElement; if (hidden) hidden.disabled = e.currentTarget.checked; }} />
 											available
 										</label>
+										<label class="check-label">
+											<input type="checkbox" name="fulfilled_locally" value="true" checked={item.fulfilledLocally} />
+											fulfilled locally (shows substitution disclaimer)
+										</label>
 										<div class="row-actions">
 											<button type="submit" class="btn btn-save">save</button>
 											<button type="button" class="btn btn-cancel" onclick={() => editingItemId = null}>cancel</button>
@@ -168,6 +172,10 @@
 					<input class="input input-sm" type="number" name="image_padding" min="0" max="80" placeholder="image padding px (0)" value="0" />
 					<input class="input input-sm" type="number" name="stock" placeholder="stock (-1 = unlimited)" value="-1" />
 					<textarea class="input input-textarea" name="options" placeholder={"options (one per line):\nColor: red|https://cdn.../red.png, blue|https://cdn.../blue.png, black\nSize: S, M, L"}></textarea>
+					<label class="check-label">
+						<input type="checkbox" name="fulfilled_locally" value="true" />
+						fulfilled locally (shows substitution disclaimer)
+					</label>
 					<button type="submit" class="btn btn-add">add item</button>
 				</form>
 			{/if}

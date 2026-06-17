@@ -130,6 +130,7 @@ export const shopItems = pgTable('shop_items', {
 	available: boolean('available').notNull().default(true),
 	options: text('options').notNull().default('[]'), // JSON: Array<{label: string, choices: string[]}>
 	imagePadding: integer('image_padding').notNull().default(0),
+	fulfilledLocally: boolean('fulfilled_locally').notNull().default(false), // show "fulfilled locally" disclaimer in modal
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
 });

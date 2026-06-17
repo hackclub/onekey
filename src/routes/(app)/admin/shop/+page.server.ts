@@ -126,6 +126,7 @@ export const actions = {
 		const stock = parseInt(form.get('stock') as string);
 		const optionsRaw = (form.get('options') as string)?.trim() || '';
 		const imagePadding = Math.max(0, parseInt(form.get('image_padding') as string) || 0);
+		const fulfilledLocally = form.get('fulfilled_locally') === 'true';
 
 		if (!categoryId || !name) return fail(400, { error: 'category and name are required' });
 		if (isNaN(priceHours) || priceHours <= 0) return fail(400, { error: 'price must be a positive number' });
@@ -142,7 +143,7 @@ export const actions = {
 		const stockVal = isNaN(stock) ? -1 : stock;
 		const options = parseOptionsText(optionsRaw);
 
-		await db.insert(shopItems).values({ categoryId, name, description, priceSeconds, discountSeconds, imageUrl, stock: stockVal, options: JSON.stringify(options), imagePadding });
+		await db.insert(shopItems).values({ categoryId, name, description, priceSeconds, discountSeconds, imageUrl, stock: stockVal, options: JSON.stringify(options), imagePadding, fulfilledLocally });
 		return { success: true };
 	},
 
@@ -160,6 +161,7 @@ export const actions = {
 		const available = form.get('available') === 'true';
 		const optionsRaw = (form.get('options') as string)?.trim() || '';
 		const imagePadding = Math.max(0, parseInt(form.get('image_padding') as string) || 0);
+		const fulfilledLocally = form.get('fulfilled_locally') === 'true';
 
 		if (!id || !categoryId || !name) return fail(400, { error: 'id, category, and name are required' });
 		if (isNaN(priceHours) || priceHours <= 0) return fail(400, { error: 'price must be a positive number' });
@@ -177,7 +179,7 @@ export const actions = {
 		const options = parseOptionsText(optionsRaw);
 
 		await db.update(shopItems)
-			.set({ categoryId, name, description, priceSeconds, discountSeconds, imageUrl, stock: stockVal, available, options: JSON.stringify(options), imagePadding, updatedAt: new Date() })
+			.set({ categoryId, name, description, priceSeconds, discountSeconds, imageUrl, stock: stockVal, available, options: JSON.stringify(options), imagePadding, fulfilledLocally, updatedAt: new Date() })
 			.where(eq(shopItems.id, id));
 		return { success: true };
 	},

@@ -270,6 +270,14 @@
 						</div>
 					{/if}
 
+					{#if modalItem.fulfilledLocally}
+						<p class="modal-disclaimer">
+							this item is fulfilled locally and doesn't ship from HQ — if we can't fulfill it in
+							your region, it'll be substituted for a similar item or you'll be given a grant for
+							it!
+						</p>
+					{/if}
+
 					<div class="modal-actions">
 						<button
 							type="submit"
@@ -768,6 +776,16 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
+	}
+
+	.modal-disclaimer {
+		margin: 0;
+		font-size: clamp(11px, 0.78rem, 22px);
+		line-height: 1.45;
+		color: var(--color-text-soft);
+		opacity: 0.85;
+		border-left: 2px solid color-mix(in srgb, var(--color-text) 25%, transparent);
+		padding-left: 0.7rem;
 	}
 
 	.opt-field {
