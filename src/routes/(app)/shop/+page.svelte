@@ -243,6 +243,7 @@
 							closeModal();
 						}}
 					class="modal-form"
+					class:tight-top={modalOptions.length === 0 && modalItem.fulfilledLocally}
 				>
 					<input type="hidden" name="item_id" value={modalItem.id} />
 
@@ -770,6 +771,12 @@
 		flex-direction: column;
 		gap: 1rem;
 		margin-top: 1.25rem;
+	}
+
+	/* No options to select → the disclaimer is the form's first row; drop the
+	   extra top margin so it sits on the body's normal rhythm under the description. */
+	.modal-form.tight-top {
+		margin-top: 0;
 	}
 
 	.modal-options {
