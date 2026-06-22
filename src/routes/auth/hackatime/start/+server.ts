@@ -1,4 +1,4 @@
-import { redirect, error } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { db } from '$lib/server/db';
@@ -31,6 +31,21 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 		secure: !dev,
 		maxAge: 60 * 10
 	});
+
+	// Where to send the user back to after linking. Only accept safe, internal
+	// paths (a single leading slash) so this can't be turned into an open redirect.
+	const returnTo = url.searchParams.get('return');
+	if (returnTo && /^\/(?![/\\])/.test(returnTo)) {
+		cookies.set('hackatime_return', returnTo, {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'lax',
+			secure: !dev,
+			maxAge: 60 * 10
+		});
+	} else {
+		cookies.delete('hackatime_return', { path: '/' });
+	}
 
 	const redirectUri = env.HACKATIME_REDIRECT_URI || `${url.origin}/auth/hackatime/callback`;
 

@@ -72,5 +72,9 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		})
 		.where(eq(users.id, row.users.id));
 
-	redirect(302, '/home');
+	// Return to wherever the link was initiated from (e.g. the onboarding flow),
+	// falling back to the dashboard. Re-validate the path defensively.
+	const returnTo = cookies.get('hackatime_return');
+	cookies.delete('hackatime_return', { path: '/' });
+	redirect(302, returnTo && /^\/(?![/\\])/.test(returnTo) ? returnTo : '/home');
 };

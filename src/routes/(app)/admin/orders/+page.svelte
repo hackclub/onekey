@@ -38,7 +38,7 @@
 	<div class="page-header">
 		<a href="/admin" class="back-link">← admin</a>
 		<h1>orders</h1>
-		<p class="sub">oldest first — fulfill in order shown.</p>
+		<p class="sub">oldest first - fulfill in order shown.</p>
 		<input
 			type="text"
 			class="search-input"

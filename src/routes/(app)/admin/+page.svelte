@@ -18,7 +18,7 @@
 	>
 		<button type="submit" class="launch-btn" class:launched={data.isLaunched}>
 			{#if data.isLaunched}
-				🔓 platform is live — click to lock
+				🔓 platform is live - click to lock
 			{:else}
 				🚀 launch platform
 			{/if}

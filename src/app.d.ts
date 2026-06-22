@@ -16,6 +16,7 @@ declare global {
 				slack_display_name?: string;
 				ysws_eligible?: boolean;
 				hackatime_linked: boolean;
+				onboarded: boolean;
 				street_address?: string;
 				address_line_2?: string;
 				locality?: string;

@@ -47,7 +47,8 @@
 	--transition-med: 0.2s linear;
 }
 
-html:has(.dashboard) {
+html:has(.dashboard),
+html:has(.onboarding) {
 	font-size: clamp(12px, 1.25vw, 48px);
 }
 

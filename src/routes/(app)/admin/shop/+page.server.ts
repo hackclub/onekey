@@ -68,7 +68,7 @@ export const actions = {
 		try {
 			await db.insert(shopCategories).values({ name, slug, description, sortOrder });
 		} catch {
-			return fail(400, { error: 'slug already exists — try a different name' });
+			return fail(400, { error: 'slug already exists - try a different name' });
 		}
 
 		return { success: true };
@@ -89,7 +89,7 @@ export const actions = {
 		try {
 			await db.update(shopCategories).set({ name, slug, description, sortOrder }).where(eq(shopCategories.id, id));
 		} catch {
-			return fail(400, { error: 'slug already exists — try a different name' });
+			return fail(400, { error: 'slug already exists - try a different name' });
 		}
 
 		return { success: true };
@@ -108,7 +108,7 @@ export const actions = {
 			.innerJoin(shopItems, eq(shopOrders.itemId, shopItems.id))
 			.where(eq(shopItems.categoryId, id));
 
-		if (orderCount > 0) return fail(400, { error: 'cannot delete — items in this category have existing orders' });
+		if (orderCount > 0) return fail(400, { error: 'cannot delete - items in this category have existing orders' });
 
 		await db.delete(shopCategories).where(eq(shopCategories.id, id));
 		return { success: true };
@@ -195,7 +195,7 @@ export const actions = {
 			.from(shopOrders)
 			.where(eq(shopOrders.itemId, id));
 
-		if (orderCount > 0) return fail(400, { error: 'cannot delete — this item has existing orders. mark it unavailable instead.' });
+		if (orderCount > 0) return fail(400, { error: 'cannot delete - this item has existing orders. mark it unavailable instead.' });
 
 		await db.delete(shopItems).where(eq(shopItems.id, id));
 		return { success: true };

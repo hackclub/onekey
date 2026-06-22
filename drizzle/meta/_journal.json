@@ -155,6 +155,13 @@
       "when": 1781727056987,
       "tag": "0021_shop_item_local_fulfillment",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1782345600000,
+      "tag": "0022_add_onboarded",
+      "breakpoints": true
     }
   ]
 }

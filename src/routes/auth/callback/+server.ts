@@ -112,7 +112,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 				country: sql`coalesce(nullif(${users.country}, ''), ${addressInsert.country})`
 			}
 		})
-		.returning({ id: users.id });
+		.returning({ id: users.id, onboardedAt: users.onboardedAt });
 
 	const rawToken = generateSessionToken();
 	await db.insert(sessions).values({
@@ -139,5 +139,6 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		maxAge: SESSION_TTL_MS / 1000
 	});
 
-	redirect(302, '/home');
+	// First-time users go through onboarding; returning users land on the dashboard.
+	redirect(302, dbUser.onboardedAt ? '/home' : '/onboarding');
 };

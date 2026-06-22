@@ -58,6 +58,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				slack_display_name: u.slackDisplayName ?? undefined,
 				ysws_eligible: u.yswsEligible ?? undefined,
 				hackatime_linked: !!(u.hackatimeTokenCt && u.hackatimeTokenIv && u.hackatimeTokenTag),
+				onboarded: !!u.onboardedAt,
 				street_address: u.streetAddress ?? undefined,
 				address_line_2: u.addressLine2 ?? undefined,
 				locality: u.locality ?? undefined,

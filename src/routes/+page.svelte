@@ -283,7 +283,7 @@
 			<strong>we ship:</strong> a customizable, community-designed one key macropad!
 		</p>
 		<p>
-			programs these days require too many keys—WASD or arrow keys to move, or even the entire
+			programs these days require too many keys-WASD or arrow keys to move, or even the entire
 			keyboard to type!<br /><br />
 			let's simplify things: by rejecting modernity's plethora of buttons and keys, and writing programs
 			that only require one key!
@@ -291,7 +291,7 @@
 		<p class="subhead subhead-spaced"><strong>how do i participate?</strong></p>
 		<p>
 			sign up, and ship projects that only use one key! use
-			<a href="https://hackatime.hackclub.com/">hackatime</a> to track your time — every hour you log
+			<a href="https://hackatime.hackclub.com/">hackatime</a> to track your time - every hour you log
 			becomes balance to spend in the shop. the coolest projects can earn bonus prizes and customizations,
 			too!
 		</p>
@@ -336,7 +336,7 @@
 		<p class="subhead subhead-spaced"><strong>what do i get?</strong></p>
 		<p>
 			a community-designed macropad, made with only onekey™!<br />
-			every hour you ship becomes balance to spend in the shop — buy the macropad itself, then deck it
+			every hour you ship becomes balance to spend in the shop - buy the macropad itself, then deck it
 			out with keycaps, fancy cables, or even just buy a whole keyboard. the more you build, the more
 			you can grab:
 		</p>
@@ -426,7 +426,7 @@
 				<div class="card faq-card bordered">
 					<p class="subhead"><strong>the macropads are customizable?</strong></p>
 					<p>
-						yes! the macropad is just the start — in the shop you can spend your hours on different
+						yes! the macropad is just the start - in the shop you can spend your hours on different
 						case colors, keycap designs, and key switches to make it your own. the more you build,
 						the more you can claim.
 					</p>

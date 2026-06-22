@@ -35,6 +35,8 @@ export const users = pgTable('users', {
 	country: text('country'),
 	keySfxEnabled: boolean('key_sfx_enabled').notNull().default(true),
 	darkModeEnabled: boolean('dark_mode_enabled').notNull().default(false),
+	// null = hasn't finished the onboarding flow yet; set once they complete it
+	onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
 	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
 });

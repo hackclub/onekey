@@ -100,7 +100,7 @@
 
 {#if data.categories.length === 0}
 	<div class="empty-state">
-		<p>no items available yet — check back soon.</p>
+		<p>no items available yet - check back soon.</p>
 	</div>
 {:else}
 	{#each data.categories as cat (cat.id)}

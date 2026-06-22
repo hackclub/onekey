@@ -4,11 +4,11 @@ import { projects, users, projectApprovals, shopOrders } from '$lib/server/db/sc
 import { eq, and, sum, notInArray } from 'drizzle-orm';
 import { getAvailableSeconds } from '$lib/server/balance';
 
-export async function load({ locals, url }) {
+export async function load({ locals }) {
 	if (!locals.user) redirect(302, '/?needs_auth=1');
-	if (!locals.user.hackatime_linked && !url.pathname.startsWith('/auth/hackatime')) {
-		redirect(302, '/auth/hackatime/start');
-	}
+	// First-time users are walked through the onboarding flow (which now owns
+	// Hackatime linking) before they can reach any dashboard page.
+	if (!locals.user.onboarded) redirect(302, '/onboarding');
 
 	let userApprovedSeconds = 0;
 	let communityApprovedSeconds = 0;
