@@ -273,7 +273,7 @@
 
 					{#if modalItem.fulfilledLocally}
 						<p class="modal-disclaimer">
-							this item is fulfilled locally and doesn't ship from HQ — if we can't fulfill it in
+							this item is fulfilled locally and doesn't ship from HQ - if we can't fulfill it in
 							your region, it'll be substituted for a similar item or you'll be given a grant for
 							it!
 						</p>
