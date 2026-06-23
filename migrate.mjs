@@ -38,6 +38,10 @@ try {
 	console.log('[migrate] Done.');
 } catch (e) {
 	console.error('[migrate] FAILED:', e.message);
+	console.error('[migrate] detail:', e.detail ?? e.cause?.message ?? '');
+	console.error('[migrate] code:', e.code ?? e.cause?.code ?? '');
+	console.error('[migrate] hint:', e.hint ?? '');
+	console.error('[migrate] full:', JSON.stringify(e, Object.getOwnPropertyNames(e)));
 	await client.end();
 	process.exit(1);
 }
