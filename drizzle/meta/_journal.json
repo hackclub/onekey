@@ -162,6 +162,20 @@
       "when": 1782345600000,
       "tag": "0022_add_onboarded",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1782432000000,
+      "tag": "0023_add_nps",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1782518400000,
+      "tag": "0024_add_birthday_note_to_approved",
+      "breakpoints": true
     }
   ]
 }

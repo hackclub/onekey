@@ -1,7 +1,8 @@
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { setLaunched } from '$lib/server/launch';
 
 export function load({ locals }) {
+	if (!locals.isAdmin) error(403, 'forbidden');
 	return { user: locals.user, isLaunched: locals.isLaunched };
 }
 

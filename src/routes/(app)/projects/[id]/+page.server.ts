@@ -13,6 +13,7 @@ import {
 import { eq, and, ne, asc, desc, count, notExists, gt, sql, sum } from 'drizzle-orm';
 import { sendSlackDM } from '$lib/server/slack';
 import { uploadImageBlob } from '$lib/server/cdn';
+import { createAirtableApprovalRecord } from '$lib/server/airtable';
 import { decryptToken } from '$lib/server/session';
 
 const HACKATIME_BASE_URL = 'https://hackatime.hackclub.com';
@@ -104,8 +105,16 @@ export async function load({ locals, params }) {
 		return { ...a, newSeconds: a.submittedSeconds - baseline };
 	});
 
+	// soft_approved is internal-only — non-reviewers/admins see it as still pending
+	const isInternal = locals.isReviewer || locals.isAdmin;
+	const visibleApprovals = isInternal
+		? approvalsWithDelta
+		: approvalsWithDelta
+				.filter((a) => a.status !== 'soft_approved')
+				.map(({ internalNote: _n, ...rest }) => ({ ...rest, internalNote: null }));
+
 	const latestApproval =
-		approvalsWithDelta.length > 0 ? approvalsWithDelta[approvalsWithDelta.length - 1] : null;
+		visibleApprovals.length > 0 ? visibleApprovals[visibleApprovals.length - 1] : null;
 	const derivedStatus: string | null = latestApproval?.status ?? null;
 
 	const events = await db
@@ -154,7 +163,7 @@ export async function load({ locals, params }) {
 	const linkedRows = await db
 		.select({ hackatimeProject: projects.hackatimeProject })
 		.from(projects)
-		.where(ne(projects.id, id));
+		.where(and(ne(projects.id, id), eq(projects.userId, dbUser.id)));
 	const linkedHackatimeProjects = linkedRows.flatMap((r) =>
 		r.hackatimeProject
 			? r.hackatimeProject
@@ -174,10 +183,23 @@ export async function load({ locals, params }) {
 		.where(eq(users.id, project.userId))
 		.limit(1);
 
+	const visibleEvents = isInternal
+		? events
+		: events
+				.filter((e) => e.action !== 'soft_approved')
+				.map(({ internalNote: _n, ...rest }) => ({ ...rest, internalNote: null }));
+
+	let hasPendingNps = false;
+	if (project.userId === dbUser.id) {
+		const actualLatest = await getLatestApproval(id);
+		hasPendingNps =
+			!!actualLatest && actualLatest.status !== 'approved' && !!actualLatest.npsHeardAbout;
+	}
+
 	return {
 		project,
-		approvals: approvalsWithDelta,
-		events,
+		approvals: visibleApprovals,
+		events: visibleEvents,
 		latestApproval,
 		derivedStatus,
 		availableSeconds,
@@ -185,7 +207,8 @@ export async function load({ locals, params }) {
 		projectOwner: projectOwnerRow ?? null,
 		isReviewer: locals.isReviewer,
 		isAdmin: locals.isAdmin,
-		isOwnProject: project.userId === dbUser.id
+		isOwnProject: project.userId === dbUser.id,
+		hasPendingNps
 	};
 }
 
@@ -209,6 +232,14 @@ export const actions = {
 
 		if (!name) return fail(400, { error: 'project name is required' });
 
+		const [ownedProject] = await db
+			.select({ id: projects.id })
+			.from(projects)
+			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id)))
+			.limit(1);
+
+		if (!ownedProject) return fail(403, { error: 'project not found' });
+
 		const rawKeepUrl = (form.get('screenshot_keep') as string)?.trim() || null;
 		const keepUrl =
 			rawKeepUrl?.startsWith('https://cdn.hackclub.com/') ? rawKeepUrl : null;
@@ -222,7 +253,7 @@ export const actions = {
 			}
 		}
 
-		const [updated] = await db
+		await db
 			.update(projects)
 			.set({
 				name,
@@ -234,11 +265,7 @@ export const actions = {
 				aiDeclaration,
 				updatedAt: new Date()
 			})
-			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id)))
-			.returning({ id: projects.id });
-
-		if (!updated && locals.isReviewer)
-			return fail(403, { error: "reviewers cannot edit other people's projects" });
+			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id)));
 
 		return { success: true };
 	},
@@ -313,6 +340,9 @@ export const actions = {
 			});
 
 		const aiDeclaration = (form.get('ai_declaration') as string)?.trim() || null;
+		const npsHeardAbout = (form.get('nps_heard_about') as string)?.trim() || null;
+		const npsDoingWell = (form.get('nps_doing_well') as string)?.trim() || null;
+		const npsImprove = (form.get('nps_improve') as string)?.trim() || null;
 
 		await db
 			.update(projects)
@@ -326,20 +356,23 @@ export const actions = {
 				aiDeclaration,
 				updatedAt: new Date()
 			})
-			.where(eq(projects.id, id));
+			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id)));
 
 		await db.insert(projectApprovals).values({
 			projectId: id,
 			submittedById: dbUser.id,
 			submittedSeconds: totalSeconds,
 			status: 'pending',
-			aiDeclaration
+			aiDeclaration,
+			npsHeardAbout,
+			npsDoingWell,
+			npsImprove
 		});
 
 		return { success: true };
 	},
 
-	reship: async ({ locals, params }) => {
+	reship: async ({ request, locals, params }) => {
 		if (!locals.user) redirect(302, '/login');
 
 		const id = parseInt(params.id, 10);
@@ -382,12 +415,25 @@ export const actions = {
 			});
 		}
 
+		const form = await request.formData();
+		const formNpsHeardAbout = (form.get('nps_heard_about') as string)?.trim() || null;
+		const formNpsDoingWell = (form.get('nps_doing_well') as string)?.trim() || null;
+		const formNpsImprove = (form.get('nps_improve') as string)?.trim() || null;
+
+		// Use NPS from form (fresh collection) or carry forward from previous approval
+		const npsHeardAbout = formNpsHeardAbout ?? latestApproval.npsHeardAbout;
+		const npsDoingWell = formNpsDoingWell ?? latestApproval.npsDoingWell;
+		const npsImprove = formNpsImprove ?? latestApproval.npsImprove;
+
 		await db.insert(projectApprovals).values({
 			projectId: id,
 			submittedById: dbUser.id,
 			submittedSeconds: currentSeconds,
 			status: 'pending',
-			aiDeclaration: projectRow.aiDeclaration ?? null
+			aiDeclaration: projectRow.aiDeclaration ?? null,
+			npsHeardAbout,
+			npsDoingWell,
+			npsImprove
 		});
 
 		return { success: true };
@@ -402,6 +448,14 @@ export const actions = {
 		const dbUser = await getDbUser(locals.user.sub);
 		if (!dbUser) redirect(302, '/login');
 
+		const [ownedProject] = await db
+			.select({ id: projects.id })
+			.from(projects)
+			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id)))
+			.limit(1);
+
+		if (!ownedProject) return fail(404, { error: 'project not found' });
+
 		const [{ total: approvalCount }] = await db
 			.select({ total: count() })
 			.from(projectApprovals)
@@ -410,12 +464,7 @@ export const actions = {
 		if (approvalCount > 0)
 			return fail(403, { error: 'cannot delete a submitted or approved project' });
 
-		const [deleted] = await db
-			.delete(projects)
-			.where(and(eq(projects.id, id), eq(projects.userId, dbUser.id)))
-			.returning({ id: projects.id });
-
-		if (!deleted) return fail(403, { error: 'project not found' });
+		await db.delete(projects).where(eq(projects.id, id));
 
 		redirect(302, '/projects');
 	},
@@ -437,8 +486,8 @@ export const actions = {
 		if (!internalNote) return fail(400, { error: 'internal note is required' });
 
 		const latestApproval = await getLatestApproval(id);
-		if (!latestApproval || latestApproval.status !== 'pending') {
-			return fail(400, { error: 'can only reject pending projects' });
+		if (!latestApproval || (latestApproval.status !== 'pending' && latestApproval.status !== 'soft_approved')) {
+			return fail(400, { error: 'can only reject pending or soft approved projects' });
 		}
 
 		await db
@@ -483,14 +532,20 @@ export const actions = {
 		return { success: true };
 	},
 
-	approve: async ({ request, locals, params }) => {
-		if (!locals.isReviewer || !locals.user) return fail(403, { error: 'forbidden' });
+	softApprove: async ({ request, locals, params }) => {
+		if ((!locals.isReviewer && !locals.isAdmin) || !locals.user)
+			return fail(403, { error: 'forbidden' });
 
 		const id = parseInt(params.id, 10);
 		if (isNaN(id)) error(404, 'project not found');
 
 		const reviewerDbUser = await getDbUser(locals.user.sub);
 		if (!reviewerDbUser) return fail(403, { error: 'forbidden' });
+
+		const latestApproval = await getLatestApproval(id);
+		if (!latestApproval || latestApproval.status !== 'pending') {
+			return fail(400, { error: 'can only soft-approve pending projects' });
+		}
 
 		const form = await request.formData();
 		const message = (form.get('message') as string)?.trim() || null;
@@ -500,16 +555,7 @@ export const actions = {
 		if (!message) return fail(400, { error: 'message to author is required' });
 		if (!internalNote) return fail(400, { error: 'internal note is required' });
 
-		const latestApproval = await getLatestApproval(id);
-		if (!latestApproval || latestApproval.status !== 'pending') {
-			return fail(400, { error: 'can only approve pending projects' });
-		}
-
-		if (latestApproval.submittedById === reviewerDbUser.id) {
-			return fail(403, { error: "you can't approve your own project" });
-		}
-
-		// Compute delta: new hours since the last approved submission
+		// Compute delta: same as the full approve action
 		const allApprovals = await db
 			.select({
 				submittedSeconds: projectApprovals.submittedSeconds,
@@ -544,6 +590,95 @@ export const actions = {
 			return fail(400, {
 				error: `approved minutes cannot exceed submitted time (${maxAllowedMinutes}m)`
 			});
+		}
+
+		await db
+			.update(projectApprovals)
+			.set({
+				status: 'soft_approved',
+				reviewerId: reviewerDbUser.id,
+				approvedSeconds,
+				publicMessage: message,
+				internalNote,
+				reviewedAt: new Date()
+			})
+			.where(eq(projectApprovals.id, latestApproval.id));
+
+		return { success: true };
+	},
+
+	approve: async ({ request, locals, params }) => {
+		if (!locals.isAdmin || !locals.user) return fail(403, { error: 'forbidden' });
+
+		const id = parseInt(params.id, 10);
+		if (isNaN(id)) error(404, 'project not found');
+
+		const reviewerDbUser = await getDbUser(locals.user.sub);
+		if (!reviewerDbUser) return fail(403, { error: 'forbidden' });
+
+		const latestApproval = await getLatestApproval(id);
+		if (!latestApproval || (latestApproval.status !== 'pending' && latestApproval.status !== 'soft_approved')) {
+			return fail(400, { error: 'can only approve pending or soft-approved projects' });
+		}
+
+		let approvedSeconds: number;
+		let message: string | null;
+		let internalNote: string | null;
+
+		if (latestApproval.status === 'soft_approved') {
+			// Confirm the existing soft approval — no form input needed
+			if (!latestApproval.approvedSeconds) {
+				return fail(400, { error: 'soft approval is missing approved seconds' });
+			}
+			approvedSeconds = latestApproval.approvedSeconds;
+			message = latestApproval.publicMessage;
+			internalNote = latestApproval.internalNote;
+		} else {
+			// Full approval from pending — require form data
+			const form = await request.formData();
+			message = (form.get('message') as string)?.trim() || null;
+			internalNote = (form.get('internal_note') as string)?.trim() || null;
+			const approvedMinutesRaw = form.get('approved_minutes');
+
+			if (!message) return fail(400, { error: 'message to author is required' });
+			if (!internalNote) return fail(400, { error: 'internal note is required' });
+
+			// Compute delta: new hours since the last approved submission
+			const allApprovals = await db
+				.select({
+					submittedSeconds: projectApprovals.submittedSeconds,
+					status: projectApprovals.status
+				})
+				.from(projectApprovals)
+				.where(eq(projectApprovals.projectId, id))
+				.orderBy(asc(projectApprovals.submittedAt));
+			const currentIndex = allApprovals.findIndex(
+				(a) => a.submittedSeconds === latestApproval.submittedSeconds
+			);
+			const lastApproved = allApprovals
+				.slice(0, currentIndex)
+				.reverse()
+				.find((a) => a.status === 'approved');
+			const prevSubmittedSeconds = lastApproved?.submittedSeconds ?? 0;
+			const newSeconds = latestApproval.submittedSeconds - prevSubmittedSeconds;
+
+			const approvedMinutes =
+				approvedMinutesRaw !== null && approvedMinutesRaw !== ''
+					? Math.floor(Number(approvedMinutesRaw))
+					: Math.floor(newSeconds / 60);
+
+			if (isNaN(approvedMinutes) || approvedMinutes <= 0) {
+				return fail(400, { error: 'approved minutes must be greater than 0' });
+			}
+
+			approvedSeconds = approvedMinutes * 60;
+
+			const maxAllowedMinutes = Math.floor(newSeconds / 60);
+			if (approvedMinutes > maxAllowedMinutes) {
+				return fail(400, {
+					error: `approved minutes cannot exceed submitted time (${maxAllowedMinutes}m)`
+				});
+			}
 		}
 
 		await db
@@ -589,6 +724,7 @@ export const actions = {
 				authorRegion: authorUser?.region ?? null,
 				authorPostalCode: authorUser?.postalCode ?? null,
 				authorCountry: authorUser?.country ?? null,
+				authorBirthday: authorUser?.birthday ?? null,
 				projectName: projectData.name,
 				projectDescription: projectData.description,
 				projectRepoUrl: projectData.repoUrl,
@@ -599,8 +735,33 @@ export const actions = {
 				submittedSeconds: latestApproval.submittedSeconds,
 				approvedSeconds,
 				publicMessage: message,
+				internalNote,
+				npsHeardAbout: latestApproval.npsHeardAbout ?? null,
+				npsDoingWell: latestApproval.npsDoingWell ?? null,
+				npsImprove: latestApproval.npsImprove ?? null,
 				submittedAt: latestApproval.submittedAt,
 				approvedAt: new Date()
+			});
+
+			await createAirtableApprovalRecord({
+				repoUrl: projectData.repoUrl,
+				demoUrl: projectData.demoUrl,
+				npsHeardAbout: latestApproval.npsHeardAbout ?? null,
+				npsDoingWell: latestApproval.npsDoingWell ?? null,
+				npsImprove: latestApproval.npsImprove ?? null,
+				authorName: authorUser?.name ?? null,
+				authorEmail: authorUser?.email ?? null,
+				screenshotUrl: projectData.screenshotUrl,
+				description: projectData.description,
+				authorStreetAddress: authorUser?.streetAddress ?? null,
+				authorAddressLine2: authorUser?.addressLine2 ?? null,
+				authorLocality: authorUser?.locality ?? null,
+				authorRegion: authorUser?.region ?? null,
+				authorCountry: authorUser?.country ?? null,
+				authorPostalCode: authorUser?.postalCode ?? null,
+				authorBirthday: authorUser?.birthday ?? null,
+				approvedSeconds,
+				internalNote
 			});
 
 			await db
@@ -660,6 +821,14 @@ export const actions = {
 
 		if (!message && !internalNote)
 			return fail(400, { error: 'comment must have a message or internal note' });
+
+		const [projectRow] = await db
+			.select({ id: projects.id })
+			.from(projects)
+			.where(eq(projects.id, id))
+			.limit(1);
+
+		if (!projectRow) return fail(404, { error: 'project not found' });
 
 		await db.insert(projectEvents).values({
 			projectId: id,

@@ -81,6 +81,9 @@ export const projectApprovals = pgTable('project_approvals', {
 	publicMessage: text('public_message'),
 	internalNote: text('internal_note'),
 	aiDeclaration: text('ai_declaration'),
+	npsHeardAbout: text('nps_heard_about'),
+	npsDoingWell: text('nps_doing_well'),
+	npsImprove: text('nps_improve'),
 	submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().default(sql`now()`),
 	reviewedAt: timestamp('reviewed_at', { withTimezone: true })
 });
@@ -199,10 +202,19 @@ export const approvedSubmissions = pgTable('approved_submissions', {
 	projectAiDeclaration: text('project_ai_declaration'),
 	hackatimeProject: text('hackatime_project'),
 
+	// author birthday snapshot
+	authorBirthday: text('author_birthday'),
+
 	// approval data
 	submittedSeconds: integer('submitted_seconds').notNull(),
 	approvedSeconds: integer('approved_seconds').notNull(),
 	publicMessage: text('public_message'),
+	internalNote: text('internal_note'),
+
+	// NPS feedback collected at submission time
+	npsHeardAbout: text('nps_heard_about'),
+	npsDoingWell: text('nps_doing_well'),
+	npsImprove: text('nps_improve'),
 
 	submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull(),
 	approvedAt: timestamp('approved_at', { withTimezone: true }).notNull(),

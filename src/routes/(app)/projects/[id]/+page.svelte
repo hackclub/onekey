@@ -11,17 +11,33 @@
 
 	let reviewAction = $state('comment');
 	const reviewFormAction = $derived(
-		reviewAction === 'approve' ? '?/approve' : reviewAction === 'reject' ? '?/reject' : '?/comment'
+		reviewAction === 'approve'
+			? '?/approve'
+			: reviewAction === 'soft_approve'
+				? '?/softApprove'
+				: reviewAction === 'reject'
+					? '?/reject'
+					: '?/comment'
 	);
 	const reviewActionLabel = $derived(
-		reviewAction === 'approve' ? 'approve' : reviewAction === 'reject' ? 'reject' : 'post comment'
+		reviewAction === 'approve'
+			? derivedStatus === 'soft_approved'
+				? 'confirm approval'
+				: 'approve'
+			: reviewAction === 'soft_approve'
+				? 'soft approve'
+				: reviewAction === 'reject'
+					? 'reject'
+					: 'post comment'
 	);
 	const reviewActionClass = $derived(
 		reviewAction === 'approve'
 			? 'btn-approve'
-			: reviewAction === 'reject'
-				? 'btn-reject'
-				: 'btn-save'
+			: reviewAction === 'soft_approve'
+				? 'btn-soft-approve'
+				: reviewAction === 'reject'
+					? 'btn-reject'
+					: 'btn-save'
 	);
 
 	const canReship = $derived(
@@ -75,12 +91,15 @@
 	];
 
 	let showCheckModal = $state(false);
+	let checkModalClosing = $state(false);
+	let checkModalInstant = $state(false);
 	let checkModalAction = $state<'submit' | 'reship'>('submit');
 	let modalChecks = $state([false, false, false]);
 	let actualSubmitBtnEl = $state<HTMLButtonElement | null>(null);
 	let reshipFormEl = $state<HTMLFormElement | null>(null);
 
 	const allChecked = $derived(modalChecks.every(Boolean));
+	const MODAL_CLOSE_MS = 160;
 
 	const hasShippingAddress = $derived(
 		!!(data.user?.street_address && data.user?.locality && data.user?.country)
@@ -88,6 +107,15 @@
 	let showAddressModal = $state(false);
 	let addressModalClosing = $state(false);
 	const ADDRESS_MODAL_CLOSE_MS = 160;
+
+	let showNpsModal = $state(false);
+	let npsModalClosing = $state(false);
+	let npsHeardAbout = $state('');
+	let npsDoingWell = $state('');
+	let npsImprove = $state('');
+	const npsComplete = $derived(
+		npsHeardAbout.trim() !== '' && npsDoingWell.trim() !== '' && npsImprove.trim() !== ''
+	);
 
 	function closeAddressModal() {
 		if (addressModalClosing) return;
@@ -117,16 +145,52 @@
 	function openCheckModal(action: 'submit' | 'reship') {
 		modalChecks = [false, false, false];
 		checkModalAction = action;
+		checkModalInstant = false;
 		showCheckModal = true;
 	}
 
 	function closeCheckModal() {
-		showCheckModal = false;
+		if (checkModalClosing) return;
+		checkModalClosing = true;
+		setTimeout(() => {
+			showCheckModal = false;
+			checkModalClosing = false;
+		}, MODAL_CLOSE_MS);
 	}
 
 	function confirmCheckModal() {
+		// instant close - no animation when transitioning into NPS modal
 		showCheckModal = false;
-		actualSubmitBtnEl?.click();
+		checkModalClosing = false;
+		const needsNps = checkModalAction === 'submit' || !data.hasPendingNps;
+		if (needsNps) {
+			npsHeardAbout = '';
+			npsDoingWell = '';
+			npsImprove = '';
+			showNpsModal = true;
+		} else {
+			reshipFormEl?.requestSubmit();
+		}
+	}
+
+	function closeNpsModal() {
+		if (npsModalClosing) return;
+		// instant close, reopen checklist with checks preserved and no enter animation
+		showNpsModal = false;
+		npsModalClosing = false;
+		checkModalInstant = true;
+		showCheckModal = true;
+	}
+
+	function confirmNpsModal() {
+		// instant close before submitting
+		showNpsModal = false;
+		npsModalClosing = false;
+		if (checkModalAction === 'reship') {
+			reshipFormEl?.requestSubmit();
+		} else {
+			actualSubmitBtnEl?.click();
+		}
 	}
 
 	function formatDate(d: Date | string) {
@@ -448,6 +512,9 @@
 				<div class="edit-actions">
 					<button type="submit" class="btn-save">save</button>
 				</div>
+				<input type="hidden" name="nps_heard_about" value={npsHeardAbout} />
+				<input type="hidden" name="nps_doing_well" value={npsDoingWell} />
+				<input type="hidden" name="nps_improve" value={npsImprove} />
 				<button
 					type="submit"
 					formaction="?/submit"
@@ -542,6 +609,9 @@
 					<p class="form-error">{form.error}</p>
 				{/if}
 				<form method="POST" action="?/reship" use:enhance bind:this={reshipFormEl}>
+					<input type="hidden" name="nps_heard_about" value={npsHeardAbout} />
+					<input type="hidden" name="nps_doing_well" value={npsDoingWell} />
+					<input type="hidden" name="nps_improve" value={npsImprove} />
 					<button type="button" class="btn-submit" onclick={tryReship}>ship again</button>
 				</form>
 			{:else}
@@ -661,15 +731,60 @@
 					<span class="card-label">action</span>
 					<select bind:value={reviewAction} class="review-select">
 						<option value="comment">comment</option>
+						{#if data.isAdmin && (derivedStatus === 'pending' || derivedStatus === 'soft_approved')}
+							<option value="approve">approve</option>
+						{/if}
 						{#if derivedStatus === 'pending'}
-							{#if !data.isOwnProject}
-								<option value="approve">approve</option>
-							{/if}
+							<option value="soft_approve">soft approve</option>
+						{/if}
+						{#if derivedStatus === 'pending' || (derivedStatus === 'soft_approved' && data.isAdmin)}
 							<option value="reject">reject</option>
 						{/if}
 					</select>
 				</div>
-				{#if reviewAction === 'approve'}
+				{#if reviewAction === 'approve' && derivedStatus === 'soft_approved'}
+					<!-- confirming an existing soft approval — no re-entry needed -->
+					<div class="review-soft-summary">
+						<span class="review-soft-row">
+							<span class="review-soft-key">hours approved</span>
+							<span class="review-soft-val">{data.latestApproval?.approvedSeconds != null ? formatHours(data.latestApproval.approvedSeconds) : '—'}</span>
+						</span>
+						<span class="review-soft-row">
+							<span class="review-soft-key">message to author</span>
+							<span class="review-soft-val">{data.latestApproval?.publicMessage ?? '—'}</span>
+						</span>
+					</div>
+				{:else if reviewAction === 'approve'}
+					<label class="review-hours-label">
+						<span class="review-hours-text">minutes to approve</span>
+						<input
+							type="number"
+							name="approved_minutes"
+							class="review-input"
+							min="1"
+							max={data.latestApproval
+								? Math.floor(data.latestApproval.newSeconds / 60)
+								: undefined}
+							bind:value={approvedMinutesInput}
+							step="1"
+							required
+						/>
+						<span class="review-hours-hint">
+							{#if approvedMinutesConverted()}
+								= {approvedMinutesConverted()} ·
+							{/if}
+							submitted: {data.latestApproval ? formatHours(data.latestApproval.newSeconds) : '—'}
+						</span>
+					</label>
+					<textarea class="review-textarea" name="message" placeholder="message to author" required
+					></textarea>
+					<textarea
+						class="review-textarea"
+						name="internal_note"
+						placeholder="internal note (reviewer-only)"
+						required
+					></textarea>
+				{:else if reviewAction === 'soft_approve'}
 					<label class="review-hours-label">
 						<span class="review-hours-text">minutes to approve</span>
 						<input
@@ -771,8 +886,17 @@
 {/if}
 
 {#if showCheckModal}
-	<div class="modal-backdrop" role="dialog" aria-modal="true" aria-label="submission checklist">
-		<div class="modal-box">
+	<div
+		class="modal-backdrop"
+		class:closing={checkModalClosing}
+		role="dialog"
+		aria-modal="true"
+		aria-label="submission checklist"
+		onclick={(e) => e.target === e.currentTarget && closeCheckModal()}
+		onkeydown={(e) => e.key === 'Escape' && closeCheckModal()}
+		tabindex="-1"
+	>
+		<div class="modal-box check-modal" class:closing={checkModalClosing} class:instant={checkModalInstant}>
 			<h2 class="modal-title">before you {checkModalAction === 'submit' ? 'submit' : 'reship'}</h2>
 			<p class="modal-desc">please confirm the following:</p>
 			<div class="checklist">
@@ -803,7 +927,47 @@
 					class="btn-modal-confirm"
 					onclick={confirmCheckModal}
 					disabled={!allChecked}
-					>{checkModalAction === 'submit' ? 'submit for review' : 'ship again'}</button
+					>{checkModalAction === 'submit' ? 'next' : 'ship again'}</button
+				>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if showNpsModal}
+	<div
+		class="modal-backdrop"
+		class:closing={npsModalClosing}
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="nps-modal-title"
+		onclick={(e) => e.target === e.currentTarget && closeNpsModal()}
+		onkeydown={(e) => e.key === 'Escape' && closeNpsModal()}
+		tabindex="-1"
+	>
+		<div class="modal-box nps-modal" class:closing={npsModalClosing}>
+			<h2 class="modal-title" id="nps-modal-title">one last thing</h2>
+			<div class="nps-fields">
+				<label class="nps-field">
+					<span class="nps-label">how did you hear about onekey?</span>
+					<textarea class="nps-input" bind:value={npsHeardAbout}></textarea>
+				</label>
+				<label class="nps-field">
+					<span class="nps-label">what are we doing well?</span>
+					<textarea class="nps-input" bind:value={npsDoingWell}></textarea>
+				</label>
+				<label class="nps-field">
+					<span class="nps-label">how can we improve?</span>
+					<textarea class="nps-input" bind:value={npsImprove}></textarea>
+				</label>
+			</div>
+			<div class="modal-actions">
+				<button type="button" class="btn-modal-cancel" onclick={closeNpsModal}>back</button>
+				<button
+					type="button"
+					class="btn-modal-confirm"
+					onclick={confirmNpsModal}
+					disabled={!npsComplete}>submit for review</button
 				>
 			</div>
 		</div>
@@ -1280,6 +1444,48 @@
 		transition: none;
 	}
 
+	.review-soft-summary {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding: 0.75rem;
+		border: solid calc(var(--border-width) / 2);
+		border-radius: calc(var(--radius-card) / 1.5);
+		border-color: color-mix(in srgb, #a0c878 40%, transparent);
+		background: color-mix(in srgb, #a0c878 6%, transparent);
+	}
+
+	.review-soft-row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+	}
+
+	.review-soft-key {
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-text-soft);
+	}
+
+	.review-soft-val {
+		font-size: 0.85rem;
+	}
+
+	.btn-soft-approve {
+		font-size: 0.85rem;
+		font-weight: bold;
+		border-radius: var(--radius-pill);
+		padding: 0.45rem 0.9rem;
+		cursor: pointer;
+		border: solid var(--border-width) #a0c878;
+		font-family: inherit;
+		background: transparent;
+		color: #a0c878;
+		width: 100%;
+		transition: none;
+	}
+
 	.danger-section {
 		display: flex;
 		flex-direction: column;
@@ -1600,6 +1806,43 @@
 		margin: 0;
 	}
 
+	.nps-fields {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.nps-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.nps-label {
+		font-size: 0.9rem;
+		font-weight: bold;
+		color: var(--color-text-soft);
+	}
+
+	.nps-input {
+		background: transparent;
+		border: solid var(--border-width);
+		border-radius: calc(var(--radius-card) / 2);
+		padding: 0.6rem 0.75rem;
+		font-family: inherit;
+		font-size: 0.9rem;
+		color: var(--color-text);
+		resize: vertical;
+		min-height: 3.5rem;
+		width: 100%;
+		box-sizing: border-box;
+	}
+
+	.nps-input:focus {
+		outline: none;
+		border-color: var(--color-text);
+	}
+
 	.checklist {
 		display: flex;
 		flex-direction: column;
@@ -1770,6 +2013,42 @@
 
 	.req {
 		color: #c96a6a;
+	}
+
+	/* checklist modal */
+
+	.modal-backdrop:has(.check-modal:not(.instant)) {
+		animation: address-modal-fade-in 0.18s ease both;
+	}
+
+	.modal-backdrop:has(.check-modal.closing) {
+		animation: address-modal-fade-out 0.16s ease forwards;
+	}
+
+	.check-modal {
+		animation: address-modal-slide-up 0.22s ease both;
+	}
+
+	.check-modal.instant {
+		animation: none;
+	}
+
+	.check-modal.closing {
+		animation: address-modal-slide-down 0.16s ease forwards;
+	}
+
+	/* nps modal */
+
+	.modal-backdrop:has(.nps-modal.closing) {
+		animation: address-modal-fade-out 0.16s ease forwards;
+	}
+
+	.nps-modal {
+		width: min(560px, 90vw);
+	}
+
+	.nps-modal.closing {
+		animation: address-modal-slide-down 0.16s ease forwards;
 	}
 
 	/* address-required modal */
