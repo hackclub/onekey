@@ -87,7 +87,7 @@
 			alt=""
 			aria-hidden="true"
 		/>
-		<span class="card-hero-label">items up to 25% off</span>
+		<span class="card-hero-label">items up to 50% off</span>
 		<a href="/shop" class="hero-btn">
 			view shop
 			<svg
