@@ -10,15 +10,18 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	finish: async ({ locals }) => {
+	finish: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/?needs_auth=1');
 		if (!locals.user.hackatime_linked) redirect(302, '/onboarding/setup');
+
+		const data = await request.formData();
+		const destination = (data.get('destination') as string) || '/home';
 
 		await db
 			.update(users)
 			.set({ onboardedAt: new Date(), updatedAt: new Date() })
 			.where(eq(users.hcaId, locals.user.sub));
 
-		redirect(302, '/home');
+		redirect(302, destination);
 	}
 };

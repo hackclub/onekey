@@ -3,13 +3,13 @@
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { darkMode } from '$lib/stores/theme';
+	import { keySfxEnabled } from '$lib/stores/sfx';
 
 	let { data } = $props();
 
 	let editingAddress = $state(
 		untrack(() => page.url.searchParams.get('edit') === 'address')
 	);
-	let sfxEnabled = $state(untrack(() => data.user?.key_sfx_enabled ?? true));
 
 	let addressCardEl = $state<HTMLDivElement | null>(null);
 
@@ -23,8 +23,6 @@
 		}
 	});
 
-	let sfxForm: HTMLFormElement;
-	let sfxInput: HTMLInputElement;
 	let darkForm: HTMLFormElement;
 	let darkInput: HTMLInputElement;
 
@@ -112,32 +110,20 @@
 					</button>
 				</label>
 			</form>
-			<form method="POST" action="?/saveSfx" bind:this={sfxForm} use:enhance>
-				<input
-					type="hidden"
-					name="key_sfx_enabled"
-					bind:this={sfxInput}
-					value={sfxEnabled ? 'true' : 'false'}
-				/>
-				<label class="toggle-row">
-					<span class="toggle-label">sidebar key sfx</span>
-					<button
-						type="button"
-						class="toggle"
-						class:on={sfxEnabled}
-						role="switch"
-						aria-checked={sfxEnabled}
-						aria-label="sidebar key sfx"
-						onclick={() => {
-							sfxEnabled = !sfxEnabled;
-							sfxInput.value = sfxEnabled ? 'true' : 'false';
-							sfxForm.requestSubmit();
-						}}
-					>
-						<span class="toggle-thumb"></span>
-					</button>
-				</label>
-			</form>
+			<label class="toggle-row">
+				<span class="toggle-label">sidebar key sfx</span>
+				<button
+					type="button"
+					class="toggle"
+					class:on={$keySfxEnabled}
+					role="switch"
+					aria-checked={$keySfxEnabled}
+					aria-label="sidebar key sfx"
+					onclick={() => keySfxEnabled.toggle()}
+				>
+					<span class="toggle-thumb"></span>
+				</button>
+			</label>
 		</div>
 	</div>
 

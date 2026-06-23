@@ -8,11 +8,10 @@
 	const goals = [
 		{ pct: 5, label: "decide max's pfp", hours: '100 hours' },
 		{ pct: 12.5, label: 'i want to cheese', hours: '250 hours' },
-		{ pct: 25, label: 'livestream locked on hq roof', hours: '500 hours' },
-		{ pct: 37.5, label: 'water balloon firing squad', hours: '750 hours' },
-		{ pct: 50, label: "dye max's hair", hours: '1000 hours' },
-		{ pct: 75, label: 'jenin and max tiktok dance', hours: '1500 hours' },
-		{ pct: 100, label: 'catmaid for a day', hours: '2000 hours' }
+		{ pct: 25, label: 'water balloon firing squad', hours: '500 hours' },
+		{ pct: 37.5, label: "dye max's hair", hours: '750 hours' },
+		{ pct: 50, label: 'jenin and max tiktok dance', hours: '1000 hours' },
+		{ pct: 75, label: 'catmaid for a day', hours: '1500 hours' }
 	];
 
 	const barSegments = Array.from({ length: 20 }, (_, i) => i);
@@ -72,11 +71,11 @@
 			</li>
 			<li class="started-item" class:done={data.hasProject}>
 				<span class="started-check"></span>
-				<span>create a project</span>
+				<span>make a project</span>
 				{#if data.hasProject}
 					<span class="started-action">done!</span>
 				{:else}
-					<a href="/projects" class="started-action">go</a>
+					<a href="/projects?new=1" class="started-action">go</a>
 				{/if}
 			</li>
 		</ul>

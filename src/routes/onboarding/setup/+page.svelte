@@ -30,12 +30,14 @@
 
 <h1 class="ob-title">let's get you setup</h1>
 
-<section class="ob-card">
-	<span class="ob-card-label">hackatime</span>
-	<p class="ob-text">
-		use hackatime to track your coding hours! linking it here will allow us to credit your hours!
-	</p>
-	<div class="hackatime-action">
+<section class="ob-card hackatime-card">
+	<div class="hackatime-card-content">
+		<span class="ob-card-label">hackatime</span>
+		<p class="ob-text">
+			hackatime is the tool you'll use to track your coding time!<br />if you want to learn more or
+			need help setting up, see our tutorial below!
+		</p>
+		<div class="hackatime-action">
 		{#if linked}
 			<button type="button" class="hackatime-btn linked" disabled>hackatime linked</button>
 		{:else}
@@ -60,7 +62,17 @@
 				>
 			</a>
 		{/if}
+		<a
+			href="https://www.youtube.com/watch?v=grriwsX5mIo"
+			target="_blank"
+			rel="noopener noreferrer"
+			class="hackatime-btn tutorial"
+		>
+			tutorial
+		</a>
 	</div>
+	</div>
+	<img src="/img/hackatime-logo-bw.png" alt="Hackatime" class="hackatime-logo" />
 </section>
 
 <section class="ob-card">
@@ -245,8 +257,32 @@
 </div>
 
 <style>
+	.hackatime-card {
+		display: flex;
+		align-items: center;
+		gap: 1.5rem;
+	}
+
+	.hackatime-card-content {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.hackatime-logo {
+		align-self: stretch;
+		width: auto;
+		max-width: clamp(6rem, 12vw, 12rem);
+		object-fit: contain;
+		flex-shrink: 0;
+		opacity: 0.85;
+	}
+
 	.hackatime-action {
 		margin-top: 1.4rem;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		flex-wrap: wrap;
 	}
 
 	.hackatime-btn {
@@ -264,10 +300,12 @@
 		font-size: clamp(1rem, 1.3vw, 1.4rem);
 		font-family: inherit;
 		cursor: pointer;
-		transition: background-color var(--transition-fast);
+		transition:
+			background-color var(--transition-fast),
+			border-color var(--transition-fast);
 	}
 
-	.hackatime-btn:not(:disabled):hover {
+	.hackatime-btn:not(:disabled):not(.tutorial):hover {
 		background: var(--color-text-soft);
 		border-color: var(--color-text-soft);
 		color: var(--color-bg);
@@ -282,6 +320,16 @@
 		border-color: var(--color-text-soft);
 		cursor: not-allowed;
 		opacity: 0.6;
+	}
+
+	.hackatime-btn.tutorial {
+		background: var(--color-bg);
+		color: var(--color-text);
+		border-color: var(--color-text);
+	}
+
+	.hackatime-btn.tutorial:hover {
+		border-style: dotted;
 	}
 
 	/* address card */
@@ -428,7 +476,9 @@
 		background: var(--color-text);
 		color: var(--color-bg);
 		font-family: inherit;
-		transition: background-color var(--transition-fast);
+		transition:
+			background-color var(--transition-fast),
+			border-color var(--transition-fast);
 	}
 
 	.address-save:hover {

@@ -27,16 +27,6 @@ export const actions = {
 		return { success: true };
 	},
 
-	saveSfx: async ({ request, locals }) => {
-		if (!locals.user) redirect(302, '/login');
-		const form = await request.formData();
-		await db
-			.update(users)
-			.set({ keySfxEnabled: form.get('key_sfx_enabled') === 'true', updatedAt: new Date() })
-			.where(eq(users.hcaId, locals.user.sub));
-		return { success: true };
-	},
-
 	saveDarkMode: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/login');
 		const form = await request.formData();

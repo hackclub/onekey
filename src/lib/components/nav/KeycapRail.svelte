@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import Keycap from '../Keycap.svelte';
 	import { formatHours } from '$lib/format';
+	import { keySfxEnabled } from '$lib/stores/sfx';
 
 	let isMobile = $state(false);
 	let keyAudio: HTMLAudioElement;
@@ -46,7 +47,7 @@
 
 	function handlePress(href: string) {
 		pressedHref = href;
-		if (page.data.user?.key_sfx_enabled !== false) {
+		if ($keySfxEnabled) {
 			keyAudio.currentTime = 0;
 			keyAudio.play().catch(() => {});
 		}

@@ -10,11 +10,11 @@
 		},
 		{
 			title: 'submit your project',
-			desc: 'once your project is functional and ready for others to see, share it with other teens doing the same thing!'
+			desc: 'once your project is ready for others to see, share it with other teens doing the same thing!'
 		},
 		{
 			title: 'claim your prize(s)!',
-			desc: 'get a customizable one key macropad for 5 hours + choose any number of prizes from our shop!'
+			desc: 'get a customizable one key macropad for 5 hours, or choose any number of prizes from our shop!'
 		}
 	];
 </script>

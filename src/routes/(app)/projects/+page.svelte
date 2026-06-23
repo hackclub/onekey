@@ -16,7 +16,7 @@
 		}
 	});
 
-	let creating = $state(false);
+	let creating = $state(page.url.searchParams.get('new') === '1');
 	let closing = $state(false);
 
 	const CLOSE_MS = 160;
