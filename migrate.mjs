@@ -30,6 +30,19 @@ try {
 await client`SET lock_timeout = '30s'`;
 console.log('[migrate] lock_timeout = 30s');
 
+// Fix ownership of tables that were created by a different DB user (e.g. during
+// initial cluster setup). ALTER TABLE requires ownership, not just privileges.
+const currentUser = (await client`SELECT current_user`)[0].current_user;
+console.log('[migrate] current_user:', currentUser);
+const tables = ['approved_submissions'];
+for (const t of tables) {
+	try {
+		await client`SELECT pg_catalog.pg_get_userbyid(relowner) as owner FROM pg_class WHERE relname = ${t} AND relkind = 'r'`.then(rows => {
+			if (rows[0]) console.log(`[migrate] owner of ${t}:`, rows[0].owner);
+		});
+	} catch {}
+}
+
 const db = drizzle(client);
 
 try {
