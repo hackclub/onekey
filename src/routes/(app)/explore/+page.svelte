@@ -5,6 +5,8 @@
 
 	const clockSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor" stroke="currentColor" stroke-width="1.5" paint-order="stroke fill"><path d="M26 16c0 5.523-4.477 10-10 10S6 21.523 6 16 10.477 6 16 6s10 4.477 10 10zm2 0c0 6.627-5.373 12-12 12S4 22.627 4 16 9.373 4 16 4s12 5.373 12 12z"/><path d="M15.64 17a1 1 0 0 1-1-1V9a1 1 0 0 1 2 0v7a1 1 0 0 1-1 1z"/><path d="M21.702 19.502a1 1 0 0 1-1.366.366l-5.196-3a1 1 0 0 1 1-1.732l5.196 3a1 1 0 0 1 .366 1.366z"/></svg>`;
 
+	import { enhance } from '$app/forms';
+
 	// svelte-ignore state_referenced_locally
 	let visibleProjects = $state([...data.projects]);
 	// svelte-ignore state_referenced_locally
@@ -52,6 +54,17 @@
 {:else}
 	<div class="project-grid">
 		{#each visibleProjects as project (project.id)}
+			<div class="project-card-wrap">
+			{#if data.isAdmin}
+				<form method="POST" action="?/delete" use:enhance={() => {
+					return ({ result }) => {
+						if (result.type === 'success') visibleProjects = visibleProjects.filter(p => p.id !== project.id);
+					};
+				}}>
+					<input type="hidden" name="id" value={project.id} />
+					<button type="submit" class="btn-delete-project" onclick={(e) => { if (!confirm(`delete "${project.name}"?`)) e.preventDefault(); }}>delete</button>
+				</form>
+			{/if}
 			<a
 				href={project.demoUrl ?? '#'}
 				target="_blank"
@@ -85,6 +98,7 @@
 					<p class="project-desc">{project.description}</p>
 				{/if}
 			</a>
+			</div>
 		{/each}
 	</div>
 	{#if hasMore}
@@ -229,5 +243,33 @@
 		padding: 2rem;
 		color: var(--color-text-soft);
 		font-size: 0.9rem;
+	}
+
+	.project-card-wrap {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.project-card-wrap .project-card {
+		flex: 1;
+	}
+
+	.btn-delete-project {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		z-index: 10;
+		background: var(--color-bg);
+		border: solid var(--border-width);
+		border-radius: var(--radius-card);
+		padding: 0.2rem 0.5rem;
+		font-size: 0.75rem;
+		cursor: pointer;
+		color: var(--color-text-soft);
+	}
+
+	.btn-delete-project:hover {
+		color: var(--color-text);
 	}
 </style>
