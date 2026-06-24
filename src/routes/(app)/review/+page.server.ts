@@ -19,6 +19,7 @@ export async function load({ locals }) {
 			demoUrl: projects.demoUrl,
 			hackatimeProject: projects.hackatimeProject,
 			approvalId: projectApprovals.id,
+			status: projectApprovals.status,
 			submittedSeconds: projectApprovals.submittedSeconds,
 			submittedAt: projectApprovals.submittedAt,
 			submitterName: users.nickname,
@@ -30,7 +31,7 @@ export async function load({ locals }) {
 		.innerJoin(users, eq(projects.userId, users.id))
 		.where(
 			and(
-				eq(projectApprovals.status, 'pending'),
+				sql`${projectApprovals.status} in ('pending', 'soft_approved')`,
 				notExists(
 					db.select({ x: sql`1` })
 						.from(pa2)

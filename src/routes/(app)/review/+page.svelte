@@ -32,8 +32,17 @@
 				<span class="col-submitted">submitted</span>
 			</div>
 			{#each data.submitted as project (project.id)}
-				<a href="/projects/{project.id}" class="table-row">
-					<span class="col-name">{project.name}</span>
+				<a
+					href="/projects/{project.id}"
+					class="table-row"
+					class:soft-accepted={project.status === 'soft_approved'}
+				>
+					<span class="col-name">
+						{project.name}
+						{#if project.status === 'soft_approved'}
+							<span class="soft-tag">soft accepted</span>
+						{/if}
+					</span>
 					<span class="col-desc">{project.description ?? '—'}</span>
 					<span class="col-author">{project.submitterSlack ?? project.submitterName ?? project.submitterEmail ?? 'unknown'}</span>
 					<span class="col-hours">{formatHours(project.submittedSeconds)}</span>
@@ -139,6 +148,28 @@
 		overflow: hidden;
 		white-space: nowrap;
 		text-overflow: ellipsis;
+	}
+
+	.table-row.soft-accepted {
+		background: #f0fdf4;
+	}
+
+	.table-row.soft-accepted:hover {
+		background: #dcfce7;
+	}
+
+	.soft-tag {
+		display: inline-block;
+		font-size: 0.65rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		background: #16a34a;
+		color: #fff;
+		border-radius: 9999px;
+		padding: 0.1em 0.5em;
+		vertical-align: middle;
+		margin-left: 0.4rem;
 	}
 
 </style>
