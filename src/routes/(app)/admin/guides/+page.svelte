@@ -7,20 +7,38 @@
 		<a href="/admin" class="back">← admin</a>
 		<h1>guides</h1>
 		<p class="sub">
-			guides are hardcoded — edit <code>src/lib/guides.ts</code> and redeploy to add or update them.
+			guides are loaded from markdown files — add or edit <code>src/lib/guides/*.md</code> and
+			redeploy to publish changes.
 		</p>
 	</div>
 
 	<div class="info-box">
 		<strong>how to add a guide</strong>
 		<ol>
-			<li>Open <code>src/lib/guides.ts</code> in your editor.</li>
 			<li>
-				Add a new object to the <code>guides</code> array with a unique <code>slug</code>,
-				<code>title</code>, <code>description</code>, <code>thumbnail</code>, <code>stack</code>,
-				and <code>sections</code>.
+				Create a new file at <code>src/lib/guides/your-slug.md</code>. The filename becomes the URL
+				slug.
 			</li>
-			<li>Commit and redeploy — the guide will appear at <code>/guides/your-slug</code>.</li>
+			<li>
+				Add a YAML frontmatter block at the top:
+				<pre><code>---
+title: My Guide
+description: A short description shown on the index.
+thumbnail: https://example.com/image.png
+stack:
+  - Python
+  - Pygame
+order: 1
+---</code></pre>
+			</li>
+			<li>
+				Write content using <code>##</code> headings to define sections — each <code>##</code> becomes
+				a left-nav entry on the guide page. Use <code>###</code> for subheadings within a section.
+			</li>
+			<li>
+				To hide a guide without deleting it, add <code>draft: true</code> to the frontmatter.
+			</li>
+			<li>Commit and redeploy — the guide appears at <code>/guides/your-slug</code>.</li>
 		</ol>
 	</div>
 
@@ -138,6 +156,23 @@
 		padding: 0.1em 0.35em;
 		border-radius: 4px;
 		color: #a78bfa;
+	}
+
+	.info-box pre {
+		margin: 0.6rem 0 0;
+		background: #1c2027;
+		border-radius: 6px;
+		padding: 0.75rem 1rem;
+		overflow-x: auto;
+	}
+
+	.info-box pre code {
+		background: none;
+		padding: 0;
+		border-radius: 0;
+		color: #c9ced8;
+		font-size: 0.82rem;
+		line-height: 1.6;
 	}
 
 	.table-wrap {

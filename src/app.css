@@ -158,7 +158,7 @@ input.dotted:focus {
 .section {
 	display: flex;
 	justify-content: center;
-	width: 100vw;
+	width: 100%;
 }
 
 .content {
@@ -300,6 +300,6 @@ footer {
 @media screen and (min-width: 768px) {
 	.content,
 	footer {
-		min-width: 55rem;
+		min-width: min(55rem, 100%);
 	}
 }
