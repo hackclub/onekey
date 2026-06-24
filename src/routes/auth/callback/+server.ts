@@ -6,7 +6,10 @@ import { sessions, users } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { encryptToken, generateSessionToken, hashToken } from '$lib/server/session';
 import { getLaunched } from '$lib/server/launch';
+import { inviteToChannel } from '$lib/server/slack';
 import type { RequestHandler } from './$types';
+
+const ONEKEY_CHANNEL_ID = 'C0AM132QQUR';
 
 const adminSet = new Set((env.ADMIN_IDS || '').split(' ').map((id) => id.trim()).filter(Boolean));
 const reviewerSet = new Set((env.REVIEWER_IDS || '').split(' ').map((id) => id.trim()).filter(Boolean));
@@ -63,6 +66,8 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		const slackData = await slackRes.json();
 		avatar_url = slackData.user?.profile?.image_192 ?? slackData.user?.profile?.image_72 ?? undefined;
 		slack_display_name = slackData.user?.profile?.display_name || slackData.user?.name || undefined;
+
+		inviteToChannel(user.slack_id, ONEKEY_CHANNEL_ID).catch(() => {});
 	}
 
 	const encKey = Buffer.from(env.TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');

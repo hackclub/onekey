@@ -42,6 +42,10 @@
 			<span class="card-label">reviewers</span>
 			<p class="card-desc">manage who can access review pages</p>
 		</a>
+		<a href="/admin/guides" class="card">
+			<span class="card-label">guides</span>
+			<p class="card-desc">view published guides (edit src/lib/guides.ts to update)</p>
+		</a>
 	</div>
 </div>
 
