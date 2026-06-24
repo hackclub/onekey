@@ -445,9 +445,9 @@
 				<div class="card faq-card bordered">
 					<p class="subhead"><strong>what counts as "one key?"</strong></p>
 					<p>
-						your app should be controllable with only one key! anything else where you're pressing a
-						button or clicking something for input is not allowed! mouse movement, mic, camera are
-						acceptable.
+						the main point of your project should generally revolve around only one key, but other
+						controls are fine to have if they are really needed.<br />as long as your idea embodies
+						the concept well and is polished, there should be no reason we can't accept it!
 					</p>
 				</div>
 				<div class="card faq-card bordered">
