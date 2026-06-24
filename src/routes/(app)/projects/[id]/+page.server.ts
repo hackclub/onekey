@@ -222,7 +222,12 @@ export const actions = {
 		const dbUser = await getDbUser(locals.user.sub);
 		if (!dbUser) redirect(302, '/login');
 
-		const form = await request.formData();
+		let form: FormData;
+		try {
+			form = await request.formData();
+		} catch {
+			return fail(400, { error: 'invalid form submission' });
+		}
 		const name = (form.get('name') as string)?.trim();
 		const description = (form.get('description') as string)?.trim() || null;
 		const repoUrl = (form.get('repo_url') as string)?.trim() || null;
