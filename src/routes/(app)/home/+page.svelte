@@ -39,6 +39,15 @@
 	</div>
 </div>
 
+{#if data.user?.verification_status !== 'verified'}
+	<div class="verify-banner">
+		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+			<path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+		</svg>
+		your identity isn't verified yet, so you won't be able to submit projects! <a href="https://auth.hackclub.com/verifications/new" target="_blank" rel="noreferrer">verify your identity here</a>
+	</div>
+{/if}
+
 <div class="bento">
 	<div class="card card-started">
 		<span class="started-title">get started</span>
@@ -186,6 +195,36 @@
 </div>
 
 <style>
+	.verify-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		background: color-mix(in srgb, #d97706 12%, var(--color-bg));
+		border: solid var(--border-width) color-mix(in srgb, #d97706 50%, transparent);
+		border-radius: var(--radius-card);
+		padding: 0.75rem 1.1rem;
+		font-size: 0.9rem;
+		font-weight: 500;
+		color: var(--color-text);
+		margin: 1rem 0;
+	}
+
+	.verify-banner svg {
+		width: 1.1rem;
+		height: 1.1rem;
+		flex-shrink: 0;
+		color: #d97706;
+	}
+
+	.verify-banner a {
+		color: var(--color-text);
+		text-underline-offset: 2px;
+	}
+
+	.verify-banner a:hover {
+		opacity: 0.7;
+	}
+
 	.greeting-row {
 		display: flex;
 		align-items: center;
