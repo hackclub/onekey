@@ -15,6 +15,7 @@ import { sendSlackDM } from '$lib/server/slack';
 import { uploadImageBlob } from '$lib/server/cdn';
 import { createAirtableApprovalRecord } from '$lib/server/airtable';
 import { decryptToken } from '$lib/server/session';
+import { isYswsEligible } from '$lib/server/eligibility';
 
 const HACKATIME_BASE_URL = 'https://hackatime.hackclub.com';
 const DEV_ENCRYPTION_KEY = '0'.repeat(64);
@@ -105,13 +106,29 @@ export async function load({ locals, params }) {
 		return { ...a, newSeconds: a.submittedSeconds - baseline };
 	});
 
-	// soft_approved is internal-only — non-reviewers/admins see it as still pending
+	// soft_approved is internal-only — non-reviewers/admins see it as still pending.
+	// Relabel (rather than hide) the soft_approved approval so the author lands on the
+	// pending view; hiding it would expose a stale approved/rejected status and wrongly
+	// surface the reship/submit view while final confirmation is outstanding.
 	const isInternal = locals.isReviewer || locals.isAdmin;
 	const visibleApprovals = isInternal
 		? approvalsWithDelta
-		: approvalsWithDelta
-				.filter((a) => a.status !== 'soft_approved')
-				.map(({ internalNote: _n, ...rest }) => ({ ...rest, internalNote: null }));
+		: approvalsWithDelta.map((a) => {
+				if (a.status === 'soft_approved') {
+					return {
+						...a,
+						status: 'pending',
+						approvedSeconds: null,
+						publicMessage: null,
+						internalNote: null,
+						reviewedAt: null,
+						reviewerName: null,
+						reviewerNickname: null,
+						reviewerAvatar: null
+					};
+				}
+				return { ...a, internalNote: null };
+			});
 
 	const latestApproval =
 		visibleApprovals.length > 0 ? visibleApprovals[visibleApprovals.length - 1] : null;
@@ -189,13 +206,6 @@ export async function load({ locals, params }) {
 				.filter((e) => e.action !== 'soft_approved')
 				.map(({ internalNote: _n, ...rest }) => ({ ...rest, internalNote: null }));
 
-	let hasPendingNps = false;
-	if (project.userId === dbUser.id) {
-		const actualLatest = await getLatestApproval(id);
-		hasPendingNps =
-			!!actualLatest && actualLatest.status !== 'approved' && !!actualLatest.npsHeardAbout;
-	}
-
 	return {
 		project,
 		approvals: visibleApprovals,
@@ -207,8 +217,7 @@ export async function load({ locals, params }) {
 		projectOwner: projectOwnerRow ?? null,
 		isReviewer: locals.isReviewer,
 		isAdmin: locals.isAdmin,
-		isOwnProject: project.userId === dbUser.id,
-		hasPendingNps
+		isOwnProject: project.userId === dbUser.id
 	};
 }
 
@@ -300,6 +309,9 @@ export const actions = {
 		if (approvalCount > 0)
 			return fail(400, { error: 'project already submitted, use reship to submit new work' });
 
+		if (!isYswsEligible(dbUser.birthday))
+			return fail(403, { error: 'you must be a hack clubber aged 13-18 to submit a project' });
+
 		if (!dbUser.streetAddress || !dbUser.locality || !dbUser.country)
 			return fail(400, {
 				error: 'set your shipping address in account settings before submitting'
@@ -345,9 +357,6 @@ export const actions = {
 			});
 
 		const aiDeclaration = (form.get('ai_declaration') as string)?.trim() || null;
-		const npsHeardAbout = (form.get('nps_heard_about') as string)?.trim() || null;
-		const npsDoingWell = (form.get('nps_doing_well') as string)?.trim() || null;
-		const npsImprove = (form.get('nps_improve') as string)?.trim() || null;
 
 		await db
 			.update(projects)
@@ -368,10 +377,7 @@ export const actions = {
 			submittedById: dbUser.id,
 			submittedSeconds: totalSeconds,
 			status: 'pending',
-			aiDeclaration,
-			npsHeardAbout,
-			npsDoingWell,
-			npsImprove
+			aiDeclaration
 		});
 
 		return { success: true };
@@ -399,6 +405,9 @@ export const actions = {
 		if (latestApproval.status === 'pending')
 			return fail(400, { error: 'a review is already pending for this project' });
 
+		if (!isYswsEligible(dbUser.birthday))
+			return fail(403, { error: 'you must be a hack clubber aged 13-18 to submit a project' });
+
 		if (!dbUser.streetAddress || !dbUser.locality || !dbUser.country)
 			return fail(400, {
 				error: 'set your shipping address in account settings before submitting'
@@ -420,25 +429,12 @@ export const actions = {
 			});
 		}
 
-		const form = await request.formData();
-		const formNpsHeardAbout = (form.get('nps_heard_about') as string)?.trim() || null;
-		const formNpsDoingWell = (form.get('nps_doing_well') as string)?.trim() || null;
-		const formNpsImprove = (form.get('nps_improve') as string)?.trim() || null;
-
-		// Use NPS from form (fresh collection) or carry forward from previous approval
-		const npsHeardAbout = formNpsHeardAbout ?? latestApproval.npsHeardAbout;
-		const npsDoingWell = formNpsDoingWell ?? latestApproval.npsDoingWell;
-		const npsImprove = formNpsImprove ?? latestApproval.npsImprove;
-
 		await db.insert(projectApprovals).values({
 			projectId: id,
 			submittedById: dbUser.id,
 			submittedSeconds: currentSeconds,
 			status: 'pending',
-			aiDeclaration: projectRow.aiDeclaration ?? null,
-			npsHeardAbout,
-			npsDoingWell,
-			npsImprove
+			aiDeclaration: projectRow.aiDeclaration ?? null
 		});
 
 		return { success: true };
@@ -741,9 +737,6 @@ export const actions = {
 				approvedSeconds,
 				publicMessage: message,
 				internalNote,
-				npsHeardAbout: latestApproval.npsHeardAbout ?? null,
-				npsDoingWell: latestApproval.npsDoingWell ?? null,
-				npsImprove: latestApproval.npsImprove ?? null,
 				submittedAt: latestApproval.submittedAt,
 				approvedAt: new Date()
 			});
@@ -751,9 +744,6 @@ export const actions = {
 			await createAirtableApprovalRecord({
 				repoUrl: projectData.repoUrl,
 				demoUrl: projectData.demoUrl,
-				npsHeardAbout: latestApproval.npsHeardAbout ?? null,
-				npsDoingWell: latestApproval.npsDoingWell ?? null,
-				npsImprove: latestApproval.npsImprove ?? null,
 				authorName: authorUser?.name ?? null,
 				authorEmail: authorUser?.email ?? null,
 				screenshotUrl: projectData.screenshotUrl,

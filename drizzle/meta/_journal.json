@@ -183,6 +183,13 @@
       "when": 1782604800000,
       "tag": "0025_add_reviewers",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1782691200000,
+      "tag": "0026_add_prize_claim",
+      "breakpoints": true
     }
   ]
 }

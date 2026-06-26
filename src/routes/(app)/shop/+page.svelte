@@ -9,12 +9,14 @@
 	type ItemOption = { label: string; choices: Choice[] };
 
 	let modalItem = $state<Item | null>(null);
+	let modalMode = $state<'buy' | 'claim'>('buy');
 	let modalOptions = $state<ItemOption[]>([]);
 	let modalClosing = $state(false);
 	let displayedImageUrl = $state<string | null>(null);
 	const CLOSE_MS = 160;
 
-	function openModal(item: Item) {
+	function openModal(item: Item, mode: 'buy' | 'claim' = 'buy') {
+		modalMode = mode;
 		try {
 			const raw = JSON.parse(item.options) as Array<{
 				label: string;
@@ -58,6 +60,8 @@
 
 	const clockSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor" stroke="currentColor" stroke-width="1.5" paint-order="stroke fill"><path d="M26 16c0 5.523-4.477 10-10 10S6 21.523 6 16 10.477 6 16 6s10 4.477 10 10zm2 0c0 6.627-5.373 12-12 12S4 22.627 4 16 9.373 4 16 4s12 5.373 12 12z"/><path d="M15.64 17a1 1 0 0 1-1-1V9a1 1 0 0 1 2 0v7a1 1 0 0 1-1 1z"/><path d="M21.702 19.502a1 1 0 0 1-1.366.366l-5.196-3a1 1 0 0 1 1-1.732l5.196 3a1 1 0 0 1 .366 1.366z"/></svg>`;
 	const caretSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" aria-label="down-caret" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor"><path d="M 0.359841 9.01822C 0.784113 9.37178 1.41467 9.31446 1.76823 8.8902C 3.14518 7.2451 6.52975 3.42464 8.25002 2.11557C 9.99919 3.44663 13.335 7.21555 14.7318 8.8902C 15.0854 9.31446 15.7159 9.37178 16.1402 9.01822C 16.5645 8.66466 16.6215 8.03371 16.2679 7.60943C 14.7363 5.76983 11.2749 1.80977 9.30351 0.408618C 8.99227 0.190441 8.64018 0 8.25002 0C 7.85987 0 7.50778 0.190441 7.19654 0.408618C 5.26486 1.78153 1.73514 5.80788 0.232849 7.60856L 0.231804 7.60982C -0.12176 8.03409 -0.0644362 8.66466 0.359841 9.01822Z" transform="translate(7.12506 20.6251)scale(1 -1)"/></svg>`;
+	const lockSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" aria-label="private" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor"><path d="M19.196 6.238C18.44 6.041 17.479 5.999 16 6c-1.479-.001-2.44.041-3.195.238-.606.15-.826.343-.976.551-.208.291-.451.872-.613 2.111-.119.895-.178 1.972-.202 3.315C12.316 12.052 13.951 12 16 12s3.684.052 4.986.215c-.024-1.343-.083-2.42-.201-3.315-.162-1.239-.406-1.82-.614-2.111-.15-.208-.37-.401-.976-.551zm3.797 6.403C22.894 4.897 21.803 4 16.001 4s-6.893.897-6.992 8.641c-2.604.885-3.008 2.911-3.008 7.359 0 7 1 8 10 8s10-1 10-8c0-4.448-.404-6.474-3.008-7.359zm-5.992 8.092a2 2 0 1 0-2 0V22a1 1 0 0 0 2 0v-1.267z"/></svg>`;
+	const giftSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/><path d="M12 8S11 4 8.5 4 6 7 8 8M12 8s1-4 3.5-4S18 7 16 8"/></svg>`;
 </script>
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && modalItem && closeModal()} />
@@ -65,12 +69,14 @@
 <div class="page-header">
 	<div class="heading-row">
 		<h1 class="heading">shop</h1>
-		<span class="balance-display">
-			<span class="dot-sep">·</span>
-			<span class="balance-label">balance:</span>
-			<span class="balance-icon">{@html clockSvg}</span>
-			{formatHours(data.availableSeconds)}
-		</span>
+		{#if data.verified}
+			<span class="balance-display">
+				<span class="dot-sep">·</span>
+				<span class="balance-label">balance:</span>
+				<span class="balance-icon">{@html clockSvg}</span>
+				{formatHours(data.availableSeconds)}
+			</span>
+		{/if}
 	</div>
 	<a href="/shop/orders" class="orders-btn bordered"
 		>your orders <svg
@@ -95,111 +101,201 @@
 	<p class="form-error">{form.error}</p>
 {/if}
 {#if form?.success}
-	<p class="form-success">order placed!</p>
+	<p class="form-success">{form.claimed ? 'prize claimed!' : 'order placed!'}</p>
 {/if}
 
-{#if data.categories.length === 0}
-	<div class="empty-state">
-		<p>no items available yet - check back soon.</p>
-	</div>
+{#if data.verified}
+	{@render shopGrid()}
 {:else}
-	{#each data.categories as cat (cat.id)}
-		<section class="category">
-			<div class="cat-header">
-				<h2 class="cat-name">{cat.name}</h2>
-				{#if cat.description}<p class="cat-desc">{cat.description}</p>{/if}
-			</div>
-			<div class="item-grid">
-				{#each cat.items as item (item.id)}
-					{@const effectivePrice = item.discountSeconds ?? item.priceSeconds}
-					{@const isDiscounted = item.discountSeconds != null}
-					{@const canAfford = data.availableSeconds >= effectivePrice}
-					{@const outOfStock = item.stock === 0}
-					<div
-						class="item-card"
-						role="button"
-						tabindex={!outOfStock ? 0 : -1}
-						aria-disabled={outOfStock}
-						onclick={() => !outOfStock && openModal(item)}
-						onkeydown={(e) =>
-							(e.key === 'Enter' || e.key === ' ') && !outOfStock && openModal(item)}
+	<div class="locked-shop">
+		<div class="locked-grid" inert aria-hidden="true">
+			{@render shopGrid()}
+		</div>
+		<div class="lock-overlay">
+			{#if data.prizeClaimed}
+				<div class="lock-panel">
+					<span class="lock-icon" aria-hidden="true">{@html lockSvg}</span>
+					<h2 class="lock-title">prize claimed!</h2>
+					<p class="lock-desc">
+						you've claimed your one prize. verify your identity to unlock the full shop and start
+						spending your hours on bigger, better stuff.
+					</p>
+					<a
+						href="https://auth.hackclub.com/verifications/new"
+						target="_blank"
+						rel="noreferrer"
+						class="lock-verify-btn">verify your identity</a
 					>
-						<div
-							class="item-img-wrap"
-							style={item.imagePadding ? `--img-pad: ${item.imagePadding}px;` : ''}
-						>
-							{#if item.imageUrl}
-								<img
-									src={item.imageUrl}
-									alt={item.name}
-									class="item-img"
-									style={item.imagePadding ? 'object-fit: contain;' : ''}
-								/>
-							{/if}
-							{#if isDiscounted}
-								<span class="discount-flag">sale</span>
-							{/if}
-						</div>
-						<div class="item-body">
-							<div class="item-top">
-								<span class="item-name">{item.name}</span>
-								<span class="item-price">
-									{#if isDiscounted}
-										<span class="item-price-original">
-											<span class="price-icon">{@html clockSvg}</span>{formatHours(
-												item.priceSeconds
-											)}
-											<svg
-												class="price-strike"
-												viewBox="0 0 100 100"
-												preserveAspectRatio="none"
-												aria-hidden="true"
-											>
-												<line x1="2" y1="38" x2="98" y2="9" vector-effect="non-scaling-stroke" />
-											</svg>
-										</span>
-										<span class="item-price-sale"
-											><span class="price-icon">{@html clockSvg}</span>{formatHours(
-												effectivePrice
-											)}</span
-										>
-									{:else}
-										<span class="price-icon">{@html clockSvg}</span>{formatHours(effectivePrice)}
+				</div>
+			{:else if data.hasApprovedProject && data.prizeItems.length > 0}
+				<div class="lock-panel lock-panel-prizes">
+					<span class="lock-icon" aria-hidden="true">{@html giftSvg}</span>
+					<h2 class="lock-title">claim a prize</h2>
+					<p class="lock-desc">
+						nice work getting a project approved! since you're not verified yet, pick <strong
+							>one</strong
+						> of these to claim. or verify your identity to unlock the full shop instead.
+					</p>
+					<div class="prize-grid">
+						{#each data.prizeItems as prize (prize.id)}
+							{@const prizeOut = prize.stock === 0}
+							<button
+								type="button"
+								class="prize-card"
+								disabled={prizeOut}
+								onclick={() => !prizeOut && openModal(prize, 'claim')}
+							>
+								<div
+									class="prize-img-wrap"
+									style={prize.imagePadding ? `--img-pad: ${prize.imagePadding}px;` : ''}
+								>
+									{#if prize.imageUrl}
+										<img
+											src={prize.imageUrl}
+											alt={prize.name}
+											class="prize-img"
+											style={prize.imagePadding ? 'object-fit: contain;' : ''}
+										/>
 									{/if}
-								</span>
-							</div>
-							{#if item.stock !== -1 && item.stock > 0}
-								<span class="stock-badge">{item.stock} left</span>
-							{/if}
-							{#if item.description}
-								<p class="item-desc">{item.description}</p>
-							{/if}
-						</div>
-						<button
-							class="btn-order"
-							class:btn-order-disabled={outOfStock}
-							class:btn-order-discounted={isDiscounted && !outOfStock}
-							disabled={outOfStock}
-							tabindex="-1"
-						>
-							{#if outOfStock}
-								out of stock
-							{:else}
-								buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(effectivePrice)}
-							{/if}
-						</button>
+								</div>
+								<span class="prize-name">{prize.name}</span>
+								<span class="prize-cta">{prizeOut ? 'out of stock' : 'claim'}</span>
+							</button>
+						{/each}
 					</div>
-				{/each}
-			</div>
-		</section>
-	{/each}
+					<a
+						href="https://auth.hackclub.com/verifications/new"
+						target="_blank"
+						rel="noreferrer"
+						class="lock-verify-link">or verify to unlock the full shop →</a
+					>
+				</div>
+			{:else}
+				<div class="lock-panel">
+					<span class="lock-icon" aria-hidden="true">{@html lockSvg}</span>
+					<h2 class="lock-title">the shop is locked</h2>
+					<p class="lock-desc">
+						verify your identity to unlock a shop full of bigger, more awesome prizes - or get a
+						project approved to claim one of three starter prizes.
+					</p>
+					<a
+						href="https://auth.hackclub.com/verifications/new"
+						target="_blank"
+						rel="noreferrer"
+						class="lock-verify-btn">verify your identity</a
+					>
+				</div>
+			{/if}
+		</div>
+	</div>
 {/if}
 
-<!-- ORDER CONFIRMATION MODAL -->
+{#snippet shopGrid()}
+	{#if data.categories.length === 0}
+		<div class="empty-state">
+			<p>no items available yet - check back soon.</p>
+		</div>
+	{:else}
+		{#each data.categories as cat (cat.id)}
+			<section class="category">
+				<div class="cat-header">
+					<h2 class="cat-name">{cat.name}</h2>
+					{#if cat.description}<p class="cat-desc">{cat.description}</p>{/if}
+				</div>
+				<div class="item-grid">
+					{#each cat.items as item (item.id)}
+						{@const effectivePrice = item.discountSeconds ?? item.priceSeconds}
+						{@const isDiscounted = item.discountSeconds != null}
+						{@const outOfStock = item.stock === 0}
+						<div
+							class="item-card"
+							role="button"
+							tabindex={!outOfStock ? 0 : -1}
+							aria-disabled={outOfStock}
+							onclick={() => !outOfStock && openModal(item)}
+							onkeydown={(e) =>
+								(e.key === 'Enter' || e.key === ' ') && !outOfStock && openModal(item)}
+						>
+							<div
+								class="item-img-wrap"
+								style={item.imagePadding ? `--img-pad: ${item.imagePadding}px;` : ''}
+							>
+								{#if item.imageUrl}
+									<img
+										src={item.imageUrl}
+										alt={item.name}
+										class="item-img"
+										style={item.imagePadding ? 'object-fit: contain;' : ''}
+									/>
+								{/if}
+								{#if isDiscounted}
+									<span class="discount-flag">sale</span>
+								{/if}
+							</div>
+							<div class="item-body">
+								<div class="item-top">
+									<span class="item-name">{item.name}</span>
+									<span class="item-price">
+										{#if isDiscounted}
+											<span class="item-price-original">
+												<span class="price-icon">{@html clockSvg}</span>{formatHours(
+													item.priceSeconds
+												)}
+												<svg
+													class="price-strike"
+													viewBox="0 0 100 100"
+													preserveAspectRatio="none"
+													aria-hidden="true"
+												>
+													<line x1="2" y1="38" x2="98" y2="9" vector-effect="non-scaling-stroke" />
+												</svg>
+											</span>
+											<span class="item-price-sale"
+												><span class="price-icon">{@html clockSvg}</span>{formatHours(
+													effectivePrice
+												)}</span
+											>
+										{:else}
+											<span class="price-icon">{@html clockSvg}</span>{formatHours(effectivePrice)}
+										{/if}
+									</span>
+								</div>
+								{#if item.stock !== -1 && item.stock > 0}
+									<span class="stock-badge">{item.stock} left</span>
+								{/if}
+								{#if item.description}
+									<p class="item-desc">{item.description}</p>
+								{/if}
+							</div>
+							<button
+								class="btn-order"
+								class:btn-order-disabled={outOfStock}
+								class:btn-order-discounted={isDiscounted && !outOfStock}
+								disabled={outOfStock}
+								tabindex="-1"
+							>
+								{#if outOfStock}
+									out of stock
+								{:else}
+									buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(
+										effectivePrice
+									)}
+								{/if}
+							</button>
+						</div>
+					{/each}
+				</div>
+			</section>
+		{/each}
+	{/if}
+{/snippet}
+
+<!-- ORDER / PRIZE CONFIRMATION MODAL -->
 {#if modalItem}
 	{@const currentImg = displayedImageUrl ?? modalItem.imageUrl}
 	{@const modalEffective = modalItem.discountSeconds ?? modalItem.priceSeconds}
 	{@const modalDiscounted = modalItem.discountSeconds != null}
+	{@const isClaim = modalMode === 'claim'}
 	<div
 		class="modal-backdrop"
 		class:closing={modalClosing}
@@ -236,14 +332,14 @@
 
 				<form
 					method="POST"
-					action="?/buy"
+					action={isClaim ? '?/claimPrize' : '?/buy'}
 					use:enhance={() =>
 						async ({ update }) => {
 							await update();
 							closeModal();
 						}}
 					class="modal-form"
-					class:tight-top={modalOptions.length === 0 && modalItem.fulfilledLocally}
+					class:tight-top={modalOptions.length === 0 && (modalItem.fulfilledLocally || isClaim)}
 				>
 					<input type="hidden" name="item_id" value={modalItem.id} />
 
@@ -271,7 +367,12 @@
 						</div>
 					{/if}
 
-					{#if modalItem.fulfilledLocally}
+					{#if isClaim}
+						<p class="modal-disclaimer">
+							this is your <strong>one</strong> prize - choose carefully! once you claim it you won't
+							be able to claim another. verify your identity any time to unlock the full shop.
+						</p>
+					{:else if modalItem.fulfilledLocally}
 						<p class="modal-disclaimer">
 							this item is fulfilled locally and doesn't ship from HQ - if we can't fulfill it in
 							your region, it'll be substituted for a similar item or you'll be given a grant for
@@ -280,26 +381,32 @@
 					{/if}
 
 					<div class="modal-actions">
-						<button
-							type="submit"
-							class="btn-confirm"
-							class:btn-confirm-discounted={modalDiscounted &&
-								data.availableSeconds >= modalEffective}
-							disabled={data.availableSeconds < modalEffective}
-						>
-							{#if data.availableSeconds < modalEffective}
-								not enough hours
-							{:else}
-								buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(modalEffective)}
-								{#if modalDiscounted}
-									<span class="btn-confirm-original"
-										><span class="price-icon">{@html clockSvg}</span>{formatHours(
-											modalItem.priceSeconds
-										)}</span
-									>
+						{#if isClaim}
+							<button type="submit" class="btn-confirm">claim this prize</button>
+						{:else}
+							<button
+								type="submit"
+								class="btn-confirm"
+								class:btn-confirm-discounted={modalDiscounted &&
+									data.availableSeconds >= modalEffective}
+								disabled={data.availableSeconds < modalEffective}
+							>
+								{#if data.availableSeconds < modalEffective}
+									not enough hours
+								{:else}
+									buy for<span class="price-icon">{@html clockSvg}</span>{formatHours(
+										modalEffective
+									)}
+									{#if modalDiscounted}
+										<span class="btn-confirm-original"
+											><span class="price-icon">{@html clockSvg}</span>{formatHours(
+												modalItem.priceSeconds
+											)}</span
+										>
+									{/if}
 								{/if}
-							{/if}
-						</button>
+							</button>
+						{/if}
 						<button type="button" class="btn-cancel-modal" onclick={closeModal}>cancel</button>
 					</div>
 				</form>
@@ -309,6 +416,180 @@
 {/if}
 
 <style>
+	/* ── LOCKED SHOP (unverified) ── */
+
+	.locked-shop {
+		position: relative;
+	}
+
+	.locked-grid {
+		filter: blur(7px);
+		opacity: 0.5;
+		pointer-events: none;
+		user-select: none;
+		/* keep enough height behind the overlay so the blur reads as "a shop is here" */
+		min-height: 60vh;
+		overflow: hidden;
+		-webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent 95%);
+		mask-image: linear-gradient(to bottom, #000 35%, transparent 95%);
+	}
+
+	.lock-overlay {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		padding: clamp(1rem, 6vh, 5rem) 1rem;
+	}
+
+	.lock-panel {
+		background: var(--color-bg);
+		border: solid var(--border-width);
+		border-radius: var(--radius-card);
+		padding: clamp(1.5rem, 3vw, 2.5rem);
+		max-width: 30rem;
+		width: 100%;
+		text-align: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.85rem;
+		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+	}
+
+	.lock-panel-prizes {
+		max-width: 38rem;
+	}
+
+	.lock-icon {
+		display: flex;
+		width: 3.75rem;
+		height: 3.75rem;
+		color: var(--color-text);
+	}
+
+	.lock-icon :global(svg) {
+		width: 100%;
+		height: 100%;
+	}
+
+	.lock-title {
+		font-size: clamp(1.5rem, 2.4vw, 2rem);
+		font-weight: bold;
+		letter-spacing: -0.02em;
+		margin: 0;
+	}
+
+	.lock-desc {
+		margin: 0;
+		font-size: 0.98rem;
+		line-height: 1.5;
+		color: var(--color-text-soft);
+	}
+
+	.lock-verify-btn {
+		margin-top: 0.4rem;
+		text-decoration: none;
+		background: var(--color-text);
+		color: var(--color-bg);
+		font-weight: bold;
+		border-radius: var(--radius-pill);
+		padding: 0.65rem 1.5rem;
+		font-size: 1rem;
+		transition: opacity 0.1s;
+	}
+
+	.lock-verify-btn:hover {
+		opacity: 0.85;
+	}
+
+	.lock-verify-link {
+		margin-top: 0.3rem;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--color-text-soft);
+		text-decoration: none;
+	}
+
+	.lock-verify-link:hover {
+		color: var(--color-text);
+	}
+
+	.prize-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.75rem;
+		width: 100%;
+		margin-top: 0.4rem;
+	}
+
+	.prize-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		background: var(--color-bg);
+		border: solid var(--border-width);
+		border-radius: var(--radius-card);
+		padding: 0.75rem 0.75rem 0.85rem;
+		cursor: pointer;
+		font-family: inherit;
+		color: var(--color-text);
+		transition: border-color 0.15s;
+	}
+
+	.prize-card:hover:not(:disabled) {
+		border-color: var(--color-text);
+	}
+
+	.prize-card:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.prize-img-wrap {
+		width: 100%;
+		aspect-ratio: 1 / 1;
+		background: #fff;
+		border-radius: calc(var(--radius-card) - 4px);
+		border: calc(var(--border-width) / 2) solid;
+		box-sizing: border-box;
+		overflow: hidden;
+		position: relative;
+	}
+
+	.prize-img {
+		position: absolute;
+		top: var(--img-pad, 0px);
+		left: var(--img-pad, 0px);
+		width: calc(100% - 2 * var(--img-pad, 0px));
+		height: calc(100% - 2 * var(--img-pad, 0px));
+		object-fit: cover;
+		display: block;
+	}
+
+	.prize-name {
+		font-weight: bold;
+		font-size: 0.9rem;
+		line-height: 1.2;
+		letter-spacing: -0.01em;
+	}
+
+	.prize-cta {
+		font-size: 0.72rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-text-soft);
+	}
+
+	@media (max-width: 540px) {
+		.prize-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
 	/* ── PAGE HEADER ── */
 
 	.page-header {

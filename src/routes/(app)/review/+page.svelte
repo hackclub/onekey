@@ -150,12 +150,14 @@
 		text-overflow: ellipsis;
 	}
 
+	/* Tint derived from the background so it stays subtle in both light and dark mode
+	   (a fixed light green washes out / blows out on the dark dashboard). */
 	.table-row.soft-accepted {
-		background: #f0fdf4;
+		background: color-mix(in srgb, #16a34a 8%, var(--color-bg));
 	}
 
 	.table-row.soft-accepted:hover {
-		background: #dcfce7;
+		background: color-mix(in srgb, #16a34a 16%, var(--color-bg));
 	}
 
 	.soft-tag {

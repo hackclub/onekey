@@ -97,6 +97,7 @@
 	let modalChecks = $state([false, false, false]);
 	let actualSubmitBtnEl = $state<HTMLButtonElement | null>(null);
 	let reshipFormEl = $state<HTMLFormElement | null>(null);
+	let saveFormEl = $state<HTMLFormElement | null>(null);
 
 	const allChecked = $derived(modalChecks.every(Boolean));
 	const MODAL_CLOSE_MS = 160;
@@ -106,30 +107,25 @@
 	);
 	const isVerified = $derived(data.user?.verification_status === 'verified');
 
-	let showVerifyModal = $state(false);
-	let verifyModalClosing = $state(false);
-	const VERIFY_MODAL_CLOSE_MS = 160;
+	// Non-blocking disclaimer shown to unverified users before submitting. It explains they can
+	// submit now but must verify to access the full shop / have their hours shown, then lets
+	// them continue with the normal submit flow.
+	let showDisclaimerModal = $state(false);
+	let disclaimerModalClosing = $state(false);
+	let disclaimerAction = $state<'submit' | 'reship'>('submit');
+	const DISCLAIMER_MODAL_CLOSE_MS = 160;
 
 	let showAddressModal = $state(false);
 	let addressModalClosing = $state(false);
 	const ADDRESS_MODAL_CLOSE_MS = 160;
 
-	let showNpsModal = $state(false);
-	let npsModalClosing = $state(false);
-	let npsHeardAbout = $state('');
-	let npsDoingWell = $state('');
-	let npsImprove = $state('');
-	const npsComplete = $derived(
-		npsHeardAbout.trim() !== '' && npsDoingWell.trim() !== '' && npsImprove.trim() !== ''
-	);
-
-	function closeVerifyModal() {
-		if (verifyModalClosing) return;
-		verifyModalClosing = true;
+	function closeDisclaimerModal() {
+		if (disclaimerModalClosing) return;
+		disclaimerModalClosing = true;
 		setTimeout(() => {
-			showVerifyModal = false;
-			verifyModalClosing = false;
-		}, VERIFY_MODAL_CLOSE_MS);
+			showDisclaimerModal = false;
+			disclaimerModalClosing = false;
+		}, DISCLAIMER_MODAL_CLOSE_MS);
 	}
 
 	function closeAddressModal() {
@@ -141,11 +137,8 @@
 		}, ADDRESS_MODAL_CLOSE_MS);
 	}
 
-	function tryOpenSubmit() {
-		if (!isVerified) {
-			showVerifyModal = true;
-			return;
-		}
+	// Address is still required to ship a prize; verification is no longer a gate.
+	function proceedSubmit() {
 		if (!hasShippingAddress) {
 			showAddressModal = true;
 			return;
@@ -153,16 +146,64 @@
 		openCheckModal('submit');
 	}
 
-	function tryReship() {
-		if (!isVerified) {
-			showVerifyModal = true;
-			return;
-		}
+	function proceedReship() {
 		if (!hasShippingAddress) {
 			showAddressModal = true;
 			return;
 		}
 		reshipFormEl?.requestSubmit();
+	}
+
+	// Mirror the server-side submit requirements so we can surface missing fields up front,
+	// before any of the submit modals open. Returns a human phrase for the first missing field.
+	function missingSubmitField(): string | null {
+		const fd = saveFormEl ? new FormData(saveFormEl) : null;
+		const val = (k: string) => ((fd?.get(k) as string) ?? '').trim();
+		if (!val('name')) return 'a project name';
+		if (!val('description')) return 'a description';
+		if (!val('repo_url')) return 'a repo url';
+		if (!val('demo_url')) return 'a demo url';
+		if (!displayUrl) return 'a screenshot';
+		if (selectedHtProjects.length === 0) return 'at least one hackatime project';
+		return null;
+	}
+
+	function tryOpenSubmit() {
+		const missing = missingSubmitField();
+		if (missing) {
+			flashError(`please add ${missing} before submitting`);
+			return;
+		}
+		// Persist edits right away so nothing is lost if they back out of the upcoming modals
+		// without finishing the submission. Fires in the background (?/save) - the modal flow
+		// continues immediately and the eventual ?/submit re-saves anyway.
+		saveFormEl?.requestSubmit();
+		if (!isVerified) {
+			disclaimerAction = 'submit';
+			showDisclaimerModal = true;
+			return;
+		}
+		proceedSubmit();
+	}
+
+	function tryReship() {
+		if (!isVerified) {
+			disclaimerAction = 'reship';
+			showDisclaimerModal = true;
+			return;
+		}
+		proceedReship();
+	}
+
+	// Unverified user acknowledged the disclaimer - continue the flow they started.
+	function continueAfterDisclaimer() {
+		showDisclaimerModal = false;
+		disclaimerModalClosing = false;
+		if (disclaimerAction === 'reship') {
+			proceedReship();
+		} else {
+			proceedSubmit();
+		}
 	}
 
 	function openCheckModal(action: 'submit' | 'reship') {
@@ -182,33 +223,9 @@
 	}
 
 	function confirmCheckModal() {
-		// instant close - no animation when transitioning into NPS modal
+		// instant close before submitting
 		showCheckModal = false;
 		checkModalClosing = false;
-		const needsNps = checkModalAction === 'submit' || !data.hasPendingNps;
-		if (needsNps) {
-			npsHeardAbout = '';
-			npsDoingWell = '';
-			npsImprove = '';
-			showNpsModal = true;
-		} else {
-			reshipFormEl?.requestSubmit();
-		}
-	}
-
-	function closeNpsModal() {
-		if (npsModalClosing) return;
-		// instant close, reopen checklist with checks preserved and no enter animation
-		showNpsModal = false;
-		npsModalClosing = false;
-		checkModalInstant = true;
-		showCheckModal = true;
-	}
-
-	function confirmNpsModal() {
-		// instant close before submitting
-		showNpsModal = false;
-		npsModalClosing = false;
 		if (checkModalAction === 'reship') {
 			reshipFormEl?.requestSubmit();
 		} else {
@@ -347,6 +364,15 @@
 			errorToastTimer = setTimeout(() => (showErrorToast = false), 3500);
 		}
 	});
+
+	// Show a client-side error toast immediately. Drives the toast directly (not just via the
+	// effect) so re-clicking with the same message re-pops it after the previous one faded.
+	function flashError(msg: string) {
+		localError = msg;
+		clearTimeout(errorToastTimer);
+		showErrorToast = true;
+		errorToastTimer = setTimeout(() => (showErrorToast = false), 3500);
+	}
 </script>
 
 <a href="/projects" class="back">
@@ -422,6 +448,7 @@
 				<p class="form-error">{form.error}</p>
 			{/if}
 			<form
+				bind:this={saveFormEl}
 				id="save-form"
 				method="POST"
 				action="?/save"
@@ -535,9 +562,6 @@
 				<div class="edit-actions">
 					<button type="submit" class="btn-save">save</button>
 				</div>
-				<input type="hidden" name="nps_heard_about" value={npsHeardAbout} />
-				<input type="hidden" name="nps_doing_well" value={npsDoingWell} />
-				<input type="hidden" name="nps_improve" value={npsImprove} />
 				<button
 					type="submit"
 					formaction="?/submit"
@@ -632,9 +656,6 @@
 					<p class="form-error">{form.error}</p>
 				{/if}
 				<form method="POST" action="?/reship" use:enhance bind:this={reshipFormEl}>
-					<input type="hidden" name="nps_heard_about" value={npsHeardAbout} />
-					<input type="hidden" name="nps_doing_well" value={npsDoingWell} />
-					<input type="hidden" name="nps_improve" value={npsImprove} />
 					<button type="button" class="btn-submit" onclick={tryReship}>ship again</button>
 				</form>
 			{:else}
@@ -721,7 +742,9 @@
 								<div class="event-avatar event-avatar-placeholder"></div>
 							{/if}
 							<span class="event-actor"
-								>{event.actorNickname ?? event.actorName ?? (event.isSubmission ? 'submitter' : 'reviewer')}</span
+								>{event.actorNickname ??
+									event.actorName ??
+									(event.isSubmission ? 'submitter' : 'reviewer')}</span
 							>
 							<span class="event-action event-action-{event.action}">{event.action}</span>
 							{#if event.isSubmission && event.newSeconds}
@@ -770,7 +793,11 @@
 					<div class="review-soft-summary">
 						<span class="review-soft-row">
 							<span class="review-soft-key">hours approved</span>
-							<span class="review-soft-val">{data.latestApproval?.approvedSeconds != null ? formatHours(data.latestApproval.approvedSeconds) : '—'}</span>
+							<span class="review-soft-val"
+								>{data.latestApproval?.approvedSeconds != null
+									? formatHours(data.latestApproval.approvedSeconds)
+									: '—'}</span
+							>
 						</span>
 						<span class="review-soft-row">
 							<span class="review-soft-key">message to author</span>
@@ -856,18 +883,18 @@
 	</div>
 {/if}
 
-{#if showVerifyModal}
+{#if showDisclaimerModal}
 	<div
 		class="modal-backdrop"
-		class:closing={verifyModalClosing}
+		class:closing={disclaimerModalClosing}
 		role="dialog"
 		aria-modal="true"
-		aria-labelledby="verify-modal-title"
-		onclick={(e) => e.target === e.currentTarget && closeVerifyModal()}
-		onkeydown={(e) => e.key === 'Escape' && closeVerifyModal()}
+		aria-labelledby="disclaimer-modal-title"
+		onclick={(e) => e.target === e.currentTarget && closeDisclaimerModal()}
+		onkeydown={(e) => e.key === 'Escape' && closeDisclaimerModal()}
 		tabindex="-1"
 	>
-		<div class="modal-box address-modal" class:closing={verifyModalClosing}>
+		<div class="modal-box address-modal" class:closing={disclaimerModalClosing}>
 			<span class="address-modal-icon" aria-hidden="true">
 				<svg
 					fill-rule="evenodd"
@@ -878,24 +905,34 @@
 					viewBox="0 0 32 32"
 					preserveAspectRatio="xMidYMid meet"
 					fill="currentColor"
-				><path d="M6.291 21.048C6.05 19.836 6 18.256 6 16C6 15.6509 6.0012 15.3179 6.00412 15H25.9959C25.9988 15.3179 26 15.6509 26 16C26 18.256 25.95 19.836 25.709 21.048C25.493 22.158 25.176 22.625 24.845 22.901C24.461 23.221 23.751 23.542 22.248 23.744C20.717 23.954 18.725 24 16 24C13.274 24 11.283 23.954 9.752 23.744C8.249 23.542 7.539 23.221 7.155 22.901C6.824 22.625 6.507 22.158 6.291 21.048ZM25.709 10.952L25.7184 11H6.28159L6.291 10.952C6.507 9.842 6.824 9.375 7.155 9.099C7.539 8.779 8.249 8.458 9.752 8.255C11.283 8.046 13.274 8 16 8C18.725 8 20.717 8.046 22.248 8.255C23.751 8.458 24.461 8.779 24.845 9.099C25.176 9.375 25.493 9.842 25.709 10.952ZM16 26C5 26 4 25.167 4 16C4 6.833 5 6 16 6C27 6 28 6.833 28 16C28 25.167 27 26 16 26ZM9 17C8.448 17 8 17.448 8 18C8 18.552 8.448 19 9 19H23C23.552 19 24 18.552 24 18C24 17.448 23.552 17 23 17H9ZM8 21C8 20.448 8.41354 20 8.92308 20H17.0769C17.5865 20 18 20.448 18 21C18 21.552 17.5865 22 17.0769 22H8.92308C8.41354 22 8 21.552 8 21ZM19.9231 20C19.4135 20 19 20.448 19 21C19 21.552 19.4135 22 19.9231 22H23.0769C23.5865 22 24 21.552 24 21C24 20.448 23.5865 20 23.0769 20H19.9231Z"/></svg>
+					><path
+						d="M6.291 21.048C6.05 19.836 6 18.256 6 16C6 15.6509 6.0012 15.3179 6.00412 15H25.9959C25.9988 15.3179 26 15.6509 26 16C26 18.256 25.95 19.836 25.709 21.048C25.493 22.158 25.176 22.625 24.845 22.901C24.461 23.221 23.751 23.542 22.248 23.744C20.717 23.954 18.725 24 16 24C13.274 24 11.283 23.954 9.752 23.744C8.249 23.542 7.539 23.221 7.155 22.901C6.824 22.625 6.507 22.158 6.291 21.048ZM25.709 10.952L25.7184 11H6.28159L6.291 10.952C6.507 9.842 6.824 9.375 7.155 9.099C7.539 8.779 8.249 8.458 9.752 8.255C11.283 8.046 13.274 8 16 8C18.725 8 20.717 8.046 22.248 8.255C23.751 8.458 24.461 8.779 24.845 9.099C25.176 9.375 25.493 9.842 25.709 10.952ZM16 26C5 26 4 25.167 4 16C4 6.833 5 6 16 6C27 6 28 6.833 28 16C28 25.167 27 26 16 26ZM9 17C8.448 17 8 17.448 8 18C8 18.552 8.448 19 9 19H23C23.552 19 24 18.552 24 18C24 17.448 23.552 17 23 17H9ZM8 21C8 20.448 8.41354 20 8.92308 20H17.0769C17.5865 20 18 20.448 18 21C18 21.552 17.5865 22 17.0769 22H8.92308C8.41354 22 8 21.552 8 21ZM19.9231 20C19.4135 20 19 20.448 19 21C19 21.552 19.4135 22 19.9231 22H23.0769C23.5865 22 24 21.552 24 21C24 20.448 23.5865 20 23.0769 20H19.9231Z"
+					/></svg
+				>
 			</span>
-			<h2 class="modal-title" id="verify-modal-title">identity verification required</h2>
+			<h2 class="modal-title" id="disclaimer-modal-title">heads up before you submit</h2>
 			<p class="address-modal-desc">
-				you'll need to verify your identity through Hack Club Auth before you can submit projects - just so we know who we're sending prizes to.
+				you haven't submitted your documents and verified your identity yet! you can still submit
+				your projects, but note that you won't have access to the full shop - only 3 starter prizes.
+				if you want to verify later, you'll still have all of the hours you submitted to use in the
+				full shop.
 			</p>
 			<div class="modal-actions">
-				<button type="button" class="btn-modal-cancel" onclick={closeVerifyModal}>
-					not yet
-				</button>
 				<a
 					href="https://auth.hackclub.com/verifications/new"
 					target="_blank"
 					rel="noreferrer"
-					class="btn-modal-confirm address-modal-cta"
+					class="btn-modal-cancel address-modal-cta"
 				>
 					verify identity
 				</a>
+				<button
+					type="button"
+					class="btn-modal-confirm address-modal-cta"
+					onclick={continueAfterDisclaimer}
+				>
+					continue
+				</button>
 			</div>
 		</div>
 	</div>
@@ -964,7 +1001,11 @@
 		onkeydown={(e) => e.key === 'Escape' && closeCheckModal()}
 		tabindex="-1"
 	>
-		<div class="modal-box check-modal" class:closing={checkModalClosing} class:instant={checkModalInstant}>
+		<div
+			class="modal-box check-modal"
+			class:closing={checkModalClosing}
+			class:instant={checkModalInstant}
+		>
 			<h2 class="modal-title">before you {checkModalAction === 'submit' ? 'submit' : 'reship'}</h2>
 			<p class="modal-desc">please confirm the following:</p>
 			<div class="checklist">
@@ -994,48 +1035,7 @@
 					type="button"
 					class="btn-modal-confirm"
 					onclick={confirmCheckModal}
-					disabled={!allChecked}
-					>{checkModalAction === 'submit' ? 'next' : 'ship again'}</button
-				>
-			</div>
-		</div>
-	</div>
-{/if}
-
-{#if showNpsModal}
-	<div
-		class="modal-backdrop"
-		class:closing={npsModalClosing}
-		role="dialog"
-		aria-modal="true"
-		aria-labelledby="nps-modal-title"
-		onclick={(e) => e.target === e.currentTarget && closeNpsModal()}
-		onkeydown={(e) => e.key === 'Escape' && closeNpsModal()}
-		tabindex="-1"
-	>
-		<div class="modal-box nps-modal" class:closing={npsModalClosing}>
-			<h2 class="modal-title" id="nps-modal-title">one last thing</h2>
-			<div class="nps-fields">
-				<label class="nps-field">
-					<span class="nps-label">how did you hear about onekey?</span>
-					<textarea class="nps-input" bind:value={npsHeardAbout}></textarea>
-				</label>
-				<label class="nps-field">
-					<span class="nps-label">what are we doing well?</span>
-					<textarea class="nps-input" bind:value={npsDoingWell}></textarea>
-				</label>
-				<label class="nps-field">
-					<span class="nps-label">how can we improve?</span>
-					<textarea class="nps-input" bind:value={npsImprove}></textarea>
-				</label>
-			</div>
-			<div class="modal-actions">
-				<button type="button" class="btn-modal-cancel" onclick={closeNpsModal}>back</button>
-				<button
-					type="button"
-					class="btn-modal-confirm"
-					onclick={confirmNpsModal}
-					disabled={!npsComplete}>submit for review</button
+					disabled={!allChecked}>{checkModalAction === 'submit' ? 'submit' : 'ship again'}</button
 				>
 			</div>
 		</div>
@@ -1538,6 +1538,8 @@
 
 	.review-soft-val {
 		font-size: 0.85rem;
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
 	}
 
 	.btn-soft-approve {
@@ -1763,6 +1765,9 @@
 		font-size: 0.85rem;
 		margin: 0.6rem 0 0;
 		line-height: 1.5;
+		/* preserve author-facing comment line breaks while still wrapping long lines */
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
 	}
 
 	.event-internal {
@@ -1774,6 +1779,9 @@
 		border-radius: 0 calc(var(--radius-card) / 3) calc(var(--radius-card) / 3) 0;
 		color: var(--color-text-soft);
 		line-height: 1.5;
+		/* preserve internal-note line breaks while still wrapping long lines */
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
 	}
 
 	.event-internal-label {
@@ -1872,43 +1880,6 @@
 		font-size: 0.85rem;
 		color: var(--color-text-soft);
 		margin: 0;
-	}
-
-	.nps-fields {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-	}
-
-	.nps-field {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-	}
-
-	.nps-label {
-		font-size: 0.9rem;
-		font-weight: bold;
-		color: var(--color-text-soft);
-	}
-
-	.nps-input {
-		background: transparent;
-		border: solid var(--border-width);
-		border-radius: calc(var(--radius-card) / 2);
-		padding: 0.6rem 0.75rem;
-		font-family: inherit;
-		font-size: 0.9rem;
-		color: var(--color-text);
-		resize: vertical;
-		min-height: 3.5rem;
-		width: 100%;
-		box-sizing: border-box;
-	}
-
-	.nps-input:focus {
-		outline: none;
-		border-color: var(--color-text);
 	}
 
 	.checklist {
@@ -2102,20 +2073,6 @@
 	}
 
 	.check-modal.closing {
-		animation: address-modal-slide-down 0.16s ease forwards;
-	}
-
-	/* nps modal */
-
-	.modal-backdrop:has(.nps-modal.closing) {
-		animation: address-modal-fade-out 0.16s ease forwards;
-	}
-
-	.nps-modal {
-		width: min(560px, 90vw);
-	}
-
-	.nps-modal.closing {
 		animation: address-modal-slide-down 0.16s ease forwards;
 	}
 

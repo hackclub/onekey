@@ -4,7 +4,7 @@
 
 	let { data, form } = $props();
 
-	type Category = typeof data.categories[number];
+	type Category = (typeof data.categories)[number];
 	type Item = Category['items'][number];
 
 	let editingCatId = $state<number | null>(null);
@@ -33,7 +33,6 @@
 	}
 </script>
 
-
 <div class="admin-shop">
 	<div class="page-header">
 		<a href="/admin" class="back-link">← admin</a>
@@ -52,27 +51,68 @@
 			{#each data.categories as cat (cat.id)}
 				<div class="row">
 					{#if editingCatId === cat.id}
-						<form method="POST" action="?/updateCategory" use:enhance={() => ({ update }) => { editingCatId = null; update(); }} class="edit-form">
+						<form
+							method="POST"
+							action="?/updateCategory"
+							use:enhance={() =>
+								({ update }) => {
+									editingCatId = null;
+									update();
+								}}
+							class="edit-form"
+						>
 							<input type="hidden" name="id" value={cat.id} />
-							<input class="input" type="text" name="name" value={cat.name} placeholder="name" required />
-							<input class="input" type="text" name="description" value={cat.description ?? ''} placeholder="description" />
-							<input class="input input-sm" type="number" name="sort_order" value={cat.sortOrder} placeholder="sort order" min="0" />
+							<input
+								class="input"
+								type="text"
+								name="name"
+								value={cat.name}
+								placeholder="name"
+								required
+							/>
+							<input
+								class="input"
+								type="text"
+								name="description"
+								value={cat.description ?? ''}
+								placeholder="description"
+							/>
+							<input
+								class="input input-sm"
+								type="number"
+								name="sort_order"
+								value={cat.sortOrder}
+								placeholder="sort order"
+								min="0"
+							/>
 							<div class="row-actions">
 								<button type="submit" class="btn btn-save">save</button>
-								<button type="button" class="btn btn-cancel" onclick={() => editingCatId = null}>cancel</button>
+								<button type="button" class="btn btn-cancel" onclick={() => (editingCatId = null)}
+									>cancel</button
+								>
 							</div>
 						</form>
 					{:else}
 						<div class="row-info">
 							<span class="row-name">{cat.name}</span>
 							{#if cat.description}<span class="row-desc">{cat.description}</span>{/if}
-							<span class="row-meta">sort: {cat.sortOrder} · {cat.items.length} items · id: {cat.id}</span>
+							<span class="row-meta"
+								>sort: {cat.sortOrder} · {cat.items.length} items · id: {cat.id}</span
+							>
 						</div>
 						<div class="row-actions">
-							<button type="button" class="btn btn-edit" onclick={() => editingCatId = cat.id}>edit</button>
+							<button type="button" class="btn btn-edit" onclick={() => (editingCatId = cat.id)}
+								>edit</button
+							>
 							<form method="POST" action="?/deleteCategory" use:enhance>
 								<input type="hidden" name="id" value={cat.id} />
-								<button type="submit" class="btn btn-delete" onclick={(e) => { if (!confirm('delete this category and all its items?')) e.preventDefault(); }}>delete</button>
+								<button
+									type="submit"
+									class="btn btn-delete"
+									onclick={(e) => {
+										if (!confirm('delete this category and all its items?')) e.preventDefault();
+									}}>delete</button
+								>
 							</form>
 						</div>
 					{/if}
@@ -83,7 +123,14 @@
 				<h3 class="add-title">add category</h3>
 				<input class="input" type="text" name="name" placeholder="name" required />
 				<input class="input" type="text" name="description" placeholder="description (optional)" />
-				<input class="input input-sm" type="number" name="sort_order" placeholder="sort order (0)" min="0" value="0" />
+				<input
+					class="input input-sm"
+					type="number"
+					name="sort_order"
+					placeholder="sort order (0)"
+					min="0"
+					value="0"
+				/>
 				<button type="submit" class="btn btn-add">add category</button>
 			</form>
 		</section>
@@ -99,33 +146,133 @@
 						{#each cat.items as item (item.id)}
 							<div class="row" class:unavailable={!item.available}>
 								{#if editingItemId === item.id}
-									<form method="POST" action="?/updateItem" use:enhance={() => ({ update }) => { editingItemId = null; update(); }} class="edit-form">
+									<form
+										method="POST"
+										action="?/updateItem"
+										use:enhance={() =>
+											({ update }) => {
+												editingItemId = null;
+												update();
+											}}
+										class="edit-form"
+									>
 										<input type="hidden" name="id" value={item.id} />
 										<select class="input" name="category_id" required>
 											{#each data.categories as c (c.id)}
 												<option value={c.id} selected={c.id === item.categoryId}>{c.name}</option>
 											{/each}
 										</select>
-										<input class="input" type="text" name="name" value={item.name} placeholder="name" required />
-										<input class="input" type="text" name="description" value={item.description ?? ''} placeholder="description" />
-										<input class="input input-sm" type="number" name="price_hours" value={(item.priceSeconds / 3600).toFixed(1)} step="0.5" min="0.5" placeholder="price (hours)" required />
-										<input class="input input-sm" type="number" name="discount_hours" value={item.discountSeconds != null ? (item.discountSeconds / 3600).toFixed(1) : ''} step="0.5" min="0" placeholder="discount price (hours, blank = none)" />
-										<input class="input" type="url" name="image_url" value={item.imageUrl ?? ''} placeholder="image url (optional)" />
-										<input class="input input-sm" type="number" name="image_padding" value={item.imagePadding} min="0" max="80" placeholder="image padding px (0)" />
-										<input class="input input-sm" type="number" name="stock" value={item.stock} placeholder="stock (-1 = unlimited)" />
-										<textarea class="input input-textarea" name="options" placeholder={"options (one per line):\nColor: red|https://cdn.../red.png, blue|https://cdn.../blue.png, black\nSize: S, M, L"}>{optionsToText(item.options)}</textarea>
+										<input
+											class="input"
+											type="text"
+											name="name"
+											value={item.name}
+											placeholder="name"
+											required
+										/>
+										<input
+											class="input"
+											type="text"
+											name="description"
+											value={item.description ?? ''}
+											placeholder="description"
+										/>
+										<input
+											class="input input-sm"
+											type="number"
+											name="price_hours"
+											value={(item.priceSeconds / 3600).toFixed(1)}
+											step="0.5"
+											min="0.5"
+											placeholder="price (hours)"
+											required
+										/>
+										<input
+											class="input input-sm"
+											type="number"
+											name="discount_hours"
+											value={item.discountSeconds != null
+												? (item.discountSeconds / 3600).toFixed(1)
+												: ''}
+											step="0.5"
+											min="0"
+											placeholder="discount price (hours, blank = none)"
+										/>
+										<input
+											class="input"
+											type="url"
+											name="image_url"
+											value={item.imageUrl ?? ''}
+											placeholder="image url (optional)"
+										/>
+										<input
+											class="input input-sm"
+											type="number"
+											name="image_padding"
+											value={item.imagePadding}
+											min="0"
+											max="80"
+											placeholder="image padding px (0)"
+										/>
+										<input
+											class="input input-sm"
+											type="number"
+											name="stock"
+											value={item.stock}
+											placeholder="stock (-1 = unlimited)"
+										/>
+										<textarea
+											class="input input-textarea"
+											name="options"
+											placeholder={'options (one per line):\nColor: red|https://cdn.../red.png, blue|https://cdn.../blue.png, black\nSize: S, M, L'}
+											>{optionsToText(item.options)}</textarea
+										>
 										<label class="check-label">
-											<input type="hidden" name="available" value="false" disabled={item.available} />
-											<input type="checkbox" name="available" value="true" checked={item.available} onchange={(e) => { const hidden = e.currentTarget.form?.querySelector('input[name="available"][type="hidden"]') as HTMLInputElement; if (hidden) hidden.disabled = e.currentTarget.checked; }} />
+											<input
+												type="hidden"
+												name="available"
+												value="false"
+												disabled={item.available}
+											/>
+											<input
+												type="checkbox"
+												name="available"
+												value="true"
+												checked={item.available}
+												onchange={(e) => {
+													const hidden = e.currentTarget.form?.querySelector(
+														'input[name="available"][type="hidden"]'
+													) as HTMLInputElement;
+													if (hidden) hidden.disabled = e.currentTarget.checked;
+												}}
+											/>
 											available
 										</label>
 										<label class="check-label">
-											<input type="checkbox" name="fulfilled_locally" value="true" checked={item.fulfilledLocally} />
+											<input
+												type="checkbox"
+												name="fulfilled_locally"
+												value="true"
+												checked={item.fulfilledLocally}
+											/>
 											fulfilled locally (shows substitution disclaimer)
+										</label>
+										<label class="check-label">
+											<input
+												type="checkbox"
+												name="unverified_prize"
+												value="true"
+												checked={item.unverifiedPrize}
+											/>
+											unverified prize (hidden from shop; claimable by unverified users)
 										</label>
 										<div class="row-actions">
 											<button type="submit" class="btn btn-save">save</button>
-											<button type="button" class="btn btn-cancel" onclick={() => editingItemId = null}>cancel</button>
+											<button
+												type="button"
+												class="btn btn-cancel"
+												onclick={() => (editingItemId = null)}>cancel</button
+											>
 										</div>
 									</form>
 								{:else}
@@ -140,10 +287,20 @@
 										</span>
 									</div>
 									<div class="row-actions">
-										<button type="button" class="btn btn-edit" onclick={() => editingItemId = item.id}>edit</button>
+										<button
+											type="button"
+											class="btn btn-edit"
+											onclick={() => (editingItemId = item.id)}>edit</button
+										>
 										<form method="POST" action="?/deleteItem" use:enhance>
 											<input type="hidden" name="id" value={item.id} />
-											<button type="submit" class="btn btn-delete" onclick={(e) => { if (!confirm('delete this item?')) e.preventDefault(); }}>delete</button>
+											<button
+												type="submit"
+												class="btn btn-delete"
+												onclick={(e) => {
+													if (!confirm('delete this item?')) e.preventDefault();
+												}}>delete</button
+											>
 										</form>
 									</div>
 								{/if}
@@ -165,16 +322,58 @@
 						{/each}
 					</select>
 					<input class="input" type="text" name="name" placeholder="name" required />
-					<input class="input" type="text" name="description" placeholder="description (optional)" />
-					<input class="input input-sm" type="number" name="price_hours" step="0.5" min="0.5" placeholder="price in hours (e.g. 2)" required />
-					<input class="input input-sm" type="number" name="discount_hours" step="0.5" min="0" placeholder="discount price (hours, blank = none)" />
+					<input
+						class="input"
+						type="text"
+						name="description"
+						placeholder="description (optional)"
+					/>
+					<input
+						class="input input-sm"
+						type="number"
+						name="price_hours"
+						step="0.5"
+						min="0.5"
+						placeholder="price in hours (e.g. 2)"
+						required
+					/>
+					<input
+						class="input input-sm"
+						type="number"
+						name="discount_hours"
+						step="0.5"
+						min="0"
+						placeholder="discount price (hours, blank = none)"
+					/>
 					<input class="input" type="url" name="image_url" placeholder="image url (optional)" />
-					<input class="input input-sm" type="number" name="image_padding" min="0" max="80" placeholder="image padding px (0)" value="0" />
-					<input class="input input-sm" type="number" name="stock" placeholder="stock (-1 = unlimited)" value="-1" />
-					<textarea class="input input-textarea" name="options" placeholder={"options (one per line):\nColor: red|https://cdn.../red.png, blue|https://cdn.../blue.png, black\nSize: S, M, L"}></textarea>
+					<input
+						class="input input-sm"
+						type="number"
+						name="image_padding"
+						min="0"
+						max="80"
+						placeholder="image padding px (0)"
+						value="0"
+					/>
+					<input
+						class="input input-sm"
+						type="number"
+						name="stock"
+						placeholder="stock (-1 = unlimited)"
+						value="-1"
+					/>
+					<textarea
+						class="input input-textarea"
+						name="options"
+						placeholder={'options (one per line):\nColor: red|https://cdn.../red.png, blue|https://cdn.../blue.png, black\nSize: S, M, L'}
+					></textarea>
 					<label class="check-label">
 						<input type="checkbox" name="fulfilled_locally" value="true" />
 						fulfilled locally (shows substitution disclaimer)
+					</label>
+					<label class="check-label">
+						<input type="checkbox" name="unverified_prize" value="true" />
+						unverified prize (hidden from shop; claimable by unverified users)
 					</label>
 					<button type="submit" class="btn btn-add">add item</button>
 				</form>
@@ -201,7 +400,9 @@
 		color: var(--color-text-soft);
 		text-decoration: none;
 	}
-	.back-link:hover { color: var(--color-text); }
+	.back-link:hover {
+		color: var(--color-text);
+	}
 
 	h1 {
 		font-size: clamp(1.4rem, 2.5vw, 2rem);
@@ -223,7 +424,9 @@
 	}
 
 	@media (max-width: 900px) {
-		.panels { grid-template-columns: 1fr; }
+		.panels {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	.panel {
@@ -316,8 +519,15 @@
 		border-color: color-mix(in srgb, var(--color-text) 40%, transparent);
 	}
 
-	.input-sm { max-width: 120px; }
-	.input-textarea { resize: vertical; min-height: 70px; font-family: monospace; font-size: 0.8rem; }
+	.input-sm {
+		max-width: 120px;
+	}
+	.input-textarea {
+		resize: vertical;
+		min-height: 70px;
+		font-family: monospace;
+		font-size: 0.8rem;
+	}
 
 	.check-label {
 		display: flex;
@@ -338,16 +548,47 @@
 		white-space: nowrap;
 	}
 
-	.btn-edit { background: var(--color-bg-soft); border-color: color-mix(in srgb, var(--color-text) 20%, transparent); color: var(--color-text); }
-	.btn-edit:hover { border-color: color-mix(in srgb, var(--color-text) 40%, transparent); }
-	.btn-save { background: color-mix(in srgb, #22c55e 15%, var(--color-bg)); border-color: color-mix(in srgb, #22c55e 35%, transparent); color: #22c55e; }
-	.btn-save:hover { background: color-mix(in srgb, #22c55e 25%, var(--color-bg)); }
-	.btn-cancel { background: var(--color-bg-soft); border-color: color-mix(in srgb, var(--color-text) 20%, transparent); color: var(--color-text-soft); }
-	.btn-cancel:hover { color: var(--color-text); }
-	.btn-delete { background: color-mix(in srgb, #ef4444 15%, var(--color-bg)); border-color: color-mix(in srgb, #ef4444 35%, transparent); color: #ef4444; }
-	.btn-delete:hover { background: color-mix(in srgb, #ef4444 25%, var(--color-bg)); }
-	.btn-add { background: var(--color-bg-soft); border-color: color-mix(in srgb, var(--color-text) 20%, transparent); color: var(--color-text); align-self: flex-start; }
-	.btn-add:hover { border-color: color-mix(in srgb, var(--color-text) 40%, transparent); }
+	.btn-edit {
+		background: var(--color-bg-soft);
+		border-color: color-mix(in srgb, var(--color-text) 20%, transparent);
+		color: var(--color-text);
+	}
+	.btn-edit:hover {
+		border-color: color-mix(in srgb, var(--color-text) 40%, transparent);
+	}
+	.btn-save {
+		background: color-mix(in srgb, #22c55e 15%, var(--color-bg));
+		border-color: color-mix(in srgb, #22c55e 35%, transparent);
+		color: #22c55e;
+	}
+	.btn-save:hover {
+		background: color-mix(in srgb, #22c55e 25%, var(--color-bg));
+	}
+	.btn-cancel {
+		background: var(--color-bg-soft);
+		border-color: color-mix(in srgb, var(--color-text) 20%, transparent);
+		color: var(--color-text-soft);
+	}
+	.btn-cancel:hover {
+		color: var(--color-text);
+	}
+	.btn-delete {
+		background: color-mix(in srgb, #ef4444 15%, var(--color-bg));
+		border-color: color-mix(in srgb, #ef4444 35%, transparent);
+		color: #ef4444;
+	}
+	.btn-delete:hover {
+		background: color-mix(in srgb, #ef4444 25%, var(--color-bg));
+	}
+	.btn-add {
+		background: var(--color-bg-soft);
+		border-color: color-mix(in srgb, var(--color-text) 20%, transparent);
+		color: var(--color-text);
+		align-self: flex-start;
+	}
+	.btn-add:hover {
+		border-color: color-mix(in srgb, var(--color-text) 40%, transparent);
+	}
 
 	.add-form {
 		display: flex;

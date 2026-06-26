@@ -22,7 +22,11 @@ export async function load({ locals }) {
 	let userSpentSeconds = 0;
 	let userAvailableSeconds = 0;
 
-	if (dbUser) {
+	// Unverified users have their hours tracked but never displayed. Skip computing the
+	// wallet so the balance can't leak through page data anywhere in the UI.
+	const verified = locals.user.verification_status === 'verified';
+
+	if (dbUser && verified) {
 		const [r] = await db
 			.select({ total: sum(projectApprovals.approvedSeconds) })
 			.from(projectApprovals)
@@ -33,7 +37,12 @@ export async function load({ locals }) {
 		const [s] = await db
 			.select({ total: sum(shopOrders.priceSeconds) })
 			.from(shopOrders)
-			.where(and(eq(shopOrders.userId, dbUser.id), notInArray(shopOrders.status, ['cancelled', 'refunded'])));
+			.where(
+				and(
+					eq(shopOrders.userId, dbUser.id),
+					notInArray(shopOrders.status, ['cancelled', 'refunded'])
+				)
+			);
 		userSpentSeconds = Number(s?.total ?? 0);
 
 		userAvailableSeconds = await getAvailableSeconds(dbUser.id);

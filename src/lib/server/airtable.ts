@@ -3,9 +3,6 @@ import { env } from '$env/dynamic/private';
 export interface AirtableApprovalFields {
 	repoUrl: string | null;
 	demoUrl: string | null;
-	npsHeardAbout: string | null;
-	npsDoingWell: string | null;
-	npsImprove: string | null;
 	authorName: string | null;
 	authorEmail: string | null;
 	screenshotUrl: string | null;
@@ -70,9 +67,6 @@ export async function createAirtableApprovalRecord(fields: AirtableApprovalField
 
 	set('Code URL', fields.repoUrl);
 	set('Playable URL', fields.demoUrl);
-	set('How did you hear about this?', fields.npsHeardAbout);
-	set('What are we doing well?', fields.npsDoingWell);
-	set('How can we improve?', fields.npsImprove);
 	set('First Name', first);
 	set('Last Name', last);
 	set('Email', fields.authorEmail);

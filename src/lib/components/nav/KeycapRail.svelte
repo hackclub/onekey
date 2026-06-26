@@ -10,7 +10,9 @@
 	onMount(() => {
 		const mq = window.matchMedia('(max-width: 767px)');
 		isMobile = mq.matches;
-		mq.addEventListener('change', (e) => { isMobile = e.matches; });
+		mq.addEventListener('change', (e) => {
+			isMobile = e.matches;
+		});
 		keyAudio = new Audio('/audio/key.wav');
 	});
 
@@ -39,6 +41,8 @@
 	}
 
 	const userAvailableSeconds = $derived(page.data.userAvailableSeconds ?? 0);
+	// Hours are only shown to verified users; unverified users have them tracked but hidden.
+	const showHours = $derived(page.data.user?.verification_status === 'verified');
 
 	const clockSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor" stroke="currentColor" stroke-width="1.5" paint-order="stroke fill"><path d="M26 16c0 5.523-4.477 10-10 10S6 21.523 6 16 10.477 6 16 6s10 4.477 10 10zm2 0c0 6.627-5.373 12-12 12S4 22.627 4 16 9.373 4 16 4s12 5.373 12 12z"/><path d="M15.64 17a1 1 0 0 1-1-1V9a1 1 0 0 1 2 0v7a1 1 0 0 1-1 1z"/><path d="M21.702 19.502a1 1 0 0 1-1.366.366l-5.196-3a1 1 0 0 1 1-1.732l5.196 3a1 1 0 0 1 .366 1.366z"/></svg>`;
 
@@ -58,11 +62,13 @@
 	}
 </script>
 
-<div class="mobile-topbar">
-	<div class="hours-label">
-		<span class="clock-icon">{@html clockSvg}</span>
-		{Math.floor(userAvailableSeconds / 360) / 10}h
-	</div>
+<div class="mobile-topbar" class:no-hours={!showHours}>
+	{#if showHours}
+		<div class="hours-label">
+			<span class="clock-icon">{@html clockSvg}</span>
+			{Math.floor(userAvailableSeconds / 360) / 10}h
+		</div>
+	{/if}
 	<a href="/account" class="avatar" aria-label="account" draggable="false">
 		{#if page.data.user?.avatar_url}
 			<img src={page.data.user.avatar_url} alt="avatar" draggable="false" />
@@ -117,7 +123,12 @@
 
 	<div class="bottom">
 		<div class="divider"></div>
-		<div class="hours-label"><span class="clock-icon">{@html clockSvg}</span>{Math.floor(userAvailableSeconds / 360) / 10}h</div>
+		{#if showHours}
+			<div class="hours-label">
+				<span class="clock-icon">{@html clockSvg}</span>{Math.floor(userAvailableSeconds / 360) /
+					10}h
+			</div>
+		{/if}
 		<a href="/account" class="avatar" aria-label="account" draggable="false">
 			{#if page.data.user?.avatar_url}
 				<img src={page.data.user.avatar_url} alt="avatar" draggable="false" />
@@ -199,7 +210,6 @@
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
 	}
-
 
 	.svg-icon {
 		display: flex;
@@ -312,6 +322,10 @@
 			padding: 0 16px;
 			box-sizing: border-box;
 			border-bottom: 1px solid var(--rail-line);
+		}
+
+		.mobile-topbar.no-hours {
+			justify-content: flex-end;
 		}
 
 		.mobile-topbar .hours-label {

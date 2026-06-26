@@ -2,19 +2,21 @@
 
 <div class="page">
 	<h1 class="heading">not eligible</h1>
-	<p class="body">your hack club account is not marked as ysws eligible. onekey is only open to verified hack clubbers aged 13-18.</p>
-	<p class="body">if you think this is a mistake, check your verification status at <a href="https://auth.hackclub.com">auth.hackclub.com</a> or reach out in the hack club slack.</p>
+	<p class="body">onekey is only open to hack clubbers aged 13-18. your hack club account's birthday isn't in that range (or isn't set).</p>
+	<p class="body">if you think this is a mistake, check your details at <a href="https://auth.hackclub.com">auth.hackclub.com</a> or reach out in the hack club slack.</p>
 	<a href="/" class="back">back to landing</a>
 </div>
 
 <style>
 	.page {
-		min-height: 100vh;
+		height: 100vh;
+		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
 		padding: 4rem;
 		max-width: 40rem;
+		overflow: hidden;
 	}
 
 	.heading {

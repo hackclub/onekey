@@ -1,5 +1,21 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+
 	let { data } = $props();
+
+	// Verify banner is dismissible and remembered per-device. Start hidden so it can't flash
+	// before we've read localStorage on mount.
+	let bannerDismissed = $state(true);
+	onMount(() => {
+		bannerDismissed = localStorage.getItem('verifyBannerDismissed') === '1';
+	});
+	function dismissBanner() {
+		bannerDismissed = true;
+		localStorage.setItem('verifyBannerDismissed', '1');
+	}
+	const showVerifyBanner = $derived(
+		data.user?.verification_status !== 'verified' && !bannerDismissed
+	);
 
 	const communityGoalHours = 1500;
 	// svelte-ignore state_referenced_locally
@@ -39,12 +55,30 @@
 	</div>
 </div>
 
-{#if data.user?.verification_status !== 'verified'}
+{#if showVerifyBanner}
 	<div class="verify-banner">
-		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-			<path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 20 20"
+			fill="currentColor"
+			aria-hidden="true"
+		>
+			<path
+				fill-rule="evenodd"
+				d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+				clip-rule="evenodd"
+			/>
 		</svg>
-		your identity isn't verified yet, so you won't be able to submit projects! <a href="https://auth.hackclub.com/verifications/new" target="_blank" rel="noreferrer">verify your identity here</a>
+		<span class="verify-banner-text"
+			>verify your identity to gain access to a shop full of bigger, more awesome prizes. <a
+				href="https://auth.hackclub.com/verifications/new"
+				target="_blank"
+				rel="noreferrer">verify your identity here</a
+			></span
+		>
+		<button type="button" class="verify-banner-close" aria-label="dismiss" onclick={dismissBanner}
+			>×</button
+		>
 	</div>
 {/if}
 
@@ -216,6 +250,10 @@
 		color: #d97706;
 	}
 
+	.verify-banner-text {
+		flex: 1;
+	}
+
 	.verify-banner a {
 		color: var(--color-text);
 		text-underline-offset: 2px;
@@ -223,6 +261,23 @@
 
 	.verify-banner a:hover {
 		opacity: 0.7;
+	}
+
+	.verify-banner-close {
+		flex-shrink: 0;
+		background: none;
+		border: none;
+		cursor: pointer;
+		color: var(--color-text);
+		font-size: 1.7rem;
+		line-height: 1;
+		padding: 0 0.2rem;
+		opacity: 0.55;
+		font-family: inherit;
+	}
+
+	.verify-banner-close:hover {
+		opacity: 1;
 	}
 
 	.greeting-row {

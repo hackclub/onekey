@@ -8,7 +8,9 @@ export const task = pgTable('task', {
 });
 
 export const users = pgTable('users', {
-	id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+	id: uuid('id')
+		.primaryKey()
+		.default(sql`gen_random_uuid()`),
 	hcaId: text('hca_id').notNull().unique(),
 	name: text('name'),
 	nickname: text('nickname'),
@@ -37,8 +39,15 @@ export const users = pgTable('users', {
 	darkModeEnabled: boolean('dark_mode_enabled').notNull().default(false),
 	// null = hasn't finished the onboarding flow yet; set once they complete it
 	onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
-	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
-	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+	// null = hasn't claimed their one unverified-tier prize yet; set when they do.
+	// Unverified users may claim exactly one prize (ever); verifying unlocks the full shop instead.
+	prizeClaimedAt: timestamp('prize_claimed_at', { withTimezone: true }),
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`),
+	updatedAt: timestamp('updated_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
 
 export const sessions = pgTable('sessions', {
@@ -47,7 +56,9 @@ export const sessions = pgTable('sessions', {
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
 	expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
 
 export const projects = pgTable('projects', {
@@ -62,8 +73,12 @@ export const projects = pgTable('projects', {
 	demoUrl: text('demo_url'),
 	hackatimeProject: text('hackatime_project'),
 	aiDeclaration: text('ai_declaration'),
-	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
-	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`),
+	updatedAt: timestamp('updated_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
 
 export const projectApprovals = pgTable('project_approvals', {
@@ -84,7 +99,9 @@ export const projectApprovals = pgTable('project_approvals', {
 	npsHeardAbout: text('nps_heard_about'),
 	npsDoingWell: text('nps_doing_well'),
 	npsImprove: text('nps_improve'),
-	submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().default(sql`now()`),
+	submittedAt: timestamp('submitted_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`),
 	reviewedAt: timestamp('reviewed_at', { withTimezone: true })
 });
 
@@ -99,17 +116,23 @@ export const projectEvents = pgTable('project_events', {
 	action: text('action').notNull(), // 'submitted' | 'approved' | 'rejected' | 'comment'
 	message: text('message'),
 	internalNote: text('internal_note'),
-	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
 
 export const projectExploreSnapshots = pgTable('project_explore_snapshots', {
-	projectId: integer('project_id').primaryKey().references(() => projects.id, { onDelete: 'cascade' }),
+	projectId: integer('project_id')
+		.primaryKey()
+		.references(() => projects.id, { onDelete: 'cascade' }),
 	name: text('name').notNull(),
 	description: text('description'),
 	screenshotUrl: text('screenshot_url'),
 	demoUrl: text('demo_url'),
 	totalApprovedSeconds: integer('total_approved_seconds').notNull().default(0),
-	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+	updatedAt: timestamp('updated_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
 
 export const shopCategories = pgTable('shop_categories', {
@@ -118,7 +141,9 @@ export const shopCategories = pgTable('shop_categories', {
 	slug: text('slug').notNull().unique(),
 	description: text('description'),
 	sortOrder: integer('sort_order').notNull().default(0),
-	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
 
 export const shopItems = pgTable('shop_items', {
@@ -136,8 +161,14 @@ export const shopItems = pgTable('shop_items', {
 	options: text('options').notNull().default('[]'), // JSON: Array<{label: string, choices: string[]}>
 	imagePadding: integer('image_padding').notNull().default(0),
 	fulfilledLocally: boolean('fulfilled_locally').notNull().default(false), // show "fulfilled locally" disclaimer in modal
-	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
-	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+	// true = hidden from the normal shop; only offered as one of the unverified-tier claimable prizes
+	unverifiedPrize: boolean('unverified_prize').notNull().default(false),
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`),
+	updatedAt: timestamp('updated_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
 
 export const shopOrders = pgTable('shop_orders', {
@@ -151,8 +182,12 @@ export const shopOrders = pgTable('shop_orders', {
 	priceSeconds: integer('price_seconds').notNull(),
 	status: text('status').notNull().default('ordered'), // ordered | packed | shipped | delivered | refunded
 	selectedOptions: text('selected_options').notNull().default('{}'), // JSON: Record<string, string>
-	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`),
-	updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`now()`)
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`),
+	updatedAt: timestamp('updated_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
 
 export const siteSettings = pgTable('site_settings', {
@@ -162,11 +197,17 @@ export const siteSettings = pgTable('site_settings', {
 
 export const balanceAdjustments = pgTable('balance_adjustments', {
 	id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
-	userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-	adminId: uuid('admin_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+	userId: uuid('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	adminId: uuid('admin_id')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
 	seconds: integer('seconds').notNull(),
 	message: text('message').notNull(),
-	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
 
 export const approvedSubmissions = pgTable('approved_submissions', {
@@ -218,11 +259,15 @@ export const approvedSubmissions = pgTable('approved_submissions', {
 
 	submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull(),
 	approvedAt: timestamp('approved_at', { withTimezone: true }).notNull(),
-	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
 
 export const reviewers = pgTable('reviewers', {
 	id: uuid('id').primaryKey().defaultRandom(),
 	hcaId: text('hca_id').notNull().unique(),
-	createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`now()`)
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
 });
