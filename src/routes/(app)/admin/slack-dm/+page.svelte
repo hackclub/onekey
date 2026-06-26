@@ -4,7 +4,10 @@
 
 	let selected = $state<string>('');
 	let message = $state('');
+	let imageUrl = $state('');
 	let confirmText = $state('');
+
+	const validImageUrl = $derived(/^https?:\/\/\S+/i.test(imageUrl.trim()));
 	let sending = $state(false);
 	let testing = $state(false);
 	let showRecipients = $state(false);
@@ -102,6 +105,17 @@
 				rows="6"
 				placeholder="Hey! Noticed you signed up but haven't started a project yet…"
 			></textarea>
+		</div>
+
+		<div class="field">
+			<label for="image_url">image <span class="hint">(optional · public image URL, embedded below the text)</span></label>
+			<input id="image_url" name="image_url" bind:value={imageUrl} autocomplete="off" placeholder="https://…/banner.png" />
+			{#if imageUrl.trim() && !validImageUrl}
+				<span class="warn-text">URL must start with http:// or https://</span>
+			{/if}
+			{#if validImageUrl}
+				<img class="img-preview" src={imageUrl.trim()} alt="attachment preview" />
+			{/if}
 		</div>
 
 		{#if selectedCohort}
@@ -340,7 +354,8 @@
 	}
 
 	textarea,
-	#confirm {
+	#confirm,
+	#image_url {
 		font-family: inherit;
 		font-size: 0.95rem;
 		padding: 0.7rem 0.9rem;
@@ -352,9 +367,25 @@
 	}
 
 	textarea:focus,
-	#confirm:focus {
+	#confirm:focus,
+	#image_url:focus {
 		outline: none;
 		border-color: #60a5fa;
+	}
+
+	.warn-text {
+		margin-top: 0.4rem;
+		font-size: 0.8rem;
+		color: #f3c77a;
+	}
+
+	.img-preview {
+		margin-top: 0.6rem;
+		max-width: 280px;
+		max-height: 180px;
+		border-radius: 8px;
+		border: 1px solid #2a2f38;
+		object-fit: contain;
 	}
 
 	.preview {

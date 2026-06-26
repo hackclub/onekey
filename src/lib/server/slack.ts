@@ -35,7 +35,8 @@ export async function inviteToChannel(slackUserId: string, channelId: string): P
 export async function sendUserDM(
 	token: string,
 	slackUserId: string,
-	text: string
+	text: string,
+	imageUrl?: string | null
 ): Promise<{ ok: boolean; error?: string; retryAfter?: number }> {
 	const open = await fetch('https://slack.com/api/conversations.open', {
 		method: 'POST',
@@ -51,10 +52,20 @@ export async function sendUserDM(
 	const channel = openData.channel?.id;
 	if (!channel) return { ok: false, error: 'no_im_channel' };
 
+	// `text` is always sent as the notification/fallback. When an image URL is
+	// given we also attach Block Kit blocks so the image renders inline.
+	const body: Record<string, unknown> = { channel, text, mrkdwn: true };
+	if (imageUrl) {
+		body.blocks = [
+			{ type: 'section', text: { type: 'mrkdwn', text } },
+			{ type: 'image', image_url: imageUrl, alt_text: 'attached image' }
+		];
+	}
+
 	const post = await fetch('https://slack.com/api/chat.postMessage', {
 		method: 'POST',
 		headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-		body: JSON.stringify({ channel, text, mrkdwn: true })
+		body: JSON.stringify(body)
 	});
 	if (post.status === 429) {
 		return { ok: false, error: 'ratelimited', retryAfter: Number(post.headers.get('retry-after')) || 5 };

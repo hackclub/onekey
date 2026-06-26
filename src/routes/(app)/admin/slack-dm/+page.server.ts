@@ -52,11 +52,15 @@ export const actions = {
 		const message = (form.get('message') as string)?.trim();
 		if (!message) return fail(400, { error: 'message is required' });
 
+		const imageUrl = (form.get('image_url') as string)?.trim() || null;
+		if (imageUrl && !/^https?:\/\//i.test(imageUrl))
+			return fail(400, { error: 'image URL must start with http(s)://' });
+
 		const slackId = await getAdminSlackId(locals.user!.sub);
 		if (!slackId)
 			return fail(400, { error: 'your account has no linked Slack ID, so a test DM cannot be sent.' });
 
-		const res = await sendUserDM(token, slackId, message);
+		const res = await sendUserDM(token, slackId, message, imageUrl);
 		if (!res.ok) return fail(400, { error: `test DM failed: ${res.error}` });
 
 		return { tested: true };
@@ -73,9 +77,12 @@ export const actions = {
 		const cohortKey = form.get('cohort');
 		const message = (form.get('message') as string)?.trim();
 		const confirm = (form.get('confirm') as string)?.trim();
+		const imageUrl = (form.get('image_url') as string)?.trim() || null;
 
 		if (!isCohortKey(cohortKey)) return fail(400, { error: 'pick a valid cohort' });
 		if (!message) return fail(400, { error: 'message is required' });
+		if (imageUrl && !/^https?:\/\//i.test(imageUrl))
+			return fail(400, { error: 'image URL must start with http(s)://' });
 		if (confirm !== 'CONFIRM')
 			return fail(400, { error: 'type CONFIRM in the confirmation box to send' });
 
@@ -90,12 +97,12 @@ export const actions = {
 
 		for (const r of recipients) {
 			if (!r.slackId) continue;
-			let res = await sendUserDM(token, r.slackId, message);
+			let res = await sendUserDM(token, r.slackId, message, imageUrl);
 
 			// one retry if Slack rate-limits us
 			if (!res.ok && res.error === 'ratelimited') {
 				await sleep((res.retryAfter ?? 5) * 1000);
-				res = await sendUserDM(token, r.slackId, message);
+				res = await sendUserDM(token, r.slackId, message, imageUrl);
 			}
 
 			if (res.ok) sent++;
