@@ -44,7 +44,11 @@
 		</a>
 		<a href="/admin/guides" class="card">
 			<span class="card-label">guides</span>
-			<p class="card-desc">view published guides (edit src/lib/guides.ts to update)</p>
+			<p class="card-desc">view published guides</p>
+		</a>
+		<a href="/admin/stats" class="card">
+			<span class="card-label">stats</span>
+			<p class="card-desc">key platform statistics and the submission funnel</p>
 		</a>
 	</div>
 </div>

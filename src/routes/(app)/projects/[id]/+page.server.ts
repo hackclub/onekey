@@ -11,7 +11,7 @@ import {
 	approvedSubmissions
 } from '$lib/server/db/schema';
 import { eq, and, ne, asc, desc, count, notExists, gt, sql, sum } from 'drizzle-orm';
-import { sendSlackDM } from '$lib/server/slack';
+import { sendSlackDM, inviteToChannel } from '$lib/server/slack';
 import { uploadImageBlob } from '$lib/server/cdn';
 import { createAirtableApprovalRecord } from '$lib/server/airtable';
 import { decryptToken } from '$lib/server/session';
@@ -795,6 +795,10 @@ export const actions = {
 					authorUser.slackId,
 					`Your project *${projectData.name}* was approved for ${hours}!${quote}<${dashboardUrl}|See more on the dashboard>`
 				);
+				// add the author to the approved-builders Slack channel on a hard approval
+				if (env.SLACK_APPROVED_CHANNEL_ID) {
+					await inviteToChannel(authorUser.slackId, env.SLACK_APPROVED_CHANNEL_ID);
+				}
 			}
 		}
 
