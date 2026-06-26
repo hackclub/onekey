@@ -62,6 +62,7 @@
 	const caretSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" aria-label="down-caret" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor"><path d="M 0.359841 9.01822C 0.784113 9.37178 1.41467 9.31446 1.76823 8.8902C 3.14518 7.2451 6.52975 3.42464 8.25002 2.11557C 9.99919 3.44663 13.335 7.21555 14.7318 8.8902C 15.0854 9.31446 15.7159 9.37178 16.1402 9.01822C 16.5645 8.66466 16.6215 8.03371 16.2679 7.60943C 14.7363 5.76983 11.2749 1.80977 9.30351 0.408618C 8.99227 0.190441 8.64018 0 8.25002 0C 7.85987 0 7.50778 0.190441 7.19654 0.408618C 5.26486 1.78153 1.73514 5.80788 0.232849 7.60856L 0.231804 7.60982C -0.12176 8.03409 -0.0644362 8.66466 0.359841 9.01822Z" transform="translate(7.12506 20.6251)scale(1 -1)"/></svg>`;
 	const lockSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" aria-label="private" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor"><path d="M19.196 6.238C18.44 6.041 17.479 5.999 16 6c-1.479-.001-2.44.041-3.195.238-.606.15-.826.343-.976.551-.208.291-.451.872-.613 2.111-.119.895-.178 1.972-.202 3.315C12.316 12.052 13.951 12 16 12s3.684.052 4.986.215c-.024-1.343-.083-2.42-.201-3.315-.162-1.239-.406-1.82-.614-2.111-.15-.208-.37-.401-.976-.551zm3.797 6.403C22.894 4.897 21.803 4 16.001 4s-6.893.897-6.992 8.641c-2.604.885-3.008 2.911-3.008 7.359 0 7 1 8 10 8s10-1 10-8c0-4.448-.404-6.474-3.008-7.359zm-5.992 8.092a2 2 0 1 0-2 0V22a1 1 0 0 0 2 0v-1.267z"/></svg>`;
 	const giftSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/><path d="M12 8S11 4 8.5 4 6 7 8 8M12 8s1-4 3.5-4S18 7 16 8"/></svg>`;
+	const enterSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor"><path d="M18.496,10.132c-0.479,-0.274 -1.09,-0.108 -1.364,0.372c-0.274,0.479 -0.108,1.09 0.372,1.364c1.554,0.886 3.031,1.929 4.357,3.132l-13.861,0c-0.552,0 -1,0.448 -1,1c0,0.552 0.448,1 1,1l13.861,0c-1.326,1.203 -2.803,2.246 -4.357,3.132c-0.48,0.274 -0.646,0.885 -0.372,1.364c0.274,0.48 0.885,0.646 1.364,0.372c2.16,-1.237 4.859,-2.886 6.237,-5.061c0.076,-0.12 0.267,-0.431 0.267,-0.807c0,-0.376 -0.191,-0.687 -0.267,-0.807c-1.403,-2.215 -4.021,-3.792 -6.237,-5.061Z"/></svg>`;
 </script>
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && modalItem && closeModal()} />
@@ -159,7 +160,9 @@
 									{/if}
 								</div>
 								<span class="prize-name">{prize.name}</span>
-								<span class="prize-cta">{prizeOut ? 'out of stock' : 'claim'}</span>
+								<span class="prize-claim-btn" class:prize-claim-btn-out={prizeOut}>
+									{prizeOut ? 'out of stock' : 'claim'}
+								</span>
 							</button>
 						{/each}
 					</div>
@@ -167,17 +170,43 @@
 						href="https://auth.hackclub.com/verifications/new"
 						target="_blank"
 						rel="noreferrer"
-						class="lock-verify-link">or verify to unlock the full shop →</a
+						class="lock-verify-link"
+						>or verify to unlock the full shop <span class="enter-icon">{@html enterSvg}</span></a
 					>
 				</div>
 			{:else}
-				<div class="lock-panel">
+				<div class="lock-panel" class:lock-panel-prizes={data.prizeItems.length > 0}>
 					<span class="lock-icon" aria-hidden="true">{@html lockSvg}</span>
 					<h2 class="lock-title">the shop is locked</h2>
 					<p class="lock-desc">
 						verify your identity to unlock a shop full of bigger, more awesome prizes - or get a
-						project approved to claim one of three starter prizes.
+						project approved to claim one of these starter prizes.
 					</p>
+					{#if data.prizeItems.length > 0}
+						<div class="prize-grid">
+							{#each data.prizeItems as prize (prize.id)}
+								<div class="prize-card prize-card-preview">
+									<div
+										class="prize-img-wrap"
+										style={prize.imagePadding ? `--img-pad: ${prize.imagePadding}px;` : ''}
+									>
+										{#if prize.imageUrl}
+											<img
+												src={prize.imageUrl}
+												alt={prize.name}
+												class="prize-img"
+												style={prize.imagePadding ? 'object-fit: contain;' : ''}
+											/>
+										{/if}
+									</div>
+									<span class="prize-name">{prize.name}</span>
+									{#if prize.description}
+										<span class="prize-desc">{prize.description}</span>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/if}
 					<a
 						href="https://auth.hackclub.com/verifications/new"
 						target="_blank"
@@ -510,6 +539,21 @@
 		font-weight: 600;
 		color: var(--color-text-soft);
 		text-decoration: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.1em;
+	}
+
+	.enter-icon {
+		display: inline-flex;
+		width: 1.6em;
+		height: 1.6em;
+		flex-shrink: 0;
+	}
+
+	.enter-icon :global(svg) {
+		width: 100%;
+		height: 100%;
 	}
 
 	.lock-verify-link:hover {
@@ -548,6 +592,23 @@
 		cursor: not-allowed;
 	}
 
+	/* Preview-only cards (shown before a user has earned a claim) are non-interactive. */
+	.prize-card-preview {
+		cursor: default;
+	}
+
+	.prize-desc {
+		font-size: 0.78rem;
+		line-height: 1.35;
+		color: var(--color-text-soft);
+		text-align: center;
+		display: -webkit-box;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+
 	.prize-img-wrap {
 		width: 100%;
 		aspect-ratio: 1 / 1;
@@ -571,17 +632,32 @@
 
 	.prize-name {
 		font-weight: bold;
-		font-size: 0.9rem;
+		font-size: 1.1rem;
 		line-height: 1.2;
 		letter-spacing: -0.01em;
 	}
 
-	.prize-cta {
-		font-size: 0.72rem;
+	/* Claim button on each prize card — mirrors the regular shop's buy button (.btn-order). */
+	.prize-claim-btn {
+		margin-top: auto;
+		width: 100%;
+		box-sizing: border-box;
+		padding: 0.5rem 0.75rem;
+		border-radius: var(--radius-pill);
+		border: solid var(--border-width);
+		background: var(--color-text);
+		color: var(--color-bg);
+		font-size: 0.8rem;
 		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.prize-claim-btn-out {
+		background: var(--color-bg-soft);
 		color: var(--color-text-soft);
+		opacity: 0.6;
 	}
 
 	@media (max-width: 540px) {

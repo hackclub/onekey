@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private';
+import { isStaging } from './staging';
 
 export interface AirtableApprovalFields {
 	repoUrl: string | null;
@@ -43,6 +44,12 @@ function extractGithubUsername(repoUrl: string | null): string | null {
 }
 
 export async function createAirtableApprovalRecord(fields: AirtableApprovalFields): Promise<void> {
+	// In staging, skip the Airtable write entirely so test approvals never reach prod records.
+	if (isStaging()) {
+		console.log('[staging] skipping Airtable approval record for', fields.authorEmail ?? 'unknown');
+		return;
+	}
+
 	const apiKey = env.AIRTABLE_API_KEY;
 	const baseId = env.AIRTABLE_BASE_ID;
 	const tableName = env.AIRTABLE_TABLE_NAME;

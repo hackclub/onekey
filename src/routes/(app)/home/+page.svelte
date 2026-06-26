@@ -22,12 +22,12 @@
 	const communityHours = Math.floor((data.communityApprovedSeconds ?? 0) / 3600);
 	const communityProgress = (communityHours / communityGoalHours) * 100;
 	const goals = [
-		{ pct: 5, label: "decide max's pfp", hours: '100 hours' },
-		{ pct: 12.5, label: 'i want to cheese', hours: '250 hours' },
-		{ pct: 25, label: 'water balloon firing squad', hours: '500 hours' },
-		{ pct: 37.5, label: "dye max's hair", hours: '750 hours' },
-		{ pct: 50, label: 'jenin and max tiktok dance', hours: '1000 hours' },
-		{ pct: 75, label: 'catmaid for a day', hours: '1500 hours' }
+		{ pct: 6.67, label: "decide max's pfp", hours: '100 hours' },
+		{ pct: 16.66, label: 'i want to cheese', hours: '250 hours' },
+		{ pct: 33.33, label: 'water balloon firing squad', hours: '500 hours' },
+		{ pct: 50, label: "dye max's hair", hours: '750 hours' },
+		{ pct: 66.66, label: 'jenin and max tiktok dance', hours: '1000 hours' },
+		{ pct: 100, label: 'catmaid for a day', hours: '1500 hours' }
 	];
 
 	const barSegments = Array.from({ length: 20 }, (_, i) => i);
