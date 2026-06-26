@@ -21,6 +21,8 @@ export const users = pgTable('users', {
 	slackDisplayName: text('slack_display_name'),
 	verificationStatus: text('verification_status'),
 	yswsEligible: boolean('ysws_eligible'),
+	// Latest result from Hack Club Identity's /api/external/check, refreshed at login.
+	yswsCheckResult: text('ysws_check_result'),
 	birthday: text('birthday'),
 	accessTokenCt: text('access_token_ct'),
 	accessTokenIv: text('access_token_iv'),

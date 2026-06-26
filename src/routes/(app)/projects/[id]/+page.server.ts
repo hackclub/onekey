@@ -15,7 +15,8 @@ import { sendSlackDM, inviteToChannel } from '$lib/server/slack';
 import { uploadImageBlob } from '$lib/server/cdn';
 import { createAirtableApprovalRecord } from '$lib/server/airtable';
 import { decryptToken } from '$lib/server/session';
-import { isYswsEligible } from '$lib/server/eligibility';
+import { decideEligibility, isEligibleDecision, eligibilityMessage } from '$lib/server/eligibility';
+import { checkYswsStatus } from '$lib/server/verification';
 
 const HACKATIME_BASE_URL = 'https://hackatime.hackclub.com';
 const DEV_ENCRYPTION_KEY = '0'.repeat(64);
@@ -309,8 +310,9 @@ export const actions = {
 		if (approvalCount > 0)
 			return fail(400, { error: 'project already submitted, use reship to submit new work' });
 
-		if (!isYswsEligible(dbUser.birthday))
-			return fail(403, { error: 'you must be a hack clubber aged 13-18 to submit a project' });
+		const eligibility = decideEligibility(await checkYswsStatus(locals.user.sub), dbUser.birthday);
+		if (!isEligibleDecision(eligibility))
+			return fail(403, { error: eligibilityMessage(eligibility) });
 
 		if (!dbUser.streetAddress || !dbUser.locality || !dbUser.country)
 			return fail(400, {
@@ -405,8 +407,9 @@ export const actions = {
 		if (latestApproval.status === 'pending')
 			return fail(400, { error: 'a review is already pending for this project' });
 
-		if (!isYswsEligible(dbUser.birthday))
-			return fail(403, { error: 'you must be a hack clubber aged 13-18 to submit a project' });
+		const eligibility = decideEligibility(await checkYswsStatus(locals.user.sub), dbUser.birthday);
+		if (!isEligibleDecision(eligibility))
+			return fail(403, { error: eligibilityMessage(eligibility) });
 
 		if (!dbUser.streetAddress || !dbUser.locality || !dbUser.country)
 			return fail(400, {

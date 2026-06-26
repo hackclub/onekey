@@ -77,6 +77,7 @@
 						<dt>slack display name</dt><dd>{user.slackDisplayName ?? '—'}</dd>
 						<dt>verification status</dt><dd>{user.verificationStatus ?? '—'}</dd>
 						<dt>ysws eligible</dt><dd>{bool(user.yswsEligible)}</dd>
+						<dt>ysws check</dt><dd>{user.yswsCheckResult ?? '—'}</dd>
 						<dt>birthday</dt><dd>{user.birthday ?? '—'}</dd>
 						<dt>address 1</dt><dd>{user.streetAddress ?? '—'}</dd>
 						<dt>address 2</dt><dd>{user.addressLine2 ?? '—'}</dd>

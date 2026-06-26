@@ -7,7 +7,8 @@ import { eq, sql } from 'drizzle-orm';
 import { encryptToken, generateSessionToken, hashToken } from '$lib/server/session';
 import { getLaunched } from '$lib/server/launch';
 import { inviteToChannel } from '$lib/server/slack';
-import { isYswsEligible } from '$lib/server/eligibility';
+import { decideEligibility, isEligibleDecision } from '$lib/server/eligibility';
+import { checkYswsStatus } from '$lib/server/verification';
 import type { RequestHandler } from './$types';
 
 const ONEKEY_CHANNEL_ID = 'C0AM132QQUR';
@@ -54,9 +55,12 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
 	if (!user.sub) redirect(302, '/?error=auth_failed');
 
-	// Eligibility is derived from the user's age (13-18), not Hack Club Auth's
-	// ysws_eligible flag. An unknown/invalid birthday is treated as ineligible.
-	if (!isYswsEligible(user.birthdate)) {
+	// Eligibility comes from Hack Club Identity's verification check, with the
+	// age (13-18) as a fallback when the user isn't verified yet. `verified_eligible`
+	// bypasses the age check; `verified_but_over_18`/`rejected` are hard-blocked.
+	const checkResult = await checkYswsStatus(user.sub);
+	const decision = decideEligibility(checkResult, user.birthdate);
+	if (!isEligibleDecision(decision)) {
 		redirect(302, '/ineligible');
 	}
 
@@ -86,7 +90,8 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		slackAvatarUrl: avatar_url ?? null,
 		slackDisplayName: slack_display_name ?? null,
 		verificationStatus: user.verification_status ?? null,
-		yswsEligible: isYswsEligible(user.birthdate),
+		yswsEligible: checkResult === 'verified_eligible',
+		yswsCheckResult: checkResult,
 		birthday: user.birthdate ?? null,
 		accessTokenCt: ct,
 		accessTokenIv: iv,
