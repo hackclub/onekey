@@ -397,14 +397,14 @@
 			<div class="shop-example-col">
 				<div class="card shop-example-card bordered">
 					<img
-						class="shop-example-img shop-example-img-cable"
-						src="https://cdn.hackclub.com/019eb4cb-bb57-7b9e-ba5c-92a1c332c5b8/image.png"
-						alt="coiled aviator cable"
+						class="shop-example-img shop-example-img-blahaj"
+						src="https://cdn.hackclub.com/019f04cd-73ee-755a-b897-2a34a6adefb1/PE730956.avif"
+						alt="blahaj"
 					/>
-					<strong class="shop-example-name">coiled aviator cable</strong>
+					<strong class="shop-example-name">blahaj</strong>
 				</div>
 				<div class="card shop-price-card bordered">
-					<span class="shop-price"><span class="clock-icon">{@html clockSvg}</span>4 hours</span>
+					<span class="shop-price"><span class="clock-icon">{@html clockSvg}</span>3 hours</span>
 				</div>
 			</div>
 			<div class="shop-example-col">
@@ -782,9 +782,14 @@
 		transform: translateY(-0.25rem);
 	}
 
-	/* the cable image reads small in its frame — zoom it in a touch */
-	.shop-example-img-cable {
-		transform: scale(1.15);
+	/* blahaj is landscape — use its natural ratio so it fills the card width
+	   (no square crop, no letterbox) and center it in the leftover height */
+	.shop-example-img-blahaj {
+		aspect-ratio: 820 / 523;
+		object-fit: cover;
+		object-position: left center;
+		margin-top: auto;
+		transform: scale(1.4);
 	}
 
 	.shop-example-name {
