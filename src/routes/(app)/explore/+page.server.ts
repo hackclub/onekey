@@ -20,7 +20,7 @@ export async function load({ locals }) {
 		.from(projectExploreSnapshots)
 		.innerJoin(projects, eq(projectExploreSnapshots.projectId, projects.id))
 		.innerJoin(users, eq(projects.userId, users.id))
-		.orderBy(desc(projectExploreSnapshots.projectId))
+		.orderBy(desc(projectExploreSnapshots.updatedAt), desc(projectExploreSnapshots.projectId))
 		.limit(PAGE_SIZE + 1);
 
 	const hasMore = rows.length > PAGE_SIZE;

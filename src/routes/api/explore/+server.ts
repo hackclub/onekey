@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		.from(projectExploreSnapshots)
 		.innerJoin(projects, eq(projectExploreSnapshots.projectId, projects.id))
 		.innerJoin(users, eq(projects.userId, users.id))
-		.orderBy(desc(projectExploreSnapshots.projectId))
+		.orderBy(desc(projectExploreSnapshots.updatedAt), desc(projectExploreSnapshots.projectId))
 		.limit(PAGE_SIZE + 1)
 		.offset(offset);
 
