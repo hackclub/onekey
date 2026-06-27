@@ -15,7 +15,13 @@ import { sendSlackDM, inviteToChannel } from '$lib/server/slack';
 import { uploadImageBlob } from '$lib/server/cdn';
 import { createAirtableApprovalRecord } from '$lib/server/airtable';
 import { decryptToken } from '$lib/server/session';
-import { decideEligibility, isEligibleDecision, eligibilityMessage } from '$lib/server/eligibility';
+import {
+	decideEligibility,
+	isEligibleDecision,
+	eligibilityMessage,
+	calculateAge,
+	type CheckResult
+} from '$lib/server/eligibility';
 import { checkYswsStatus } from '$lib/server/verification';
 import { isStaging } from '$lib/server/staging';
 
@@ -233,11 +239,39 @@ export async function load({ locals, params }) {
 		.select({
 			name: users.name,
 			nickname: users.nickname,
-			avatar: users.slackAvatarUrl
+			avatar: users.slackAvatarUrl,
+			slackId: users.slackId,
+			slackDisplayName: users.slackDisplayName,
+			verificationStatus: users.verificationStatus,
+			yswsEligible: users.yswsEligible,
+			yswsCheckResult: users.yswsCheckResult,
+			birthday: users.birthday
 		})
 		.from(users)
 		.where(eq(users.id, project.userId))
 		.limit(1);
+
+	// Reviewer-only panel data: Slack handle, ID verification status, and the
+	// current YSWS eligibility decision for the project's author. Only ever sent
+	// to reviewers/admins so we don't leak it back to the owner's own view.
+	const ownerReviewInfo =
+		isInternal && projectOwnerRow
+			? (() => {
+					const result = (projectOwnerRow.yswsCheckResult as CheckResult | null) ?? null;
+					const decision = decideEligibility(result, projectOwnerRow.birthday);
+					return {
+						slackId: projectOwnerRow.slackId,
+						slackDisplayName: projectOwnerRow.slackDisplayName,
+						verificationStatus: projectOwnerRow.verificationStatus,
+						yswsCheckResult: result,
+						yswsEligible: projectOwnerRow.yswsEligible,
+						// age is admin-only; reviewers see eligibility but not the raw age
+					age: locals.isAdmin ? calculateAge(projectOwnerRow.birthday) : null,
+						eligibilityDecision: decision,
+						eligible: isEligibleDecision(decision)
+					};
+				})()
+			: null;
 
 	const visibleEvents = isInternal
 		? events
@@ -253,7 +287,14 @@ export async function load({ locals, params }) {
 		derivedStatus,
 		availableSeconds,
 		linkedHackatimeProjects,
-		projectOwner: projectOwnerRow ?? null,
+		projectOwner: projectOwnerRow
+			? {
+					name: projectOwnerRow.name,
+					nickname: projectOwnerRow.nickname,
+					avatar: projectOwnerRow.avatar
+				}
+			: null,
+		ownerReviewInfo,
 		isReviewer: locals.isReviewer,
 		isAdmin: locals.isAdmin,
 		isOwnProject: project.userId === dbUser.id

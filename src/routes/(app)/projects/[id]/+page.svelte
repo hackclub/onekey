@@ -9,6 +9,27 @@
 	const isDraft = $derived(derivedStatus === null);
 	const isReviewerOrAdmin = $derived(data.isReviewer || data.isAdmin);
 
+	const ownerInfo = $derived(data.ownerReviewInfo);
+
+	// Map the YSWS check / eligibility decision onto a short reviewer-facing label.
+	const eligibilityLabel: Record<string, string> = {
+		eligible: 'eligible',
+		blocked_over_18: 'blocked — over 18',
+		blocked_rejected: 'blocked — IDV rejected',
+		blocked_age: 'blocked — outside 13-18'
+	};
+	const yswsCheckLabel: Record<string, string> = {
+		verified_eligible: 'verified (eligible)',
+		verified_but_over_18: 'verified but over 18',
+		rejected: 'rejected',
+		needs_submission: 'needs submission',
+		pending: 'pending',
+		not_found: 'not found'
+	};
+
+	const justificationDocsUrl =
+		'https://docs.hackclub.com/handbook/quality-and-integrity/override-hours-spent-justification#documenting-hour-adjustments';
+
 	let reviewAction = $state('comment');
 	const reviewFormAction = $derived(
 		reviewAction === 'approve'
@@ -768,6 +789,60 @@
 						{/if}
 					</div>
 				{/each}
+			</div>
+		{/if}
+
+		{#if isReviewerOrAdmin && ownerInfo}
+			<div class="reviewer-info-panel">
+				<span class="reviewer-info-title">reviewer info</span>
+				<div class="reviewer-info-row">
+					<span class="reviewer-info-key">slack</span>
+					<span class="reviewer-info-val">
+						{#if ownerInfo.slackDisplayName || ownerInfo.slackId}
+							{#if ownerInfo.slackId}
+								<a
+									href={`https://hackclub.slack.com/team/${ownerInfo.slackId}`}
+									target="_blank"
+									rel="noopener noreferrer"
+									>{ownerInfo.slackDisplayName ?? ownerInfo.slackId}</a
+								>
+							{:else}
+								{ownerInfo.slackDisplayName}
+							{/if}
+						{:else}
+							<span class="reviewer-info-muted">not linked</span>
+						{/if}
+					</span>
+				</div>
+				<div class="reviewer-info-row">
+					<span class="reviewer-info-key">id verification</span>
+					<span class="reviewer-info-val">
+						{ownerInfo.yswsCheckResult
+							? (yswsCheckLabel[ownerInfo.yswsCheckResult] ?? ownerInfo.yswsCheckResult)
+							: (ownerInfo.verificationStatus ?? 'unknown')}
+					</span>
+				</div>
+				<div class="reviewer-info-row">
+					<span class="reviewer-info-key">ysws eligibility</span>
+					<span
+						class="reviewer-info-val"
+						class:reviewer-info-ok={ownerInfo.eligible}
+						class:reviewer-info-bad={!ownerInfo.eligible}
+					>
+						{eligibilityLabel[ownerInfo.eligibilityDecision] ?? ownerInfo.eligibilityDecision}
+						{#if data.isAdmin && ownerInfo.age != null}
+							<span class="reviewer-info-muted">· age {ownerInfo.age}</span>
+						{/if}
+					</span>
+				</div>
+				{#if data.isAdmin}
+					<a
+						class="reviewer-info-link"
+						href={justificationDocsUrl}
+						target="_blank"
+						rel="noopener noreferrer">how to write a justification →</a
+					>
+				{/if}
 			</div>
 		{/if}
 
@@ -1540,6 +1615,73 @@
 		font-size: 0.85rem;
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
+	}
+
+	.reviewer-info-panel {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.75rem;
+		margin-bottom: 0.75rem;
+		border: solid calc(var(--border-width) / 2);
+		border-radius: calc(var(--radius-card) / 1.5);
+		border-color: color-mix(in srgb, var(--color-text) 18%, transparent);
+		background: color-mix(in srgb, var(--color-text) 4%, transparent);
+	}
+
+	.reviewer-info-title {
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		font-weight: bold;
+		color: var(--color-text-soft);
+	}
+
+	.reviewer-info-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.75rem;
+		font-size: 0.85rem;
+	}
+
+	.reviewer-info-key {
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-text-soft);
+		flex-shrink: 0;
+	}
+
+	.reviewer-info-val {
+		text-align: right;
+		overflow-wrap: anywhere;
+	}
+
+	.reviewer-info-val a {
+		color: inherit;
+		text-decoration: underline;
+	}
+
+	.reviewer-info-ok {
+		color: #6abf6a;
+		font-weight: bold;
+	}
+
+	.reviewer-info-bad {
+		color: #c96a6a;
+		font-weight: bold;
+	}
+
+	.reviewer-info-muted {
+		color: var(--color-text-soft);
+		font-weight: normal;
+	}
+
+	.reviewer-info-link {
+		font-size: 0.8rem;
+		color: var(--color-text-soft);
+		text-decoration: underline;
 	}
 
 	.btn-soft-approve {
