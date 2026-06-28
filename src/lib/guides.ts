@@ -1,4 +1,22 @@
-import { marked } from 'marked';
+import { marked, type Tokens } from 'marked';
+import hljs from 'highlight.js';
+
+// Syntax-highlight fenced code blocks at parse time. highlight.js escapes its
+// output, so the resulting HTML is safe to inject. Known languages are
+// highlighted by name; anything else falls back to auto-detection.
+marked.use({
+	renderer: {
+		code({ text, lang }: Tokens.Code): string {
+			const language = (lang ?? '').trim().split(/\s+/)[0];
+			const result =
+				language && hljs.getLanguage(language)
+					? hljs.highlight(text, { language })
+					: hljs.highlightAuto(text);
+			const cls = `hljs${language ? ` language-${language}` : ''}`;
+			return `<pre><code class="${cls}">${result.value}</code></pre>\n`;
+		}
+	}
+});
 
 export type GuideSection = {
 	id: string;

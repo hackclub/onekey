@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	// highlight.js token colors for fenced code blocks (highlighted at parse time
+	// in $lib/guides.ts). The dark theme suits the existing near-black <pre>.
+	import 'highlight.js/styles/github-dark.css';
 
 	let { data } = $props();
 	const { guide } = data;
