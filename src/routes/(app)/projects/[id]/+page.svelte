@@ -30,6 +30,19 @@
 	const justificationDocsUrl =
 		'https://docs.hackclub.com/handbook/quality-and-integrity/override-hours-spent-justification#documenting-hour-adjustments';
 
+	let copiedData = $state(false);
+	async function copyReviewData() {
+		const parts = [project.repoUrl, ownerInfo?.slackId].filter(Boolean);
+		if (parts.length === 0) return;
+		try {
+			await navigator.clipboard.writeText(parts.join(' '));
+			copiedData = true;
+			setTimeout(() => (copiedData = false), 1500);
+		} catch {
+			/* clipboard unavailable */
+		}
+	}
+
 	let reviewAction = $state('comment');
 	const reviewFormAction = $derived(
 		reviewAction === 'approve'
@@ -794,7 +807,12 @@
 
 		{#if isReviewerOrAdmin && ownerInfo}
 			<div class="reviewer-info-panel">
-				<span class="reviewer-info-title">reviewer info</span>
+				<div class="reviewer-info-header">
+					<span class="reviewer-info-title">reviewer info</span>
+					<button type="button" class="reviewer-info-copy" onclick={copyReviewData}>
+						{copiedData ? 'copied!' : 'copy data'}
+					</button>
+				</div>
 				<div class="reviewer-info-row">
 					<span class="reviewer-info-key">slack</span>
 					<span class="reviewer-info-val">
@@ -806,6 +824,9 @@
 									rel="noopener noreferrer"
 									>{ownerInfo.slackDisplayName ?? ownerInfo.slackId}</a
 								>
+								{#if ownerInfo.slackDisplayName}
+									<span class="reviewer-info-muted">· {ownerInfo.slackId}</span>
+								{/if}
 							{:else}
 								{ownerInfo.slackDisplayName}
 							{/if}
@@ -1629,12 +1650,38 @@
 		background: color-mix(in srgb, var(--color-text) 4%, transparent);
 	}
 
+	.reviewer-info-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
 	.reviewer-info-title {
 		font-size: 0.72rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		font-weight: bold;
 		color: var(--color-text-soft);
+	}
+
+	.reviewer-info-copy {
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		font-weight: bold;
+		color: var(--color-text-soft);
+		background: none;
+		border: solid calc(var(--border-width) / 2);
+		border-color: color-mix(in srgb, var(--color-text) 18%, transparent);
+		border-radius: calc(var(--radius-card) / 2);
+		padding: 0.15rem 0.5rem;
+		cursor: pointer;
+	}
+
+	.reviewer-info-copy:hover {
+		color: var(--color-text);
+		border-color: color-mix(in srgb, var(--color-text) 40%, transparent);
 	}
 
 	.reviewer-info-row {
