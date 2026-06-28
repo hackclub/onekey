@@ -8,6 +8,20 @@ const config = {
 	},
 	kit: {
 		adapter: adapter(),
+		// Defense-in-depth against XSS: `script-src 'self'` blocks inline scripts and
+		// `javascript:` URL navigation, so a stored bad URL can't execute even if one
+		// slips past server-side validation. SvelteKit auto-injects nonces/hashes for
+		// its own hydration scripts. `style-src` keeps unsafe-inline because the app
+		// uses inline style attributes; style injection isn't the threat here.
+		csp: {
+			directives: {
+				'script-src': ['self'],
+				'style-src': ['self', 'unsafe-inline'],
+				'img-src': ['self', 'data:', 'blob:', 'https:'],
+				'object-src': ['none'],
+				'base-uri': ['self']
+			}
+		},
 		typescript: {
 			config: (config) => ({
 				...config,

@@ -28,6 +28,26 @@ import { isStaging } from '$lib/server/staging';
 const HACKATIME_BASE_URL = 'https://hackatime.hackclub.com';
 const DEV_ENCRYPTION_KEY = '0'.repeat(64);
 
+/**
+ * Normalize a user-supplied URL, allowing only http(s) schemes. Returns the
+ * canonical href, or null for empty/invalid input or any other scheme. This is
+ * the authoritative gate: the demo/repo URLs are later rendered as <a href>,
+ * and Svelte does NOT strip dangerous schemes, so a stored `javascript:` URL
+ * would be a stored XSS against reviewers and the public explore page. The
+ * client-side prefixing in +page.svelte is convenience only and bypassable.
+ */
+function cleanUrl(raw: FormDataEntryValue | null): string | null {
+	const v = (raw as string | null)?.trim();
+	if (!v) return null;
+	let u: URL;
+	try {
+		u = new URL(v);
+	} catch {
+		return null;
+	}
+	return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : null;
+}
+
 // Channel reviewers watch to pick up new submissions. Overridable via env.
 const REVIEW_CHANNEL_ID = env.SLACK_REVIEW_CHANNEL_ID || 'C0BBHACUXE1';
 
@@ -319,12 +339,18 @@ export const actions = {
 		}
 		const name = (form.get('name') as string)?.trim();
 		const description = (form.get('description') as string)?.trim() || null;
-		const repoUrl = (form.get('repo_url') as string)?.trim() || null;
-		const demoUrl = (form.get('demo_url') as string)?.trim() || null;
+		const rawRepoUrl = (form.get('repo_url') as string)?.trim() || null;
+		const rawDemoUrl = (form.get('demo_url') as string)?.trim() || null;
+		const repoUrl = cleanUrl(form.get('repo_url'));
+		const demoUrl = cleanUrl(form.get('demo_url'));
 		const hackatimeProject = (form.get('hackatime_project') as string)?.trim() || null;
 		const aiDeclaration = (form.get('ai_declaration') as string)?.trim() || null;
 
 		if (!name) return fail(400, { error: 'project name is required' });
+		if (rawRepoUrl && !repoUrl)
+			return fail(400, { error: 'repo url must be a valid http(s) url' });
+		if (rawDemoUrl && !demoUrl)
+			return fail(400, { error: 'demo url must be a valid http(s) url' });
 
 		const [ownedProject] = await db
 			.select({ id: projects.id })
@@ -401,8 +427,8 @@ export const actions = {
 		const form = await request.formData();
 		const name = (form.get('name') as string)?.trim();
 		const description = (form.get('description') as string)?.trim() || null;
-		const repoUrl = (form.get('repo_url') as string)?.trim() || null;
-		const demoUrl = (form.get('demo_url') as string)?.trim() || null;
+		const repoUrl = cleanUrl(form.get('repo_url'));
+		const demoUrl = cleanUrl(form.get('demo_url'));
 		const hackatimeProject = (form.get('hackatime_project') as string)?.trim() || null;
 
 		if (!name) return fail(400, { error: 'project name is required' });
