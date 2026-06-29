@@ -75,6 +75,10 @@ export const projects = pgTable('projects', {
 	demoUrl: text('demo_url'),
 	hackatimeProject: text('hackatime_project'),
 	aiDeclaration: text('ai_declaration'),
+	// Reviewer-set flag: project is under Fraud Squad investigation. Admin-only
+	// toggle; surfaces a red tint + badge in the review queue and an internal-only
+	// comment on the project timeline. Never exposed to the project's author.
+	fraudCheck: boolean('fraud_check').notNull().default(false),
 	createdAt: timestamp('created_at', { withTimezone: true })
 		.notNull()
 		.default(sql`now()`),
@@ -115,7 +119,7 @@ export const projectEvents = pgTable('project_events', {
 	actorId: uuid('actor_id')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
-	action: text('action').notNull(), // 'submitted' | 'approved' | 'rejected' | 'comment'
+	action: text('action').notNull(), // 'submitted' | 'approved' | 'rejected' | 'comment' | 'fraud_check' | 'fraud_check_cleared'
 	message: text('message'),
 	internalNote: text('internal_note'),
 	createdAt: timestamp('created_at', { withTimezone: true })

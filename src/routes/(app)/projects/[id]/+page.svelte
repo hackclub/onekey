@@ -30,6 +30,13 @@
 	const justificationDocsUrl =
 		'https://docs.hackclub.com/handbook/quality-and-integrity/override-hours-spent-justification#documenting-hour-adjustments';
 
+	// Human-readable labels for timeline event badges whose raw action would read
+	// awkwardly (e.g. snake_case). Falls back to the raw action when unmapped.
+	const actionLabel: Record<string, string> = {
+		fraud_check: 'fraud check',
+		fraud_check_cleared: 'fraud check cleared'
+	};
+
 	let copiedData = $state(false);
 	async function copyReviewData() {
 		const parts = [project.repoUrl, ownerInfo?.slackId].filter(Boolean);
@@ -765,7 +772,11 @@
 					}))
 			]
 				.sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
-				.filter((e) => e.action !== 'comment' || isReviewerOrAdmin)}
+				.filter(
+					(e) =>
+						!['comment', 'fraud_check', 'fraud_check_cleared'].includes(e.action) ||
+						isReviewerOrAdmin
+				)}
 			<div class="event-list">
 				{#each allEvents as event (event.id)}
 					<div class="event">
@@ -780,7 +791,9 @@
 									event.actorName ??
 									(event.isSubmission ? 'submitter' : 'reviewer')}</span
 							>
-							<span class="event-action event-action-{event.action}">{event.action}</span>
+							<span class="event-action event-action-{event.action}"
+								>{actionLabel[event.action] ?? event.action}</span
+							>
 							{#if event.isSubmission && event.newSeconds}
 								<span class="event-hours">{formatHours(event.newSeconds)} submitted</span>
 							{:else if event.action === 'approved' && event.approvedSeconds}
@@ -863,6 +876,19 @@
 						target="_blank"
 						rel="noopener noreferrer">how to write a justification →</a
 					>
+					<form
+						method="POST"
+						action={project.fraudCheck ? '?/clearFraudCheck' : '?/fraudCheck'}
+						use:enhance
+					>
+						<button
+							type="submit"
+							class="reviewer-info-fraud"
+							class:reviewer-info-fraud-active={project.fraudCheck}
+						>
+							{project.fraudCheck ? 'clear fraud check' : 'mark as fraud check'}
+						</button>
+					</form>
 				{/if}
 			</div>
 		{/if}
@@ -1731,6 +1757,36 @@
 		text-decoration: underline;
 	}
 
+	.reviewer-info-fraud {
+		width: 100%;
+		font-size: 0.75rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		font-family: inherit;
+		cursor: pointer;
+		border-radius: calc(var(--radius-card) / 2);
+		padding: 0.35rem 0.6rem;
+		background: transparent;
+		border: solid calc(var(--border-width) / 2) #c96a6a;
+		color: #c96a6a;
+	}
+
+	.reviewer-info-fraud:hover {
+		background: color-mix(in srgb, #c96a6a 14%, transparent);
+	}
+
+	/* When already flagged, the button clears the check — show it filled so its
+	   active state is obvious. */
+	.reviewer-info-fraud-active {
+		background: #c96a6a;
+		color: #fff;
+	}
+
+	.reviewer-info-fraud-active:hover {
+		background: color-mix(in srgb, #c96a6a 85%, #000);
+	}
+
 	.btn-soft-approve {
 		font-size: 0.85rem;
 		font-weight: bold;
@@ -1936,6 +1992,14 @@
 	.event-action-comment {
 		background: #2a2620;
 		color: #c9a84c;
+	}
+	.event-action-fraud_check {
+		background: #2a1a1a;
+		color: #d98a8a;
+	}
+	.event-action-fraud_check_cleared {
+		background: #1a2a1a;
+		color: #6abf6a;
 	}
 
 	.event-time {

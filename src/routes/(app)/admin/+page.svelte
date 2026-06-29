@@ -10,20 +10,15 @@
 		<p class="sub">logged in as <strong>@{data.user?.slack_display_name ?? data.user?.nickname ?? data.user?.name ?? data.user?.email}</strong></p>
 	</div>
 
-	<form
-		method="POST"
-		action={data.isLaunched ? '?/lock' : '?/launch'}
-		use:enhance
-		class="launch-form"
-	>
-		<button type="submit" class="launch-btn" class:launched={data.isLaunched}>
-			{#if data.isLaunched}
-				🔓 platform is live - click to lock
-			{:else}
-				🚀 launch platform
-			{/if}
-		</button>
-	</form>
+	{#if data.isLaunched}
+		<!-- Static status only: the lock action is intentionally not a button here so
+		     it can't be triggered by an accidental click. -->
+		<div class="launch-status">🟢 platform is live</div>
+	{:else}
+		<form method="POST" action="?/launch" use:enhance class="launch-form">
+			<button type="submit" class="launch-btn">🚀 launch platform</button>
+		</form>
+	{/if}
 
 	<div class="cards">
 		<a href="/admin/users" class="card">
@@ -141,13 +136,14 @@
 		background: color-mix(in srgb, #22c55e 25%, transparent);
 	}
 
-	.launch-btn.launched {
-		border-color: #ef4444;
-		background: color-mix(in srgb, #ef4444 15%, transparent);
-		color: #ef4444;
-	}
-
-	.launch-btn.launched:hover {
-		background: color-mix(in srgb, #ef4444 25%, transparent);
+	.launch-status {
+		font-size: 1rem;
+		font-weight: 700;
+		padding: 0.75rem 1.5rem;
+		border-radius: 10px;
+		border: 2px solid #22c55e;
+		background: color-mix(in srgb, #22c55e 15%, transparent);
+		color: #22c55e;
+		align-self: flex-start;
 	}
 </style>

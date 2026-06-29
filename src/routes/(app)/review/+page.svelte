@@ -36,9 +36,13 @@
 					href="/projects/{project.id}"
 					class="table-row"
 					class:soft-accepted={project.status === 'soft_approved'}
+					class:fraud-check={project.fraudCheck}
 				>
 					<span class="col-name">
 						{project.name}
+						{#if project.fraudCheck}
+							<span class="fraud-tag">fraud check</span>
+						{/if}
 						{#if project.status === 'soft_approved'}
 							<span class="soft-tag">soft accepted</span>
 						{/if}
@@ -167,6 +171,31 @@
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
 		background: #16a34a;
+		color: #fff;
+		border-radius: 9999px;
+		padding: 0.1em 0.5em;
+		vertical-align: middle;
+		margin-left: 0.4rem;
+	}
+
+	/* Fraud-check tint mirrors the soft-accepted treatment in red. Declared after
+	   .soft-accepted so it wins when a project is both soft-approved and flagged —
+	   the fraud warning is the more urgent signal. */
+	.table-row.fraud-check {
+		background: color-mix(in srgb, #dc2626 9%, var(--color-bg));
+	}
+
+	.table-row.fraud-check:hover {
+		background: color-mix(in srgb, #dc2626 18%, var(--color-bg));
+	}
+
+	.fraud-tag {
+		display: inline-block;
+		font-size: 0.65rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		background: #dc2626;
 		color: #fff;
 		border-radius: 9999px;
 		padding: 0.1em 0.5em;

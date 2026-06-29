@@ -18,6 +18,7 @@ export async function load({ locals }) {
 			repoUrl: projects.repoUrl,
 			demoUrl: projects.demoUrl,
 			hackatimeProject: projects.hackatimeProject,
+			fraudCheck: projects.fraudCheck,
 			approvalId: projectApprovals.id,
 			status: projectApprovals.status,
 			submittedSeconds: projectApprovals.submittedSeconds,
