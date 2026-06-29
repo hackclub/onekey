@@ -39,10 +39,16 @@
 
 	let copiedData = $state(false);
 	async function copyReviewData() {
-		const parts = [project.repoUrl, ownerInfo?.slackId].filter(Boolean);
-		if (parts.length === 0) return;
+		const firstLine = [project.repoUrl, ownerInfo?.slackId].filter(Boolean).join(' ');
+		const hackatimeProjectsLine = (project.hackatimeProject ?? '')
+			.split(',')
+			.map((s) => s.trim())
+			.filter(Boolean)
+			.join(', ');
+		const lines = [firstLine, hackatimeProjectsLine].filter(Boolean);
+		if (lines.length === 0) return;
 		try {
-			await navigator.clipboard.writeText(parts.join(' '));
+			await navigator.clipboard.writeText(lines.join('\n'));
 			copiedData = true;
 			setTimeout(() => (copiedData = false), 1500);
 		} catch {
