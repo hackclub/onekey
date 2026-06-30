@@ -770,13 +770,17 @@ export const actions = {
 		let internalNote: string | null;
 
 		if (latestApproval.status === 'soft_approved') {
-			// Confirm the existing soft approval — no form input needed
+			// Confirm the existing soft approval: hours + message to author are locked
+			// to what the soft-approver set, but the admin may edit the internal note.
 			if (!latestApproval.approvedSeconds) {
 				return fail(400, { error: 'soft approval is missing approved seconds' });
 			}
 			approvedSeconds = latestApproval.approvedSeconds;
 			message = latestApproval.publicMessage;
-			internalNote = latestApproval.internalNote;
+			const form = await request.formData();
+			const editedNote = (form.get('internal_note') as string)?.trim() || null;
+			// Fall back to the soft-approver's note if the field came through empty.
+			internalNote = editedNote ?? latestApproval.internalNote;
 		} else {
 			// Full approval from pending — require form data
 			const form = await request.formData();
@@ -825,11 +829,18 @@ export const actions = {
 			}
 		}
 
+		// Credit the reviewer who soft-approved when confirming a soft approval; only
+		// a direct pending→approve is credited to the approving admin.
+		const creditedReviewerId =
+			latestApproval.status === 'soft_approved'
+				? (latestApproval.reviewerId ?? reviewerDbUser.id)
+				: reviewerDbUser.id;
+
 		await db
 			.update(projectApprovals)
 			.set({
 				status: 'approved',
-				reviewerId: reviewerDbUser.id,
+				reviewerId: creditedReviewerId,
 				approvedSeconds,
 				publicMessage: message,
 				internalNote,

@@ -97,6 +97,9 @@
 	let approvedMinutesInput = $state(
 		data.latestApproval ? String(Math.floor(data.latestApproval.newSeconds / 60)) : ''
 	);
+	// Editable internal note shown when an admin confirms a soft approval. Prefilled
+	// with the soft-approver's note; the admin can tweak it before final approval.
+	let confirmInternalNote = $state(data.latestApproval?.internalNote ?? '');
 	const approvedMinutesConverted = $derived(() => {
 		const m = parseInt(approvedMinutesInput, 10);
 		if (!isFinite(m) || m <= 0) return null;
@@ -917,7 +920,8 @@
 					</select>
 				</div>
 				{#if reviewAction === 'approve' && derivedStatus === 'soft_approved'}
-					<!-- confirming an existing soft approval — no re-entry needed -->
+					<!-- confirming an existing soft approval: hours + message to author stay
+					     as the soft-approver set them; only the internal note is editable. -->
 					<div class="review-soft-summary">
 						<span class="review-soft-row">
 							<span class="review-soft-key">hours approved</span>
@@ -932,6 +936,13 @@
 							<span class="review-soft-val">{data.latestApproval?.publicMessage ?? '—'}</span>
 						</span>
 					</div>
+					<textarea
+						class="review-textarea"
+						name="internal_note"
+						placeholder="internal note (reviewer-only)"
+						bind:value={confirmInternalNote}
+						required
+					></textarea>
 				{:else if reviewAction === 'approve'}
 					<label class="review-hours-label">
 						<span class="review-hours-text">minutes to approve</span>

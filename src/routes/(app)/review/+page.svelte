@@ -4,7 +4,6 @@
 	let { data } = $props();
 </script>
 
-
 <div class="reviewer">
 	<div class="header">
 		<h1>review panel</h1>
@@ -48,7 +47,12 @@
 						{/if}
 					</span>
 					<span class="col-desc">{project.description ?? '—'}</span>
-					<span class="col-author">{project.submitterSlack ?? project.submitterName ?? project.submitterEmail ?? 'unknown'}</span>
+					<span class="col-author"
+						>{project.submitterSlack ??
+							project.submitterName ??
+							project.submitterEmail ??
+							'unknown'}</span
+					>
 					<span class="col-hours">{formatHours(project.submittedSeconds)}</span>
 					<span class="col-submitted">{new Date(project.submittedAt).toLocaleDateString()}</span>
 				</a>
@@ -121,7 +125,8 @@
 	.table-row {
 		text-decoration: none;
 		color: var(--color-text);
-		border-bottom: solid calc(var(--border-width) / 2) color-mix(in srgb, var(--color-text) 10%, transparent);
+		border-bottom: solid calc(var(--border-width) / 2)
+			color-mix(in srgb, var(--color-text) 10%, transparent);
 		transition: background 0.15s;
 	}
 
@@ -202,5 +207,4 @@
 		vertical-align: middle;
 		margin-left: 0.4rem;
 	}
-
 </style>

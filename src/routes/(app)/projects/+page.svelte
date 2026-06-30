@@ -33,8 +33,12 @@
 	function handleUrlBlur(e: Event) {
 		const input = e.currentTarget as HTMLInputElement;
 		const val = input.value.trim();
-		if (!val) { input.setCustomValidity(''); return; }
-		const withProtocol = val.startsWith('http://') || val.startsWith('https://') ? val : 'https://' + val;
+		if (!val) {
+			input.setCustomValidity('');
+			return;
+		}
+		const withProtocol =
+			val.startsWith('http://') || val.startsWith('https://') ? val : 'https://' + val;
 		input.value = withProtocol;
 		try {
 			const url = new URL(withProtocol);
@@ -50,7 +54,6 @@
 		}
 	}
 </script>
-
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && creating && closeModal()} />
 
@@ -151,7 +154,13 @@
 					</label>
 					<label class="edit-field">
 						<span class="edit-field-label">demo url</span>
-						<input class="edit-input" type="url" name="demo_url" placeholder="https://..." onblur={handleUrlBlur} />
+						<input
+							class="edit-input"
+							type="url"
+							name="demo_url"
+							placeholder="https://..."
+							onblur={handleUrlBlur}
+						/>
 					</label>
 				</div>
 				<div class="edit-actions">
@@ -197,6 +206,7 @@
 		gap: 0.75rem;
 		transition: border-color 0.15s;
 		overflow: hidden;
+		background-color: var(--color-bg);
 	}
 
 	.project-card:hover {
@@ -505,5 +515,4 @@
 		color: var(--rail-label);
 		margin: 0.5rem 0 -0.5rem;
 	}
-
 </style>
