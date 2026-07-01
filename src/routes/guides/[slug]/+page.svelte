@@ -18,11 +18,12 @@
 	function scrollToSection(id: string) {
 		activeId = id;
 		mobileNavOpen = false;
-		const el = document.getElementById('section-' + id);
-		if (el) {
-			const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
-			window.scrollTo({ top, behavior: 'smooth' });
-		}
+		// Rely on the global `scroll-behavior: smooth` (app.css) for the animation
+		// and on `.section-block { scroll-margin-top }` for the header offset.
+		// Passing `behavior: 'smooth'` here too stacks a second animation on top of
+		// the CSS one, which fights it — causing the up-then-down hitch and the
+		// jitter when the target is already near the top.
+		document.getElementById('section-' + id)?.scrollIntoView({ block: 'start' });
 	}
 
 	// Update active section on scroll using IntersectionObserver
