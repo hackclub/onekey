@@ -10,13 +10,17 @@
 	let activeId = $state(guide.sections[0]?.id ?? '');
 	let mobileNavOpen = $state(false);
 
+	// Height of the sticky layout header (flag 3rem + 1.5rem padding × 2 = 6rem).
+	// Both the click-scroll offset and the observer's top margin key off this so
+	// headings clear the header instead of hiding behind it.
+	const HEADER_OFFSET = 96;
+
 	function scrollToSection(id: string) {
 		activeId = id;
 		mobileNavOpen = false;
 		const el = document.getElementById('section-' + id);
 		if (el) {
-			const offset = 80;
-			const top = el.getBoundingClientRect().top + window.scrollY - offset;
+			const top = el.getBoundingClientRect().top + window.scrollY - HEADER_OFFSET;
 			window.scrollTo({ top, behavior: 'smooth' });
 		}
 	}
@@ -25,15 +29,22 @@
 	import { onMount } from 'svelte';
 
 	onMount(() => {
+		// Track which sections are currently within the detection band, then pick
+		// the topmost one in document order. Reacting to the last isIntersecting
+		// entry in a batch is order-dependent and highlights the wrong section on
+		// fast scrolls and when scrolling back up.
+		const visible = new Set<string>();
 		const observer = new IntersectionObserver(
 			(entries) => {
 				for (const entry of entries) {
-					if (entry.isIntersecting) {
-						activeId = entry.target.id.replace('section-', '');
-					}
+					const id = entry.target.id.replace('section-', '');
+					if (entry.isIntersecting) visible.add(id);
+					else visible.delete(id);
 				}
+				const current = guide.sections.find((s) => visible.has(s.id));
+				if (current) activeId = current.id;
 			},
-			{ rootMargin: '-20% 0px -70% 0px', threshold: 0 }
+			{ rootMargin: `-${HEADER_OFFSET}px 0px -60% 0px`, threshold: 0 }
 		);
 
 		for (const section of guide.sections) {
@@ -337,7 +348,7 @@
 	}
 
 	.section-block {
-		scroll-margin-top: 80px;
+		scroll-margin-top: 96px;
 	}
 
 	.section-heading {
@@ -375,6 +386,14 @@
 		line-height: 1.7;
 		color: #333;
 		margin-bottom: 0.35rem;
+	}
+
+	.section-content :global(img) {
+		display: block;
+		max-width: 100%;
+		height: auto;
+		border-radius: 10px;
+		margin: 1.25rem 0;
 	}
 
 	.section-content :global(a) {
