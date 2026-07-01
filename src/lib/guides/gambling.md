@@ -1,7 +1,7 @@
 ---
 title: Make a one key gambling game!
 description: Gambling with JavaScript!
-thumbnail: https://example.com/image.png
+thumbnail: https://cdn.hackclub.com/019f1f47-55b9-78d4-8245-f1fed312274b/mr0ydi8.png
 stack:
   - HTML
   - CSS
