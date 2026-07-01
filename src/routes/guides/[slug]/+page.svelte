@@ -57,7 +57,7 @@
 </script>
 
 <svelte:head>
-	<title>{guide.title} — onekey guides</title>
+	<title>{guide.title} - onekey guides</title>
 	<meta name="description" content={guide.description} />
 </svelte:head>
 

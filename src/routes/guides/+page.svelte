@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<title>guides — onekey</title>
+	<title>guides - onekey</title>
 	<meta
 		name="description"
 		content="Step-by-step guides to help you build your one-key project and get it shipped."
