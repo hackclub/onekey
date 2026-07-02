@@ -45,6 +45,10 @@
 			<span class="card-label">stats</span>
 			<p class="card-desc">key platform statistics and the submission funnel</p>
 		</a>
+		<a href="/admin/goals" class="card">
+			<span class="card-label">timed goal</span>
+			<p class="card-desc">set the timed goal card shown on the dashboard home</p>
+		</a>
 		<a href="/admin/ships" class="card">
 			<span class="card-label">ships</span>
 			<p class="card-desc">every review submission with its verdict, linked to its project</p>

@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { projects, users, projectApprovals } from '$lib/server/db/schema';
-import { eq, count, sum } from 'drizzle-orm';
+import { projects, users, projectApprovals, timedGoals } from '$lib/server/db/schema';
+import { eq, count, sum, desc } from 'drizzle-orm';
 
 export async function load({ locals }) {
 	let hasProject = false;
@@ -27,5 +27,20 @@ export async function load({ locals }) {
 		.where(eq(projectApprovals.status, 'approved'));
 	const communityApprovedSeconds = Number(r?.total ?? 0);
 
-	return { user: locals.user, hasProject, communityApprovedSeconds };
+	// The current timed goal (latest row), or null to fall back to the community
+	// goals card. Only the fields the card needs are returned.
+	const [goal] = await db
+		.select({
+			name: timedGoals.name,
+			description: timedGoals.description,
+			currentHours: timedGoals.currentHours,
+			targetHours: timedGoals.targetHours,
+			deadline: timedGoals.deadline,
+			createdAt: timedGoals.createdAt
+		})
+		.from(timedGoals)
+		.orderBy(desc(timedGoals.createdAt))
+		.limit(1);
+
+	return { user: locals.user, hasProject, communityApprovedSeconds, timedGoal: goal ?? null };
 }

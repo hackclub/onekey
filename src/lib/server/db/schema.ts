@@ -201,6 +201,28 @@ export const siteSettings = pgTable('site_settings', {
 	value: text('value').notNull()
 });
 
+// A single "current" timed goal shown on the home dashboard in place of the
+// community goals card. The latest row (by createdAt) is the active goal; when
+// no row exists the home card falls back to the community goals widget.
+// currentHours / targetHours are set manually by an admin; the countdown ring
+// runs from createdAt (full) to deadline (empty).
+export const timedGoals = pgTable('timed_goals', {
+	id: uuid('id')
+		.primaryKey()
+		.default(sql`gen_random_uuid()`),
+	name: text('name').notNull(),
+	description: text('description'),
+	currentHours: integer('current_hours').notNull().default(0),
+	targetHours: integer('target_hours').notNull(),
+	deadline: timestamp('deadline', { withTimezone: true }).notNull(),
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`),
+	updatedAt: timestamp('updated_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
+});
+
 export const balanceAdjustments = pgTable('balance_adjustments', {
 	id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
 	userId: uuid('user_id')

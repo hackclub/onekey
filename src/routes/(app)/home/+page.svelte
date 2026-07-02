@@ -41,6 +41,58 @@
 	const segmentProgress = allCompleted
 		? 100
 		: ((communityProgress - prevGoal.pct) / (nextGoal.pct - prevGoal.pct)) * 100;
+
+	// --- timed goal (admin-set) ---------------------------------------------
+	// When a timed goal is set it replaces the community card. Progress
+	// (currentHours/targetHours) is set manually by an admin; the ring counts
+	// down from createdAt (full) to deadline (empty). After the deadline the
+	// card shows a dimmed "time's up" state.
+	const timedGoal = data.timedGoal;
+	const goalPct = timedGoal
+		? Math.max(0, Math.min(100, (timedGoal.currentHours / Math.max(1, timedGoal.targetHours)) * 100))
+		: 0;
+	const deadlineMs = timedGoal ? new Date(timedGoal.deadline).getTime() : 0;
+	const startMs = timedGoal ? new Date(timedGoal.createdAt).getTime() : 0;
+	const totalMs = Math.max(1, deadlineMs - startMs);
+	const RING_R = 52;
+	const ringCirc = 2 * Math.PI * RING_R;
+
+	// `now` ticks every second so the countdown and ring animate live.
+	// svelte-ignore state_referenced_locally
+	let now = $state(Date.now());
+	const remainingMs = $derived(Math.max(0, deadlineMs - now));
+	const goalExpired = $derived(timedGoal ? remainingMs <= 0 : false);
+	const ringFraction = $derived(Math.max(0, Math.min(1, remainingMs / totalMs)));
+	const ringOffset = $derived(ringCirc * (1 - ringFraction));
+
+	function formatRemaining(ms: number): string {
+		const s = Math.floor(ms / 1000);
+		const d = Math.floor(s / 86400);
+		const h = Math.floor((s % 86400) / 3600);
+		const m = Math.floor((s % 3600) / 60);
+		const sec = s % 60;
+		if (d > 0) return `${d}d ${h}h`;
+		if (h > 0) return `${h}h ${m}m`;
+		if (m > 0) return `${m}m ${sec}s`;
+		return `${sec}s`;
+	}
+	const remainingLabel = $derived(formatRemaining(remainingMs));
+	const deadlineLabel = timedGoal
+		? new Date(timedGoal.deadline).toLocaleDateString(undefined, {
+				month: 'short',
+				day: 'numeric',
+				hour: 'numeric',
+				minute: '2-digit'
+			})
+		: '';
+
+	onMount(() => {
+		if (!timedGoal) return;
+		const id = setInterval(() => {
+			now = Date.now();
+		}, 1000);
+		return () => clearInterval(id);
+	});
 </script>
 
 <div class="greeting-row">
@@ -175,6 +227,59 @@
 		</a>
 	</div>
 
+	{#if data.timedGoal}
+		<!-- Timed goal card: replaces the community goals card while a goal is set.
+		     Left = current goal + description + manual progress bar; right = a
+		     countdown ring. Falls back to the community card (below) when cleared. -->
+		<div class="card card-full goals-card timed-card" class:expired={goalExpired}>
+			<div class="goals-main">
+				<div class="goals-callouts">
+					<div class="goals-callout-item">
+						<span class="goals-callout-label">current goal</span>
+						<span class="goals-callout-value">{data.timedGoal.name}</span>
+					</div>
+					<div class="goals-callout-item goals-callout-right">
+						<span class="goals-callout-label">progress</span>
+						<span class="goals-callout-value">{Math.round(goalPct)}%</span>
+					</div>
+				</div>
+				{#if data.timedGoal.description}
+					<span class="timed-desc">{data.timedGoal.description}</span>
+				{/if}
+				<div class="goals-bars">
+					{#each barSegments as i (i)}
+						<div class="goal-seg" class:filled={((i + 1) / 20) * 100 <= goalPct}></div>
+					{/each}
+				</div>
+				<span class="card-label-hours timed-hours">
+					{data.timedGoal.currentHours} / {data.timedGoal.targetHours} hours
+				</span>
+			</div>
+			<div class="timed-stopwatch-section">
+				<span class="goals-callout-label">time remaining</span>
+				<div class="ring-wrap">
+					<svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+						<circle class="ring-track" cx="60" cy="60" r={RING_R} />
+						<circle
+							class="ring-fill"
+							cx="60"
+							cy="60"
+							r={RING_R}
+							style="stroke-dasharray: {ringCirc}; stroke-dashoffset: {ringOffset};"
+						/>
+					</svg>
+					<div class="ring-center">
+						{#if goalExpired}
+							<span class="ring-time up">time's up</span>
+						{:else}
+							<span class="ring-time">{remainingLabel}</span>
+						{/if}
+					</div>
+				</div>
+				<span class="timed-deadline">{goalExpired ? 'ended' : 'ends'} {deadlineLabel}</span>
+			</div>
+		</div>
+	{:else}
 	<div class="card card-full goals-card">
 		<div class="goals-main">
 			{#if allCompleted}
@@ -210,6 +315,7 @@
 			</ul>
 		</div>
 	</div>
+	{/if}
 
 	<!-- <div class="card">
 		<span class="card-label">[section]</span>
@@ -538,6 +644,106 @@
 		background: var(--color-text);
 	}
 
+	/* --- timed goal card --- */
+	.timed-card.expired {
+		opacity: 0.55;
+		filter: grayscale(0.5);
+	}
+
+	.timed-desc {
+		display: block;
+		font-size: clamp(0.8rem, 0.95vw, 1.05rem);
+		font-weight: 500;
+		color: var(--color-text-soft);
+		margin-top: 0.4rem;
+		max-width: none;
+	}
+
+	.timed-hours {
+		margin-top: 1rem;
+		margin-bottom: 0;
+	}
+
+	.timed-stopwatch-section {
+		width: clamp(12rem, 30%, 22rem);
+		flex-shrink: 0;
+		position: relative;
+		padding-left: clamp(1rem, 2vw, 2rem);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+	}
+
+	.timed-stopwatch-section::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		top: calc(-1 * clamp(1rem, 1.5vw, 1.75rem));
+		bottom: calc(-1 * clamp(1rem, 1.5vw, 1.75rem));
+		width: 0.15rem;
+		background: color-mix(in srgb, var(--color-text) 15%, transparent);
+		border-radius: 9999px;
+	}
+
+	.ring-wrap {
+		position: relative;
+		width: clamp(7rem, 12vw, 11rem);
+		aspect-ratio: 1;
+	}
+
+	.ring {
+		width: 100%;
+		height: 100%;
+		transform: rotate(-90deg);
+	}
+
+	.ring-track {
+		fill: none;
+		stroke: color-mix(in srgb, var(--color-text) 15%, transparent);
+		stroke-width: 8;
+	}
+
+	.ring-fill {
+		fill: none;
+		stroke: var(--color-text);
+		stroke-width: 8;
+		stroke-linecap: round;
+		transition: stroke-dashoffset 0.5s linear;
+	}
+
+	.ring-center {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		padding: 0 0.5rem;
+	}
+
+	.ring-time {
+		font-size: clamp(1.1rem, 1.7vw, 1.9rem);
+		font-weight: bold;
+		letter-spacing: -0.02em;
+	}
+
+	.ring-time.up {
+		font-size: clamp(0.9rem, 1.3vw, 1.35rem);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--color-text-soft);
+	}
+
+	.timed-deadline {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		font-weight: bold;
+		color: var(--rail-label);
+	}
+
 	.goals-complete {
 		font-size: clamp(2.5rem, 4vw, 5rem);
 		font-weight: bold;
@@ -651,13 +857,15 @@
 			flex-direction: column;
 		}
 
-		.goals-milestones-section {
+		.goals-milestones-section,
+		.timed-stopwatch-section {
 			width: 100%;
 			padding-left: 0;
 			padding-top: clamp(1rem, 2vw, 2rem);
 		}
 
-		.goals-milestones-section::before {
+		.goals-milestones-section::before,
+		.timed-stopwatch-section::before {
 			left: calc(-1 * clamp(1rem, 1.5vw, 1.75rem));
 			right: calc(-1 * clamp(1rem, 1.5vw, 1.75rem));
 			top: 0;
