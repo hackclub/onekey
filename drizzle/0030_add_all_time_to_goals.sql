@@ -1,0 +1,1 @@
+ALTER TABLE "timed_goals" ADD COLUMN "all_time" boolean DEFAULT false NOT NULL;

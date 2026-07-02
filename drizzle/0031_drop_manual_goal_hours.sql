@@ -1,0 +1,1 @@
+ALTER TABLE "timed_goals" DROP COLUMN "current_hours";

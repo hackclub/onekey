@@ -32,9 +32,11 @@
 			<span class="status-dot"></span>
 			<span>
 				{#if isExpired}
-					<strong>{goal.name}</strong> has ended (deadline passed) — showing the “time's up” state.
+					<strong>{goal.name}</strong> has ended (deadline passed) — {data.currentHours}/{goal.targetHours}
+					hours ({goal.allTime ? 'all-time' : 'in window'}), showing the “time's up” state.
 				{:else}
-					<strong>{goal.name}</strong> is live — {goal.currentHours}/{goal.targetHours} hours.
+					<strong>{goal.name}</strong> is live — {data.currentHours}/{goal.targetHours} approved hours
+					counted so far ({goal.allTime ? 'all-time' : 'within the goal window'}).
 				{/if}
 			</span>
 		</div>
@@ -69,33 +71,32 @@
 			>
 		</label>
 
-		<div class="row">
-			<label class="field">
-				<span class="field-label">current hours</span>
-				<input
-					type="number"
-					name="current_hours"
-					class="input"
-					min="0"
-					step="1"
-					value={goal?.currentHours ?? 0}
-					required
-				/>
-			</label>
+		<label class="field">
+			<span class="field-label">target hours</span>
+			<input
+				type="number"
+				name="target_hours"
+				class="input"
+				min="1"
+				step="1"
+				value={goal?.targetHours ?? ''}
+				required
+			/>
+			<span class="field-hint">
+				progress is counted automatically from approved hours — no manual updates needed.
+			</span>
+		</label>
 
-			<label class="field">
-				<span class="field-label">target hours</span>
-				<input
-					type="number"
-					name="target_hours"
-					class="input"
-					min="1"
-					step="1"
-					value={goal?.targetHours ?? ''}
-					required
-				/>
-			</label>
-		</div>
+		<label class="checkbox-field">
+			<input type="checkbox" name="all_time" checked={goal?.allTime ?? false} />
+			<span>
+				<span class="checkbox-label">count all-time approved hours</span>
+				<span class="field-hint">
+					off (default): only hours approved between the goal's start and deadline count. on: every
+					approved hour counts, regardless of when it was approved.
+				</span>
+			</span>
+		</label>
 
 		<label class="field">
 			<span class="field-label">deadline</span>
@@ -107,7 +108,8 @@
 				required
 			/>
 			<span class="field-hint">
-				the countdown ring runs from now (when first created) to this deadline.
+				the countdown ring runs from now (when first created) to this deadline. in windowed mode this
+				is also the end of the hour-counting window.
 			</span>
 		</label>
 
@@ -217,6 +219,31 @@
 	.field-hint {
 		font-size: 0.75rem;
 		color: #555b66;
+	}
+
+	.checkbox-field {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.6rem;
+	}
+
+	.checkbox-field input {
+		margin-top: 0.15rem;
+		width: 1rem;
+		height: 1rem;
+		flex-shrink: 0;
+		accent-color: #22c55e;
+	}
+
+	.checkbox-field > span {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
+
+	.checkbox-label {
+		font-size: 0.85rem;
+		font-weight: 600;
 	}
 
 	.row {

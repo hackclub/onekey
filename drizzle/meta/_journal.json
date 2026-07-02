@@ -211,6 +211,20 @@
       "when": 1783003704373,
       "tag": "0029_add_timed_goals",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1783020463611,
+      "tag": "0030_add_all_time_to_goals",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1783020473594,
+      "tag": "0031_drop_manual_goal_hours",
+      "breakpoints": true
     }
   ]
 }

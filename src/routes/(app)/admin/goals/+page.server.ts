@@ -2,6 +2,7 @@ import { error, fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { timedGoals } from '$lib/server/db/schema';
 import { desc, eq } from 'drizzle-orm';
+import { approvedHoursForGoal } from '$lib/server/goals';
 
 export async function load({ locals }) {
 	if (!locals.isAdmin) error(403, 'Forbidden');
@@ -12,7 +13,10 @@ export async function load({ locals }) {
 		.orderBy(desc(timedGoals.createdAt))
 		.limit(1);
 
-	return { goal: goal ?? null };
+	// Show the live computed progress so the admin sees what the home card shows.
+	const currentHours = goal ? await approvedHoursForGoal(goal) : 0;
+
+	return { goal: goal ?? null, currentHours };
 }
 
 export const actions = {
@@ -25,13 +29,11 @@ export const actions = {
 		const form = await request.formData();
 		const name = (form.get('name') as string | null)?.trim();
 		const description = (form.get('description') as string | null)?.trim() || null;
-		const currentHours = Number(form.get('current_hours'));
 		const targetHours = Number(form.get('target_hours'));
+		const allTime = form.get('all_time') != null;
 		const deadlineRaw = (form.get('deadline') as string | null)?.trim();
 
 		if (!name) return fail(400, { error: 'goal name is required' });
-		if (!Number.isFinite(currentHours) || currentHours < 0)
-			return fail(400, { error: 'current hours must be 0 or more' });
 		if (!Number.isFinite(targetHours) || targetHours < 1)
 			return fail(400, { error: 'target hours must be at least 1' });
 		if (!deadlineRaw) return fail(400, { error: 'deadline is required' });
@@ -42,8 +44,8 @@ export const actions = {
 		const values = {
 			name,
 			description,
-			currentHours: Math.round(currentHours),
 			targetHours: Math.round(targetHours),
+			allTime,
 			deadline
 		};
 
