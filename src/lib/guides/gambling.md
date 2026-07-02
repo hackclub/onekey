@@ -137,15 +137,12 @@ Oh, but... why is it a decimal number? Why is it only numbers between 0-1? Ah, t
 ```js
 document.addEventListener("keydown", (event) => {
 	if (event.key == "o") {
-		random_number = Math.floor(Math.random() * 11); // multiply the number by 11, then round it down!
+		random_number = Math.floor(Math.random() * 10) + 1; // multiply the number by 10, round it down, then add 1 so it's 1-10 instead of 0-9!
 		alert(random_number);
 	}
 });
 ```
-This math should give you, now, random numbers, from 1-10 inclusive! If you want different numbers, you can change the 11 in the code to another number:
-- 1-100: set the number to 101
-- 1-1000: set the number to 1001
-- 1-67: set the number to 68 Do you see the pattern? It's just one more than the upper bound! Let's make it look a little nicer by adding a big display on the screen!
+This math should give you, now, random numbers, from 1-10 inclusive - but you can change the number to make the range higher! Let's make it look a little nicer by adding a big display on the screen!
 ## Number display
 Right now, your code should look somewhat like this:
 ```html
@@ -156,7 +153,7 @@ Right now, your code should look somewhat like this:
 			let random_number = 0;
 			document.addEventListener("keydown", (event) => {
 				if (event.key == "o") {
-				random_number = Math.floor(Math.random() * 11);
+				random_number = Math.floor(Math.random() * 10) + 1;
 				alert(random_number);
 				}
 			});
@@ -177,7 +174,7 @@ Let's change the div text to be bigger, and in the middle of the screen - this i
 			let random_number = 0;
 			document.addEventListener("keydown", (event) => {
 				if (event.key == "o") {
-				random_number = Math.floor(Math.random() * 11);
+				random_number = Math.floor(Math.random() * 10) + 1;
 				alert(random_number);
 				}
 			});
@@ -269,7 +266,7 @@ const display = document.getElementById("display");
 let random_number = 0;
 document.addEventListener("keydown", (event) => {
 	if (event.key == "o") {
-		random_number = Math.floor(Math.random() * 11);
+		random_number = Math.floor(Math.random() * 10) + 1;
 		display.innerHTML = random_number; /* put this here! */
 	}
 });
@@ -302,7 +299,7 @@ If you run this code, you may notice that it doesn't work. This is because, this
 		let random_number = 0;
 		document.addEventListener("keydown", (event) => {
 			if (event.key == "o") {
-				random_number = Math.floor(Math.random() * 11);
+				random_number = Math.floor(Math.random() * 10) + 1;
 				display.innerHTML = random_number;
 			}
 		});
@@ -332,7 +329,7 @@ let random_number = 0;
 let coins = 0;
 document.addEventListener("keydown", (event) => {
 	if (event.key == "o") {
-		random_number = Math.floor(Math.random() * 11);
+		random_number = Math.floor(Math.random() * 10) + 1;
 		coins += random_number;
 		display.innerHTML = "Rolled " + random_number + "! Coins: " + coins;
 	}
@@ -358,7 +355,7 @@ Let's say landing on 7 is lucky, and pays out double coins! We can check for thi
 ```js
 document.addEventListener("keydown", (event) => {
 	if (event.key == "o") {
-		random_number = Math.floor(Math.random() * 11);
+		random_number = Math.floor(Math.random() * 10) + 1;
 		if (random_number == 7) {
 			coins += random_number * 2; // lucky! double coins
 			display.innerHTML = "Lucky 7! Coins: " + coins;
@@ -371,11 +368,13 @@ document.addEventListener("keydown", (event) => {
 ```
 An `if` statement runs its code only when the condition inside the parentheses is true - and `else` gives you a backup, for when it isn't! Try it out - press "o" a bunch of times until you land on 7!
 ### The pattern to reuse
-Here's the actual trick we just pulled: we checked if something was true (was `random_number` 7?), and changed something because of it (your coins, and the message). That's genuinely it - that's the whole secret behind every idea below! Here's how you'd use that same trick for each one:
-- **Add more unlock tiers**: try adding unlocks at 200, 500, or 1000 coins - or ditch the colors entirely for something like animal emojis or text labels that "hatch" as you save up (Egg → Chick → Hen → Rooster, for example)!
-- **Track your total rolls**: keep a separate variable, like `let rolls = 0;`, and add 1 to it every time you press "o" (`rolls += 1;`) - then show it on screen alongside your coins, so players can see how many tries it took to get where they are.
+Here's the actual trick we just pulled: we checked if something was true (was `random_number` 7?), and changed something because of it (your coins, and the message). That's genuinely it - that's the whole secret behind every idea below! A lot of games stop at just swapping text around, but the exact same trick works for images, animations, and sound too - so try leaning into those first, if you can. Here's how you'd use that same trick for each one:
+- **Swap your unlock colors for images**: instead of just changing `backgroundColor`, try adding an `<img>` tag to your HTML with an id like `mascot`, and swap its `src` at each coin milestone (an egg image → a chick image → a hen image, for example) - way more visual than a plain color change!
+- **Animate your lucky roll**: look up CSS `@keyframes` - you can make your `<h1>` shake, spin, grow, or pulse for a second whenever you land on 7, instead of just swapping the text.
+- **Add a coin icon**: drop an emoji or a small image next to your coin total (like 🪙) instead of just the word "Coins" - tiny change, but it reads way more like an actual game.
+- **Add a progress bar**: make a `<div>` that visually fills up toward your next unlock, by changing its `width` based on how close your coin total is - much easier to "feel" your progress than reading a number.
 - **Add sound effects**: look up the `Audio` object in JavaScript - you can play a sound with just `new Audio("yoursound.mp3").play();` inside your lucky-roll `if` statement.
-- **Add a coin multiplier**: what if every 5th press paid out extra, instead of just rolling a 7?
-- **Add a reset button**: make a `<button>` element in your HTML, give it an ID like `reset`, then add a _second_ event listener for it (`resetButton.addEventListener("click", ...)`) that sets `coins` back to 0 and resets the display and background back to their starting state.
+- **Add a reset button**: make a `<button>` element in your HTML, give it an ID like `reset`, then add a _second_ event listener for it (`resetButton.addEventListener("click", ...)`) that sets `coins` back to 0 and resets the display, image, and background back to their starting state.
+- **Track your total rolls**: keep a separate variable, like `let rolls = 0;`, and add 1 to it every time you press "o" (`rolls += 1;`) - then show it on screen alongside your coins, so players can see how many tries it took to get where they are.
 
 Before you ship this, make sure you've actually changed or added at least one thing from the list above (or come up with something totally different!) - just copying this tutorial word-for-word isn't gonna cut it. Make it feel like yours! And if you get stuck, come ask in #onekey-help on Slack! I'd be more than happy to help you!
