@@ -60,6 +60,9 @@
 	// `now` ticks every second so the countdown and ring animate live.
 	// svelte-ignore state_referenced_locally
 	let now = $state(Date.now());
+	// Flips true after hydration so timezone-sensitive labels recompute in the
+	// viewer's local timezone rather than the server's (which applies during SSR).
+	let mounted = $state(false);
 	const remainingMs = $derived(Math.max(0, deadlineMs - now));
 	const goalExpired = $derived(timedGoal ? remainingMs <= 0 : false);
 	const ringFraction = $derived(Math.max(0, Math.min(1, remainingMs / totalMs)));
@@ -77,16 +80,19 @@
 		return `${sec}s`;
 	}
 	const remainingLabel = $derived(formatRemaining(remainingMs));
-	const deadlineLabel = timedGoal
-		? new Date(timedGoal.deadline).toLocaleDateString(undefined, {
-				month: 'short',
-				day: 'numeric',
-				hour: 'numeric',
-				minute: '2-digit'
-			})
-		: '';
+	const deadlineLabel = $derived.by(() => {
+		if (!timedGoal) return '';
+		void mounted; // depend on mounted so this re-renders in the viewer's tz
+		return new Date(timedGoal.deadline).toLocaleDateString(undefined, {
+			month: 'short',
+			day: 'numeric',
+			hour: 'numeric',
+			minute: '2-digit'
+		});
+	});
 
 	onMount(() => {
+		mounted = true;
 		if (!timedGoal) return;
 		const id = setInterval(() => {
 			now = Date.now();

@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 
 	let { data, form } = $props();
 
-	// Format a stored deadline into the value a datetime-local input expects
-	// (local "YYYY-MM-DDTHH:MM"), so editing pre-fills correctly.
+	// Format a stored instant into the value a datetime-local input expects
+	// ("YYYY-MM-DDTHH:MM") using the browser's local timezone.
 	function toLocalInput(d: string | Date | null): string {
 		if (!d) return '';
 		const date = new Date(d);
@@ -15,6 +16,21 @@
 
 	const goal = $derived(data.goal);
 	const isExpired = $derived(!!goal && new Date(goal.deadline).getTime() <= Date.now());
+
+	// The deadline is a naive wall-clock value; the server can't know the admin's
+	// timezone. So we do the conversion here in the browser: the visible input
+	// holds local wall-clock time, and we submit an absolute UTC instant via the
+	// hidden field. Prefill happens in onMount so it uses the admin's timezone
+	// (not the server's, which would apply during SSR).
+	let deadlineLocal = $state('');
+	onMount(() => {
+		if (goal?.deadline) deadlineLocal = toLocalInput(goal.deadline);
+	});
+	const deadlineIso = $derived(
+		deadlineLocal && !isNaN(new Date(deadlineLocal).getTime())
+			? new Date(deadlineLocal).toISOString()
+			: ''
+	);
 </script>
 
 <div class="page">
@@ -99,17 +115,13 @@
 		</label>
 
 		<label class="field">
-			<span class="field-label">deadline</span>
-			<input
-				type="datetime-local"
-				name="deadline"
-				class="input"
-				value={toLocalInput(goal?.deadline ?? null)}
-				required
-			/>
+			<span class="field-label">deadline (your local time)</span>
+			<input type="datetime-local" class="input" bind:value={deadlineLocal} required />
+			<!-- absolute instant actually submitted, converted from the admin's tz -->
+			<input type="hidden" name="deadline" value={deadlineIso} />
 			<span class="field-hint">
-				the countdown ring runs from now (when first created) to this deadline. in windowed mode this
-				is also the end of the hour-counting window.
+				interpreted in your timezone. the countdown ring runs from now (when first created) to this
+				deadline. in windowed mode this is also the end of the hour-counting window.
 			</span>
 		</label>
 
