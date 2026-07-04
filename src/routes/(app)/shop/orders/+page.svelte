@@ -5,9 +5,8 @@
 
 	const statusDot: Record<string, string> = {
 		ordered: '#6b7280',
-		packed: '#f59e0b',
 		shipped: '#3b82f6',
-		delivered: '#22c55e',
+		fulfilled: '#22c55e',
 		refunded: '#ef4444'
 	};
 

@@ -73,7 +73,7 @@ export async function load({ locals }) {
 	const orderByStatus = orderStatusRows.map((r) => ({ status: r.status, n: num(r.n) }));
 	const totalOrders = orderByStatus.reduce((s, r) => s + r.n, 0);
 	const outstandingOrders = orderByStatus
-		.filter((r) => r.status !== 'delivered' && r.status !== 'refunded')
+		.filter((r) => r.status !== 'fulfilled' && r.status !== 'refunded')
 		.reduce((s, r) => s + r.n, 0);
 
 	const reviewByStatus = approvalStatusRows.map((r) => ({ status: r.status, n: num(r.n) }));

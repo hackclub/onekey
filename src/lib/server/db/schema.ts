@@ -186,7 +186,7 @@ export const shopOrders = pgTable('shop_orders', {
 		.notNull()
 		.references(() => shopItems.id, { onDelete: 'restrict' }),
 	priceSeconds: integer('price_seconds').notNull(),
-	status: text('status').notNull().default('ordered'), // ordered | packed | shipped | delivered | refunded
+	status: text('status').notNull().default('ordered'), // ordered | shipped | fulfilled | refunded
 	selectedOptions: text('selected_options').notNull().default('{}'), // JSON: Record<string, string>
 	createdAt: timestamp('created_at', { withTimezone: true })
 		.notNull()

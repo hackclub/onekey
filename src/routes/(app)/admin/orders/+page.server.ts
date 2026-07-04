@@ -29,7 +29,7 @@ export async function load({ locals }) {
 		.innerJoin(shopItems, eq(shopOrders.itemId, shopItems.id))
 		.innerJoin(shopCategories, eq(shopItems.categoryId, shopCategories.id))
 		.innerJoin(users, eq(shopOrders.userId, users.id))
-		.where(notInArray(shopOrders.status, ['delivered', 'refunded']))
+		.where(notInArray(shopOrders.status, ['fulfilled', 'refunded']))
 		.orderBy(asc(shopOrders.createdAt));
 
 	return { orders };
@@ -42,7 +42,7 @@ export const actions = {
 		const id = parseInt(form.get('order_id') as string);
 		const status = (form.get('status') as string)?.trim();
 
-		const VALID = ['ordered', 'packed', 'shipped', 'delivered'];
+		const VALID = ['ordered', 'shipped', 'fulfilled'];
 		if (!id || isNaN(id)) return fail(400, { error: 'invalid order id' });
 		if (!VALID.includes(status)) return fail(400, { error: 'invalid status' });
 

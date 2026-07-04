@@ -109,7 +109,7 @@
 			</div>
 			<div class="stat">
 				<span class="stat-value">{data.orders.outstanding}</span>
-				<span class="stat-label">outstanding (undelivered)</span>
+				<span class="stat-label">outstanding (unfulfilled)</span>
 			</div>
 			<div class="stat">
 				<span class="stat-value">{formatHours(data.orders.spentSeconds)}</span>
