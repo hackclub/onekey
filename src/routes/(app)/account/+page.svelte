@@ -11,6 +11,8 @@
 		untrack(() => page.url.searchParams.get('edit') === 'address')
 	);
 
+	let editingNickname = $state(false);
+
 	let addressCardEl = $state<HTMLDivElement | null>(null);
 
 	onMount(() => {
@@ -51,6 +53,44 @@
 	<div class="card card-wide">
 		<span class="card-label">details</span>
 		<div class="field-list">
+			<div class="field">
+				<span class="field-key">nickname</span>
+				{#if editingNickname}
+					<form
+						method="POST"
+						action="?/saveNickname"
+						class="inline-edit-form"
+						use:enhance={() => {
+							return ({ update }) => {
+								update();
+								editingNickname = false;
+							};
+						}}
+					>
+						<input
+							class="edit-input inline-input"
+							type="text"
+							name="nickname"
+							value={data.user?.nickname ?? ''}
+							placeholder="nickname"
+							maxlength="40"
+						/>
+						<button type="submit" class="btn-save btn-save-sm">save</button>
+						<button
+							type="button"
+							class="btn-cancel btn-cancel-sm"
+							onclick={() => (editingNickname = false)}>cancel</button
+						>
+					</form>
+				{:else}
+					<span class="field-val">
+						{data.user?.nickname ?? '—'}
+						<button class="edit-link-inline" onclick={() => (editingNickname = true)}
+							>edit</button
+						>
+					</span>
+				{/if}
+			</div>
 			{#if data.user?.name}
 				<div class="field">
 					<span class="field-key">name</span>
@@ -372,6 +412,40 @@
 		color: var(--color-bg);
 		border-radius: var(--radius-pill);
 		padding: 0.2em 0.55em;
+	}
+
+	.edit-link-inline {
+		font-size: 0.7rem;
+		font-weight: bold;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: var(--rail-label);
+		background: none;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+	}
+
+	.edit-link-inline:hover {
+		color: var(--color-text);
+	}
+
+	.inline-edit-form {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.inline-input {
+		width: 12rem;
+		padding: 0.3rem 0.5rem;
+	}
+
+	.btn-save-sm,
+	.btn-cancel-sm {
+		font-size: 0.75rem;
+		padding: 0.3rem 0.7rem;
 	}
 
 	.logout-link {

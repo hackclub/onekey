@@ -121,6 +121,9 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			target: users.hcaId,
 			set: {
 				...userRow,
+				// Users can set their own nickname in account settings — never let the
+				// HCA-synced value clobber it on a later login.
+				nickname: sql`coalesce(nullif(${users.nickname}, ''), ${userRow.nickname})`,
 				streetAddress: sql`coalesce(nullif(${users.streetAddress}, ''), ${addressInsert.streetAddress})`,
 				addressLine2: sql`coalesce(nullif(${users.addressLine2}, ''), ${addressInsert.addressLine2})`,
 				locality: sql`coalesce(nullif(${users.locality}, ''), ${addressInsert.locality})`,

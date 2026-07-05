@@ -27,6 +27,16 @@ export const actions = {
 		return { success: true };
 	},
 
+	saveNickname: async ({ request, locals }) => {
+		if (!locals.user) redirect(302, '/login');
+		const form = await request.formData();
+		await db
+			.update(users)
+			.set({ nickname: (form.get('nickname') as string)?.trim() || null, updatedAt: new Date() })
+			.where(eq(users.hcaId, locals.user.sub));
+		return { success: true };
+	},
+
 	saveDarkMode: async ({ request, locals }) => {
 		if (!locals.user) redirect(302, '/login');
 		const form = await request.formData();
