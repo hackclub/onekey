@@ -869,7 +869,11 @@
 					<span class="reviewer-info-key">hackatime id</span>
 					<span class="reviewer-info-val">
 						{#if ownerInfo.hackatimeUserId}
-							{ownerInfo.hackatimeUserId}
+							<a
+								href={`https://joe.fraud.hackclub.com/profile/${encodeURIComponent(ownerInfo.hackatimeUserId)}`}
+								target="_blank"
+								rel="noopener noreferrer">{ownerInfo.hackatimeUserId}</a
+							>
 						{:else}
 							<span class="reviewer-info-muted">not linked</span>
 						{/if}
