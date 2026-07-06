@@ -866,6 +866,16 @@
 					</span>
 				</div>
 				<div class="reviewer-info-row">
+					<span class="reviewer-info-key">hackatime id</span>
+					<span class="reviewer-info-val">
+						{#if ownerInfo.hackatimeUserId}
+							{ownerInfo.hackatimeUserId}
+						{:else}
+							<span class="reviewer-info-muted">not linked</span>
+						{/if}
+					</span>
+				</div>
+				<div class="reviewer-info-row">
 					<span class="reviewer-info-key">ysws eligibility</span>
 					<span
 						class="reviewer-info-val"

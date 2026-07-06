@@ -276,14 +276,16 @@ export async function load({ locals, params }) {
 			verificationStatus: users.verificationStatus,
 			yswsEligible: users.yswsEligible,
 			yswsCheckResult: users.yswsCheckResult,
-			birthday: users.birthday
+			birthday: users.birthday,
+			hackatimeUserId: users.hackatimeUserId
 		})
 		.from(users)
 		.where(eq(users.id, project.userId))
 		.limit(1);
 
-	// Reviewer-only panel data: Slack handle, ID verification status, and the
-	// current YSWS eligibility decision for the project's author. Only ever sent
+	// Reviewer-only panel data: Slack handle, ID verification status, Hackatime
+	// user ID, and the current YSWS eligibility decision for the project's
+	// author. Only ever sent
 	// to reviewers/admins so we don't leak it back to the owner's own view.
 	const ownerReviewInfo =
 		isInternal && projectOwnerRow
@@ -299,7 +301,8 @@ export async function load({ locals, params }) {
 						// age is admin-only; reviewers see eligibility but not the raw age
 					age: locals.isAdmin ? calculateAge(projectOwnerRow.birthday) : null,
 						eligibilityDecision: decision,
-						eligible: isEligibleDecision(decision)
+						eligible: isEligibleDecision(decision),
+						hackatimeUserId: projectOwnerRow.hackatimeUserId
 					};
 				})()
 			: null;
