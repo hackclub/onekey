@@ -101,12 +101,10 @@ async function notifyReviewChannel(opts: {
 	}
 }
 
-async function getHackatimeSeconds(
-	dbUser: typeof users.$inferSelect,
-	projectNames: string[]
-): Promise<number> {
-	if (!projectNames.length) return 0;
-	if (!dbUser.hackatimeTokenCt || !dbUser.hackatimeTokenIv || !dbUser.hackatimeTokenTag) return 0;
+async function fetchHackatimeProjects(
+	dbUser: typeof users.$inferSelect
+): Promise<{ name: string; totalSeconds: number }[]> {
+	if (!dbUser.hackatimeTokenCt || !dbUser.hackatimeTokenIv || !dbUser.hackatimeTokenTag) return [];
 
 	const encKey = Buffer.from(env.TOKEN_ENCRYPTION_KEY || (dev ? DEV_ENCRYPTION_KEY : ''), 'hex');
 	const accessToken = decryptToken(
@@ -119,14 +117,26 @@ async function getHackatimeSeconds(
 	const res = await fetch(`${HACKATIME_BASE_URL}/api/v1/authenticated/projects`, {
 		headers: { Authorization: `Bearer ${accessToken}` }
 	});
-	if (!res.ok) return 0;
+	if (!res.ok) return [];
 
 	const data = await res.json();
 	const raw: any[] = Array.isArray(data) ? data : (data.data ?? data.projects ?? []);
+	return raw.map((p: any) => ({
+		name: String(p.name ?? ''),
+		totalSeconds: Number(p.total_seconds ?? p.totalSeconds ?? 0)
+	}));
+}
+
+async function getHackatimeSeconds(
+	dbUser: typeof users.$inferSelect,
+	projectNames: string[]
+): Promise<number> {
+	if (!projectNames.length) return 0;
 	const nameSet = new Set(projectNames);
-	return raw
-		.filter((p: any) => nameSet.has(String(p.name ?? '')))
-		.reduce((sum: number, p: any) => sum + Number(p.total_seconds ?? p.totalSeconds ?? 0), 0);
+	const projects = await fetchHackatimeProjects(dbUser);
+	return projects
+		.filter((p) => nameSet.has(p.name))
+		.reduce((sum, p) => sum + p.totalSeconds, 0);
 }
 
 async function getLatestApproval(projectId: number) {
@@ -284,28 +294,47 @@ export async function load({ locals, params }) {
 		.limit(1);
 
 	// Reviewer-only panel data: Slack handle, ID verification status, Hackatime
-	// user ID, and the current YSWS eligibility decision for the project's
-	// author. Only ever sent
-	// to reviewers/admins so we don't leak it back to the owner's own view.
-	const ownerReviewInfo =
-		isInternal && projectOwnerRow
-			? (() => {
-					const result = (projectOwnerRow.yswsCheckResult as CheckResult | null) ?? null;
-					const decision = decideEligibility(result, projectOwnerRow.birthday);
-					return {
-						slackId: projectOwnerRow.slackId,
-						slackDisplayName: projectOwnerRow.slackDisplayName,
-						verificationStatus: projectOwnerRow.verificationStatus,
-						yswsCheckResult: result,
-						yswsEligible: projectOwnerRow.yswsEligible,
-						// age is admin-only; reviewers see eligibility but not the raw age
-					age: locals.isAdmin ? calculateAge(projectOwnerRow.birthday) : null,
-						eligibilityDecision: decision,
-						eligible: isEligibleDecision(decision),
-						hackatimeUserId: projectOwnerRow.hackatimeUserId
-					};
-				})()
-			: null;
+	// user ID/project breakdown, and the current YSWS eligibility decision for
+	// the project's author. Only ever sent to reviewers/admins so we don't leak
+	// it back to the owner's own view.
+	let ownerReviewInfo = null;
+	if (isInternal && projectOwnerRow) {
+		const result = (projectOwnerRow.yswsCheckResult as CheckResult | null) ?? null;
+		const decision = decideEligibility(result, projectOwnerRow.birthday);
+
+		const linkedProjectNames = (project.hackatimeProject ?? '')
+			.split(',')
+			.map((s) => s.trim())
+			.filter(Boolean);
+		let hackatimeProjects: { name: string; totalSeconds: number }[] = [];
+		if (linkedProjectNames.length) {
+			const ownerUser = await db
+				.select()
+				.from(users)
+				.where(eq(users.id, project.userId))
+				.limit(1)
+				.then((r) => r[0]);
+			if (ownerUser) {
+				const nameSet = new Set(linkedProjectNames);
+				const allProjects = await fetchHackatimeProjects(ownerUser);
+				hackatimeProjects = allProjects.filter((p) => nameSet.has(p.name));
+			}
+		}
+
+		ownerReviewInfo = {
+			slackId: projectOwnerRow.slackId,
+			slackDisplayName: projectOwnerRow.slackDisplayName,
+			verificationStatus: projectOwnerRow.verificationStatus,
+			yswsCheckResult: result,
+			yswsEligible: projectOwnerRow.yswsEligible,
+			// age is admin-only; reviewers see eligibility but not the raw age
+			age: locals.isAdmin ? calculateAge(projectOwnerRow.birthday) : null,
+			eligibilityDecision: decision,
+			eligible: isEligibleDecision(decision),
+			hackatimeUserId: projectOwnerRow.hackatimeUserId,
+			hackatimeProjects
+		};
+	}
 
 	const visibleEvents = isInternal
 		? events

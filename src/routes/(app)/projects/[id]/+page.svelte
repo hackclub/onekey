@@ -100,6 +100,28 @@
 	// Editable internal note shown when an admin confirms a soft approval. Prefilled
 	// with the soft-approver's note; the admin can tweak it before final approval.
 	let confirmInternalNote = $state(data.latestApproval?.internalNote ?? '');
+
+	// Internal note for a fresh (non-soft-approve) full approval. Autofilled with a
+	// Hackatime summary so the admin only has to add their own justification.
+	function buildHackatimeApprovalNote(): string {
+		const projects = ownerInfo?.hackatimeProjects ?? [];
+		const count = projects.length;
+		const totalSeconds = projects.reduce((sum, p) => sum + p.totalSeconds, 0);
+		const titles = projects.map((p) => `"${p.name}"`).join(', ');
+		const projectsLine = count
+			? `There ${count === 1 ? 'is' : 'are'} ${count} Hackatime project${count === 1 ? '' : 's'} associated with this project, titled ${titles}, with ${formatHours(totalSeconds)} tracked${count > 1 ? ' across all projects' : ''}.`
+			: 'There are no Hackatime projects associated with this project.';
+		const idLine = ownerInfo?.hackatimeUserId
+			? `The user's Hackatime ID is ${ownerInfo.hackatimeUserId}.`
+			: `The user's Hackatime ID is not linked.`;
+		return `[HACKATIME]\nHackatime heartbeats have no fraudulent patterns. ${projectsLine}\n${idLine}\n\n[REVIEWER JUSTIFICATION]\n`;
+	}
+	let approveInternalNote = $state('');
+	$effect(() => {
+		if (reviewAction === 'approve' && derivedStatus !== 'soft_approved' && !approveInternalNote) {
+			approveInternalNote = buildHackatimeApprovalNote();
+		}
+	});
 	const approvedMinutesConverted = $derived(() => {
 		const m = parseInt(approvedMinutesInput, 10);
 		if (!isFinite(m) || m <= 0) return null;
@@ -985,6 +1007,7 @@
 						class="review-textarea"
 						name="internal_note"
 						placeholder="internal note (reviewer-only)"
+						bind:value={approveInternalNote}
 						required
 					></textarea>
 				{:else if reviewAction === 'soft_approve'}
