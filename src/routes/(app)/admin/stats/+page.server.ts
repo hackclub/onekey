@@ -1,7 +1,8 @@
 import { error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { users, projects, projectApprovals, approvedSubmissions, shopOrders } from '$lib/server/db/schema';
-import { sql, and, isNotNull, ne, count, countDistinct, sum } from 'drizzle-orm';
+import { sql, and, isNotNull, ne, eq, gt, notExists, count, countDistinct, sum } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 
 const num = (v: unknown) => Number(v ?? 0);
 
@@ -10,6 +11,18 @@ export async function load({ locals }) {
 
 	// a project counts as "hackatime-linked" when the column is set and non-empty
 	const hasHackatime = and(isNotNull(projects.hackatimeProject), ne(projects.hackatimeProject, ''));
+
+	// same "review queue" definition as /review: latest approval per project, still pending/soft_approved
+	const pa2 = alias(projectApprovals, 'pa2');
+	const inReviewQueue = and(
+		sql`${projectApprovals.status} in ('pending', 'soft_approved')`,
+		notExists(
+			db
+				.select({ x: sql`1` })
+				.from(pa2)
+				.where(and(eq(pa2.projectId, projectApprovals.projectId), gt(pa2.submittedAt, projectApprovals.submittedAt)))
+		)
+	);
 
 	const [
 		[userAgg],
@@ -21,6 +34,7 @@ export async function load({ locals }) {
 		approvalStatusRows,
 		[approvedAgg],
 		[approvedUserAgg],
+		[pendingSecondsAgg],
 		orderStatusRows,
 		[spendAgg]
 	] = await Promise.all([
@@ -55,6 +69,10 @@ export async function load({ locals }) {
 			})
 			.from(approvedSubmissions),
 		db.select({ approvers: countDistinct(approvedSubmissions.userId) }).from(approvedSubmissions),
+		db
+			.select({ totalSeconds: sum(projectApprovals.submittedSeconds) })
+			.from(projectApprovals)
+			.where(inReviewQueue),
 		db.select({ status: shopOrders.status, n: count() }).from(shopOrders).groupBy(shopOrders.status),
 		db
 			.select({ spent: sum(shopOrders.priceSeconds) })
@@ -98,6 +116,7 @@ export async function load({ locals }) {
 		reviews: {
 			byStatus: reviewByStatus,
 			pending: pendingReviews,
+			pendingSeconds: num(pendingSecondsAgg.totalSeconds),
 			approvedCount: num(approvedAgg.n),
 			totalApprovedSeconds: num(approvedAgg.totalSeconds)
 		},

@@ -82,6 +82,10 @@
 				<span class="stat-label">awaiting review</span>
 			</div>
 			<div class="stat">
+				<span class="stat-value">{formatHours(data.reviews.pendingSeconds)}</span>
+				<span class="stat-label">hours pending review</span>
+			</div>
+			<div class="stat">
 				<span class="stat-value">{data.reviews.approvedCount}</span>
 				<span class="stat-label">approved submissions</span>
 			</div>
