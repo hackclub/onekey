@@ -22,11 +22,11 @@
 	const communityHours = Math.floor((data.communityApprovedSeconds ?? 0) / 3600);
 	const communityProgress = (communityHours / communityGoalHours) * 100;
 	const goals = [
-		{ pct: 6.67, label: "decide max's pfp", hours: '100 hours' },
+		{ pct: 6.67, label: "decide stelle's pfp", hours: '100 hours' },
 		{ pct: 16.66, label: 'i want to cheese', hours: '250 hours' },
 		{ pct: 33.33, label: 'water balloon firing squad', hours: '500 hours' },
-		{ pct: 50, label: "dye max's hair", hours: '750 hours' },
-		{ pct: 66.66, label: 'jenin and max tiktok dance', hours: '1000 hours' },
+		{ pct: 50, label: "dye stelle's hair", hours: '750 hours' },
+		{ pct: 66.66, label: 'jenin and stelle tiktok dance', hours: '1000 hours' },
 		{ pct: 100, label: 'catmaid for a day', hours: '1500 hours' }
 	];
 
