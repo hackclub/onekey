@@ -6,6 +6,12 @@ import { alias } from 'drizzle-orm/pg-core';
 
 const num = (v: unknown) => Number(v ?? 0);
 
+// hours rounded up to 1 decimal, then 10 hours = 1 weighted project, rounded to nearest 0.1
+function weightedProjectValue(approvedSeconds: number): number {
+	const hoursRoundedUp = Math.ceil((approvedSeconds / 3600) * 10) / 10;
+	return Math.round(hoursRoundedUp) / 10;
+}
+
 export async function load({ locals }) {
 	if (!locals.isAdmin) error(403, 'Forbidden');
 
@@ -34,6 +40,7 @@ export async function load({ locals }) {
 		approvalStatusRows,
 		[approvedAgg],
 		[approvedUserAgg],
+		approvedSecondsRows,
 		[pendingSecondsAgg],
 		orderStatusRows,
 		[spendAgg]
@@ -69,6 +76,7 @@ export async function load({ locals }) {
 			})
 			.from(approvedSubmissions),
 		db.select({ approvers: countDistinct(approvedSubmissions.userId) }).from(approvedSubmissions),
+		db.select({ approvedSeconds: approvedSubmissions.approvedSeconds }).from(approvedSubmissions),
 		db
 			.select({ totalSeconds: sum(projectApprovals.submittedSeconds) })
 			.from(projectApprovals)
@@ -97,6 +105,11 @@ export async function load({ locals }) {
 	const reviewByStatus = approvalStatusRows.map((r) => ({ status: r.status, n: num(r.n) }));
 	const pendingReviews = reviewByStatus.find((r) => r.status === 'pending')?.n ?? 0;
 
+	const totalWeightedProjects = approvedSecondsRows.reduce(
+		(acc, r) => acc + weightedProjectValue(num(r.approvedSeconds)),
+		0
+	);
+
 	return {
 		users: {
 			total: totalUsers,
@@ -118,7 +131,8 @@ export async function load({ locals }) {
 			pending: pendingReviews,
 			pendingSeconds: num(pendingSecondsAgg.totalSeconds),
 			approvedCount: num(approvedAgg.n),
-			totalApprovedSeconds: num(approvedAgg.totalSeconds)
+			totalApprovedSeconds: num(approvedAgg.totalSeconds),
+			totalWeightedProjects
 		},
 		orders: {
 			total: totalOrders,

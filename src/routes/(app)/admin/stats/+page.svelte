@@ -93,6 +93,10 @@
 				<span class="stat-value">{formatHours(data.reviews.totalApprovedSeconds)}</span>
 				<span class="stat-label">total approved hours</span>
 			</div>
+			<div class="stat">
+				<span class="stat-value">{data.reviews.totalWeightedProjects.toFixed(1)}</span>
+				<span class="stat-label">weighted projects</span>
+			</div>
 		</div>
 		<div class="breakdown">
 			<span class="breakdown-title">submissions by status</span>
