@@ -494,8 +494,7 @@
 
 <footer>
 	<p>
-		made with ❤︎⁠ by <a href="https://hackclub.com/">hack club</a> and
-		<a href="https://github.com/maxstellar/">@maxstellar</a><br />
+		made with ❤︎⁠ by <a href="https://hackclub.com/">hack club</a><br />
 		design inspired by <a href="https://scraps.hackclub.com/">scraps</a> and
 		<a href="https://github.com/notaroomba/">@notaroomba</a>
 	</p>
