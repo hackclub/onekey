@@ -97,13 +97,10 @@
 	let approvedMinutesInput = $state(
 		data.latestApproval ? String(Math.floor(data.latestApproval.newSeconds / 60)) : ''
 	);
-	// Editable internal note shown when an admin confirms a soft approval. Prefilled
-	// with the soft-approver's note; the admin can tweak it before final approval.
-	let confirmInternalNote = $state(data.latestApproval?.internalNote ?? '');
-
-	// Internal note for a fresh (non-soft-approve) full approval. Autofilled with a
-	// Hackatime summary so the admin only has to add their own justification.
-	function buildHackatimeApprovalNote(): string {
+	// Internal note for a full approval, autofilled with a Hackatime summary so the
+	// admin only has to add their own justification. When confirming a soft approval,
+	// the soft-approver's note is dropped in under [REVIEWER JUSTIFICATION].
+	function buildHackatimeApprovalNote(justification = ''): string {
 		const projects = ownerInfo?.hackatimeProjects ?? [];
 		const count = projects.length;
 		const totalSeconds = projects.reduce((sum, p) => sum + p.totalSeconds, 0);
@@ -114,12 +111,15 @@
 		const idLine = ownerInfo?.hackatimeUserId
 			? `The user's Hackatime ID is ${ownerInfo.hackatimeUserId}.`
 			: `The user's Hackatime ID is not linked.`;
-		return `[HACKATIME]\nHackatime heartbeats have no fraudulent patterns. ${projectsLine}\n${idLine}\n\n[REVIEWER JUSTIFICATION]\n`;
+		return `[HACKATIME]\nHackatime heartbeats have no fraudulent patterns. ${projectsLine}\n${idLine}\n\n[REVIEWER JUSTIFICATION]\n${justification}`;
 	}
 	let approveInternalNote = $state('');
 	$effect(() => {
-		if (reviewAction === 'approve' && derivedStatus !== 'soft_approved' && !approveInternalNote) {
-			approveInternalNote = buildHackatimeApprovalNote();
+		if (reviewAction === 'approve' && !approveInternalNote) {
+			// Confirming a soft approval: seed the justification with the soft-approver's note.
+			approveInternalNote = buildHackatimeApprovalNote(
+				derivedStatus === 'soft_approved' ? (data.latestApproval?.internalNote ?? '') : ''
+			);
 		}
 	});
 	const approvedMinutesConverted = $derived(() => {
@@ -976,7 +976,7 @@
 						class="review-textarea"
 						name="internal_note"
 						placeholder="internal note (reviewer-only)"
-						bind:value={confirmInternalNote}
+						bind:value={approveInternalNote}
 						required
 					></textarea>
 				{:else if reviewAction === 'approve'}
