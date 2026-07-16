@@ -57,6 +57,10 @@
 			<span class="card-label">slack mass DM</span>
 			<p class="card-desc">DM cohorts of users from your own Slack account</p>
 		</a>
+		<a href="/admin/export" class="card" download>
+			<span class="card-label">export CSV</span>
+			<p class="card-desc">download shipping info for everyone with an accepted project</p>
+		</a>
 	</div>
 </div>
 
