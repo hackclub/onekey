@@ -4,9 +4,16 @@ import { db } from '$lib/server/db';
 import { users, projects, projectApprovals } from '$lib/server/db/schema';
 import { and, eq } from 'drizzle-orm';
 
+/** Normalize "smart"/typographic quote characters that sneak in via copy-paste to plain ASCII. */
+function normalizeQuotes(value: string | null | undefined): string {
+	return (value ?? '')
+		.replace(/[‘’‚‛′‵`´]/g, "'") // single curly / prime / accents → '
+		.replace(/[“”„‟″‶«»]/g, '"'); // double curly / prime / guillemets → "
+}
+
 /** Quote a CSV cell if it contains a comma, quote, or newline; escape embedded quotes. */
 function csvCell(value: string | null | undefined): string {
-	const s = value == null ? '' : String(value);
+	const s = normalizeQuotes(value);
 	return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
