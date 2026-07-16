@@ -11,15 +11,10 @@ function normalizeQuotes(value: string | null | undefined): string {
 		.replace(/[“”„‟″‶«»]/g, '"'); // double curly / prime / guillemets → "
 }
 
-/**
- * Prepare a tab-separated cell: normalize smart quotes, then flatten any tab or
- * newline (the TSV delimiters) to a single space so every record stays one line
- * and columns line up. No quote-wrapping needed since fields never contain tabs.
- */
-function tsvCell(value: string | null | undefined): string {
-	return normalizeQuotes(value)
-		.replace(/[\t\r\n]+/g, ' ')
-		.trim();
+/** Quote a CSV cell if it contains a comma, quote, or newline; escape embedded quotes. */
+function csvCell(value: string | null | undefined): string {
+	const s = normalizeQuotes(value);
+	return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 /** Split a single stored name into first/last: last whitespace-token is the last name. */
@@ -65,7 +60,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 			and(eq(projectApprovals.projectId, projects.id), eq(projectApprovals.status, 'approved'))
 		);
 
-	const lines = [HEADERS.join('\t')];
+	const lines = [HEADERS.join(',')];
 	for (const r of rows) {
 		const { first, last } = splitName(r.name);
 		lines.push(
@@ -81,18 +76,18 @@ export const GET: RequestHandler = async ({ locals }) => {
 				r.email,
 				'onekey Stickers'
 			]
-				.map(tsvCell)
-				.join('\t')
+				.map(csvCell)
+				.join(',')
 		);
 	}
 
 	// Prepend a UTF-8 BOM so Excel opens the file with correct encoding.
-	const tsv = '﻿' + lines.join('\r\n') + '\r\n';
+	const csv = '﻿' + lines.join('\r\n') + '\r\n';
 
-	return new Response(tsv, {
+	return new Response(csv, {
 		headers: {
-			'Content-Type': 'text/tab-separated-values; charset=utf-8',
-			'Content-Disposition': 'attachment; filename="onekey-accepted-people.tsv"'
+			'Content-Type': 'text/csv; charset=utf-8',
+			'Content-Disposition': 'attachment; filename="onekey-accepted-people.csv"'
 		}
 	});
 };
