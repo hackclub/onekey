@@ -15,6 +15,26 @@
 	let displayedImageUrl = $state<string | null>(null);
 	const CLOSE_MS = 160;
 
+	// Hardcoded flagship item — the onekey macropad. Sits above every category as a
+	// full-width banner and opens its own modal that links to the /onekey customizer.
+	const MACROPAD_IMG = 'https://cdn.hackclub.com/019f70a8-3c21-7cc6-898e-02a1197c3620/6ag9s64.png';
+	let macropadOpen = $state(false);
+	let macropadClosing = $state(false);
+
+	function openMacropad() {
+		macropadClosing = false;
+		macropadOpen = true;
+	}
+
+	function closeMacropad() {
+		if (macropadClosing) return;
+		macropadClosing = true;
+		setTimeout(() => {
+			macropadOpen = false;
+			macropadClosing = false;
+		}, CLOSE_MS);
+	}
+
 	function openModal(item: Item, mode: 'buy' | 'claim' = 'buy') {
 		modalMode = mode;
 		try {
@@ -65,7 +85,13 @@
 	const enterSvg = `<svg fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" viewBox="0 0 32 32" preserveAspectRatio="xMidYMid meet" fill="currentColor"><path d="M18.496,10.132c-0.479,-0.274 -1.09,-0.108 -1.364,0.372c-0.274,0.479 -0.108,1.09 0.372,1.364c1.554,0.886 3.031,1.929 4.357,3.132l-13.861,0c-0.552,0 -1,0.448 -1,1c0,0.552 0.448,1 1,1l13.861,0c-1.326,1.203 -2.803,2.246 -4.357,3.132c-0.48,0.274 -0.646,0.885 -0.372,1.364c0.274,0.48 0.885,0.646 1.364,0.372c2.16,-1.237 4.859,-2.886 6.237,-5.061c0.076,-0.12 0.267,-0.431 0.267,-0.807c0,-0.376 -0.191,-0.687 -0.267,-0.807c-1.403,-2.215 -4.021,-3.792 -6.237,-5.061Z"/></svg>`;
 </script>
 
-<svelte:window onkeydown={(e) => e.key === 'Escape' && modalItem && closeModal()} />
+<svelte:window
+	onkeydown={(e) => {
+		if (e.key !== 'Escape') return;
+		if (modalItem) closeModal();
+		else if (macropadOpen) closeMacropad();
+	}}
+/>
 
 <div class="page-header">
 	<div class="heading-row">
@@ -220,6 +246,31 @@
 {/if}
 
 {#snippet shopGrid()}
+	<!-- Flagship item, hardcoded above every category, spanning the full page width. -->
+	<div
+		class="macropad-banner"
+		role="button"
+		tabindex="0"
+		onclick={openMacropad}
+		onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), openMacropad())}
+	>
+		<div class="macropad-info">
+			<div class="macropad-head">
+				<h2 class="macropad-name">onekey macropad</h2>
+				<span class="macropad-price">
+					<span class="price-icon">{@html clockSvg}</span>5 hours
+				</span>
+			</div>
+			<p class="macropad-tagline">one key. one dial. endless possibilities!</p>
+			<p class="macropad-blurb">
+				customize your keyswitch, top and bottom case color, and keycap!
+			</p>
+		</div>
+		<div class="macropad-img-wrap">
+			<img src={MACROPAD_IMG} alt="onekey macropad" class="macropad-img" />
+		</div>
+	</div>
+
 	{#if data.categories.length === 0}
 		<div class="empty-state">
 			<p>no items available yet - check back soon.</p>
@@ -439,6 +490,36 @@
 						<button type="button" class="btn-cancel-modal" onclick={closeModal}>cancel</button>
 					</div>
 				</form>
+			</div>
+		</div>
+	</div>
+{/if}
+
+<!-- MACROPAD MODAL — links out to the /onekey customizer instead of buying here -->
+{#if macropadOpen}
+	<div
+		class="modal-backdrop"
+		class:closing={macropadClosing}
+		role="dialog"
+		aria-modal="true"
+		onclick={(e) => e.target === e.currentTarget && closeMacropad()}
+		onkeydown={(e) => e.key === 'Escape' && closeMacropad()}
+		tabindex="-1"
+	>
+		<div class="modal-box" class:closing={macropadClosing}>
+			<div class="modal-img-wrap" style="--img-pad: 24px; background: #202020;">
+				<img src={MACROPAD_IMG} alt="onekey macropad" class="modal-img" style="object-fit: contain;" />
+			</div>
+			<div class="modal-body">
+				<div class="modal-title-row">
+					<h2 class="modal-title">onekey macropad</h2>
+				</div>
+				<p class="modal-desc">one key. one dial. endless possibilities!</p>
+				<p class="modal-desc">customize your keyswitch, top and bottom case color, and keycap!</p>
+				<div class="modal-actions">
+					<a href="/onekey" class="btn-confirm btn-confirm-link">customize your onekey</a>
+					<button type="button" class="btn-cancel-modal" onclick={closeMacropad}>cancel</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -773,6 +854,113 @@
 	.empty-state {
 		color: var(--color-text-soft);
 		font-size: 1.05rem;
+	}
+
+	/* ── MACROPAD BANNER (flagship, full-width, above all categories) ── */
+
+	.macropad-banner {
+		display: flex;
+		align-items: stretch;
+		background: var(--color-bg);
+		border: solid var(--border-width);
+		border-radius: var(--radius-card);
+		overflow: hidden;
+		cursor: pointer;
+		text-align: left;
+		color: var(--color-text);
+		transition: border-color 0.15s;
+		margin-bottom: 1.5rem;
+	}
+
+	.macropad-banner:hover {
+		border-color: var(--color-text);
+	}
+
+	.macropad-info {
+		flex: 1 1 55%;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 0.6rem;
+		padding: clamp(1.35rem, 2.6vw, 2.5rem);
+	}
+
+	.macropad-head {
+		display: flex;
+		align-items: baseline;
+		gap: 0.85rem;
+		flex-wrap: wrap;
+	}
+
+	.macropad-name {
+		margin: 0;
+		font-size: clamp(1.6rem, 2.8vw, 2.4rem);
+		font-weight: bold;
+		letter-spacing: -0.02em;
+		line-height: 1.1;
+	}
+
+	.macropad-price {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		font-size: clamp(1rem, 1.4vw, 1.2rem);
+		font-weight: bold;
+		letter-spacing: -0.02em;
+		color: var(--color-text-soft);
+	}
+
+	.macropad-price .price-icon {
+		margin: 0;
+	}
+
+	.macropad-tagline {
+		margin: 0;
+		font-size: clamp(1rem, 1.5vw, 1.25rem);
+		font-weight: 600;
+	}
+
+	.macropad-blurb {
+		margin: 0;
+		font-size: 0.95rem;
+		line-height: 1.5;
+		color: var(--color-text-soft);
+	}
+
+	.macropad-img-wrap {
+		flex: 0 0 32%;
+		overflow: hidden;
+		background: #202020;
+		border-left: calc(var(--border-width) / 2) solid;
+		padding: clamp(0.4rem, 1vw, 0.9rem);
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.macropad-img {
+		max-width: 90%;
+		max-height: 90%;
+		object-fit: contain;
+		display: block;
+	}
+
+	@media (max-width: 640px) {
+		.macropad-banner {
+			flex-direction: column;
+		}
+
+		.macropad-img-wrap {
+			flex-basis: auto;
+			width: 100%;
+			aspect-ratio: 16 / 9;
+			border-left: none;
+			border-top: calc(var(--border-width) / 2) solid;
+			/* image on top when stacked, matching the image-first item cards */
+			order: -1;
+		}
 	}
 
 	/* ── CATEGORY ── */
@@ -1239,6 +1427,10 @@
 
 	.btn-confirm:hover {
 		opacity: 0.85;
+	}
+
+	.btn-confirm-link {
+		text-decoration: none;
 	}
 
 	.btn-confirm:disabled {
