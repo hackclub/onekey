@@ -13,6 +13,25 @@
 			: data.orders.filter(o => String(o.id).includes(search.trim()))
 	);
 
+	// what it costs to buy out everything still owed to users
+	const USD_PER_HOUR = 8.5;
+
+	const sumSeconds = (orders: typeof data.orders) =>
+		orders.reduce((total, o) => total + o.priceSeconds, 0);
+
+	const money = (usd: number) =>
+		usd.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+
+	const usdFor = (seconds: number) => (seconds / 3600) * USD_PER_HOUR;
+
+	// the load already excludes fulfilled/refunded, but filter anyway so the
+	// totals stay honest if that query ever widens
+	const queue = $derived(
+		data.orders.filter(o => o.status !== 'fulfilled' && o.status !== 'refunded')
+	);
+	const queueSeconds = $derived(sumSeconds(queue));
+	const unshippedSeconds = $derived(sumSeconds(queue.filter(o => o.status !== 'shipped')));
+
 	const STATUSES = ['ordered', 'shipped', 'fulfilled'];
 
 	const statusDot: Record<string, string> = {
@@ -45,6 +64,29 @@
 			bind:value={search}
 		/>
 	</div>
+
+	{#if queue.length > 0}
+		<div class="queue-summary">
+			<div class="stat">
+				<span class="stat-value">{money(usdFor(queueSeconds))}</span>
+				<span class="stat-label">
+					needed to fulfill the queue <em>@ ${USD_PER_HOUR.toFixed(2)}/hr</em>
+				</span>
+			</div>
+			<div class="stat">
+				<span class="stat-value">{formatHours(queueSeconds)}</span>
+				<span class="stat-label">
+					unfulfilled hours across {queue.length} {queue.length === 1 ? 'order' : 'orders'}
+				</span>
+			</div>
+			<div class="stat">
+				<span class="stat-value">{money(usdFor(unshippedSeconds))}</span>
+				<span class="stat-label">
+					not yet shipped <em>({formatHours(unshippedSeconds)})</em>
+				</span>
+			</div>
+		</div>
+	{/if}
 
 	{#if form?.error}
 		<p class="form-error">{form.error}</p>
@@ -184,6 +226,40 @@
 	.search-input::placeholder {
 		color: var(--color-text-soft);
 		opacity: 0.5;
+	}
+
+	.queue-summary {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 0.5rem;
+	}
+
+	.stat {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		padding: 0.9rem 1rem;
+		border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
+		border-radius: 8px;
+		background: var(--color-bg-soft);
+	}
+
+	.stat-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+		line-height: 1;
+		letter-spacing: -0.02em;
+		color: var(--color-text);
+	}
+
+	.stat-label {
+		font-size: 0.78rem;
+		color: var(--color-text-soft);
+	}
+
+	.stat-label em {
+		font-style: normal;
+		opacity: 0.6;
 	}
 
 	.form-error {
