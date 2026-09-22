@@ -29,8 +29,22 @@
 	const queue = $derived(
 		data.orders.filter(o => o.status !== 'fulfilled' && o.status !== 'refunded')
 	);
-	const queueSeconds = $derived(sumSeconds(queue));
-	const unshippedSeconds = $derived(sumSeconds(queue.filter(o => o.status !== 'shipped')));
+
+	// onekeys are built in one batch for a flat cost, so they're priced
+	// separately instead of by the hour
+	const ONEKEY_FLAT_USD = 60;
+	const isOnekey = (o: typeof data.orders[number]) => o.categorySlug === 'onekey';
+	const onekeyUsd = (orders: typeof data.orders) =>
+		orders.some(isOnekey) ? ONEKEY_FLAT_USD : 0;
+
+	const hourly = $derived(queue.filter(o => !isOnekey(o)));
+	const unshipped = $derived(queue.filter(o => o.status !== 'shipped'));
+	const onekeyCount = $derived(queue.length - hourly.length);
+
+	const queueSeconds = $derived(sumSeconds(hourly));
+	const unshippedSeconds = $derived(sumSeconds(unshipped.filter(o => !isOnekey(o))));
+	const queueUsd = $derived(usdFor(queueSeconds) + onekeyUsd(queue));
+	const unshippedUsd = $derived(usdFor(unshippedSeconds) + onekeyUsd(unshipped));
 
 	const STATUSES = ['ordered', 'shipped', 'fulfilled'];
 
@@ -68,19 +82,19 @@
 	{#if queue.length > 0}
 		<div class="queue-summary">
 			<div class="stat">
-				<span class="stat-value">{money(usdFor(queueSeconds))}</span>
+				<span class="stat-value">{money(queueUsd)}</span>
 				<span class="stat-label">
-					needed to fulfill the queue <em>@ ${USD_PER_HOUR.toFixed(2)}/hr</em>
+					needed to fulfill the queue <em>@ ${USD_PER_HOUR.toFixed(2)}/hr{#if onekeyCount > 0} + {money(ONEKEY_FLAT_USD)} for {onekeyCount} {onekeyCount === 1 ? 'onekey' : 'onekeys'}{/if}</em>
 				</span>
 			</div>
 			<div class="stat">
 				<span class="stat-value">{formatHours(queueSeconds)}</span>
 				<span class="stat-label">
-					unfulfilled hours across {queue.length} {queue.length === 1 ? 'order' : 'orders'}
+					unfulfilled hours across {hourly.length} {hourly.length === 1 ? 'order' : 'orders'}{#if onekeyCount > 0} <em>(excl. onekeys)</em>{/if}
 				</span>
 			</div>
 			<div class="stat">
-				<span class="stat-value">{money(usdFor(unshippedSeconds))}</span>
+				<span class="stat-value">{money(unshippedUsd)}</span>
 				<span class="stat-label">
 					not yet shipped <em>({formatHours(unshippedSeconds)})</em>
 				</span>

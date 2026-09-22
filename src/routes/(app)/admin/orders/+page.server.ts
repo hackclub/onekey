@@ -15,6 +15,7 @@ export async function load({ locals }) {
 			createdAt: shopOrders.createdAt,
 			itemName: shopItems.name,
 			categoryName: shopCategories.name,
+			categorySlug: shopCategories.slug,
 			userName: users.slackDisplayName,
 			userNickname: users.nickname,
 			userAvatar: users.slackAvatarUrl,
