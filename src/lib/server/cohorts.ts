@@ -2,7 +2,7 @@ import { db } from '$lib/server/db';
 import { users, projects, projectApprovals } from '$lib/server/db/schema';
 import { eq, and, isNotNull, ne } from 'drizzle-orm';
 
-export type CohortKey = 'no_project' | 'no_hackatime' | 'not_shipped';
+export type CohortKey = 'no_project' | 'no_hackatime' | 'not_shipped' | 'approved';
 
 export const COHORTS: { key: CohortKey; label: string; description: string }[] = [
 	{
@@ -21,6 +21,11 @@ export const COHORTS: { key: CohortKey; label: string; description: string }[] =
 		label: 'Hackatime linked, not shipped',
 		description:
 			'Users who linked a Hackatime project to at least one of their projects but have never submitted one for review.'
+	},
+	{
+		key: 'approved',
+		label: 'At least one project approved',
+		description: 'Users who have had at least one of their projects approved by a reviewer.'
 	}
 ];
 
@@ -44,11 +49,12 @@ const pickName = (u: {
 }) => u.slackDisplayName || u.nickname || u.name || u.email || 'unknown';
 
 /**
- * Bucket every user into exactly one of three disjoint cohorts by their
+ * Bucket every user into at most one of four disjoint cohorts by their
  * FURTHEST milestone. Users who have shipped (have any approval row on a
- * project they own) are excluded entirely.
+ * project they own) but never had one approved are excluded entirely.
  *
- *   shipped              -> excluded
+ *   has an approval      -> approved
+ *   else shipped         -> excluded
  *   else linked HT       -> not_shipped
  *   else has a project   -> no_hackatime
  *   else                 -> no_project
@@ -56,7 +62,7 @@ const pickName = (u: {
 export async function computeCohorts(): Promise<Record<CohortKey, Cohort>> {
 	const hasHackatime = and(isNotNull(projects.hackatimeProject), ne(projects.hackatimeProject, ''));
 
-	const [allUsers, projectOwners, hackatimeOwners, shippedOwners] = await Promise.all([
+	const [allUsers, projectOwners, hackatimeOwners, shippedOwners, approvedOwners] = await Promise.all([
 		db
 			.select({
 				id: users.id,
@@ -72,24 +78,31 @@ export async function computeCohorts(): Promise<Record<CohortKey, Cohort>> {
 		db
 			.selectDistinct({ userId: projects.userId })
 			.from(projectApprovals)
+			.innerJoin(projects, eq(projectApprovals.projectId, projects.id)),
+		db
+			.selectDistinct({ userId: projects.userId })
+			.from(projectApprovals)
 			.innerJoin(projects, eq(projectApprovals.projectId, projects.id))
+			.where(eq(projectApprovals.status, 'approved'))
 	]);
 
 	const hasProject = new Set(projectOwners.map((r) => r.userId));
 	const hasHt = new Set(hackatimeOwners.map((r) => r.userId));
 	const shipped = new Set(shippedOwners.map((r) => r.userId));
+	const approved = new Set(approvedOwners.map((r) => r.userId));
 
 	const result: Record<CohortKey, Cohort> = {
 		no_project: { key: 'no_project', reachable: [], unreachableCount: 0 },
 		no_hackatime: { key: 'no_hackatime', reachable: [], unreachableCount: 0 },
-		not_shipped: { key: 'not_shipped', reachable: [], unreachableCount: 0 }
+		not_shipped: { key: 'not_shipped', reachable: [], unreachableCount: 0 },
+		approved: { key: 'approved', reachable: [], unreachableCount: 0 }
 	};
 
 	for (const u of allUsers) {
-		if (shipped.has(u.id)) continue; // already shipped — not a target
-
 		let key: CohortKey;
-		if (hasHt.has(u.id)) key = 'not_shipped';
+		if (approved.has(u.id)) key = 'approved';
+		else if (shipped.has(u.id)) continue; // shipped but nothing approved yet — not a target
+		else if (hasHt.has(u.id)) key = 'not_shipped';
 		else if (hasProject.has(u.id)) key = 'no_hackatime';
 		else key = 'no_project';
 

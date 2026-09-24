@@ -10,7 +10,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const SEND_DELAY_MS = 350; // gentle throttle between DMs to stay under Slack rate limits
 
 const isCohortKey = (v: unknown): v is CohortKey =>
-	v === 'no_project' || v === 'no_hackatime' || v === 'not_shipped';
+	v === 'no_project' || v === 'no_hackatime' || v === 'not_shipped' || v === 'approved';
 
 export async function load({ locals }) {
 	if (!locals.isAdmin) error(403, 'Forbidden');

@@ -29,7 +29,7 @@
 		<a href="/admin" class="back">← admin</a>
 		<h1>slack mass DM</h1>
 		<p class="sub">
-			Send a DM <strong>from your own Slack account</strong> to a cohort of users. The three cohorts
+			Send a DM <strong>from your own Slack account</strong> to a cohort of users. The cohorts
 			are disjoint — each user is bucketed by their furthest milestone.
 		</p>
 	</div>
