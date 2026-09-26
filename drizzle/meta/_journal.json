@@ -225,6 +225,13 @@
       "when": 1783020473594,
       "tag": "0031_drop_manual_goal_hours",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1790397713258,
+      "tag": "0032_add_eligibility_overrides",
+      "breakpoints": true
     }
   ]
 }

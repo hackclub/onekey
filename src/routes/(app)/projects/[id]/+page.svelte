@@ -908,7 +908,12 @@
 						class:reviewer-info-ok={ownerInfo.eligible}
 						class:reviewer-info-bad={!ownerInfo.eligible}
 					>
-						{eligibilityLabel[ownerInfo.eligibilityDecision] ?? ownerInfo.eligibilityDecision}
+						{#if ownerInfo.eligibilityOverride}
+							eligible (admin override)
+							<span class="reviewer-info-muted">· {eligibilityLabel[ownerInfo.eligibilityDecision] ?? ownerInfo.eligibilityDecision}</span>
+						{:else}
+							{eligibilityLabel[ownerInfo.eligibilityDecision] ?? ownerInfo.eligibilityDecision}
+						{/if}
 						{#if data.isAdmin && ownerInfo.age != null}
 							<span class="reviewer-info-muted">· age {ownerInfo.age}</span>
 						{/if}

@@ -37,6 +37,10 @@
 			<span class="card-label">reviewers</span>
 			<p class="card-desc">manage who can access review pages</p>
 		</a>
+		<a href="/admin/eligibility" class="card">
+			<span class="card-label">eligibility overrides</span>
+			<p class="card-desc">let specific ineligible users onto the platform</p>
+		</a>
 		<a href="/admin/guides" class="card">
 			<span class="card-label">guides</span>
 			<p class="card-desc">view published guides</p>

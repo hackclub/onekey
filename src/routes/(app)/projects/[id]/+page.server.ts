@@ -23,6 +23,7 @@ import {
 	type CheckResult
 } from '$lib/server/eligibility';
 import { checkYswsStatus } from '$lib/server/verification';
+import { hasEligibilityOverride } from '$lib/server/eligibility-overrides';
 import { isStaging } from '$lib/server/staging';
 
 const HACKATIME_BASE_URL = 'https://hackatime.hackclub.com';
@@ -287,7 +288,9 @@ export async function load({ locals, params }) {
 			yswsEligible: users.yswsEligible,
 			yswsCheckResult: users.yswsCheckResult,
 			birthday: users.birthday,
-			hackatimeUserId: users.hackatimeUserId
+			hackatimeUserId: users.hackatimeUserId,
+			hcaId: users.hcaId,
+			email: users.email
 		})
 		.from(users)
 		.where(eq(users.id, project.userId))
@@ -301,6 +304,8 @@ export async function load({ locals, params }) {
 	if (isInternal && projectOwnerRow) {
 		const result = (projectOwnerRow.yswsCheckResult as CheckResult | null) ?? null;
 		const decision = decideEligibility(result, projectOwnerRow.birthday);
+		const eligibilityOverride =
+			!isEligibleDecision(decision) && (await hasEligibilityOverride(projectOwnerRow));
 
 		const linkedProjectNames = (project.hackatimeProject ?? '')
 			.split(',')
@@ -330,7 +335,8 @@ export async function load({ locals, params }) {
 			// age is admin-only; reviewers see eligibility but not the raw age
 			age: locals.isAdmin ? calculateAge(projectOwnerRow.birthday) : null,
 			eligibilityDecision: decision,
-			eligible: isEligibleDecision(decision),
+			eligible: isEligibleDecision(decision) || eligibilityOverride,
+			eligibilityOverride,
 			hackatimeUserId: projectOwnerRow.hackatimeUserId,
 			hackatimeProjects
 		};
@@ -459,7 +465,7 @@ export const actions = {
 			return fail(400, { error: 'project already submitted, use reship to submit new work' });
 
 		const eligibility = decideEligibility(await checkYswsStatus(locals.user.sub), dbUser.birthday);
-		if (!isEligibleDecision(eligibility))
+		if (!isEligibleDecision(eligibility) && !(await hasEligibilityOverride(dbUser)))
 			return fail(403, { error: eligibilityMessage(eligibility) });
 
 		if (!dbUser.streetAddress || !dbUser.locality || !dbUser.country)
@@ -568,7 +574,7 @@ export const actions = {
 			return fail(400, { error: 'a review is already pending for this project' });
 
 		const eligibility = decideEligibility(await checkYswsStatus(locals.user.sub), dbUser.birthday);
-		if (!isEligibleDecision(eligibility))
+		if (!isEligibleDecision(eligibility) && !(await hasEligibilityOverride(dbUser)))
 			return fail(403, { error: eligibilityMessage(eligibility) });
 
 		if (!dbUser.streetAddress || !dbUser.locality || !dbUser.country)

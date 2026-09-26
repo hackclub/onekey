@@ -9,6 +9,7 @@ import { getLaunched } from '$lib/server/launch';
 import { inviteToChannel } from '$lib/server/slack';
 import { decideEligibility, isEligibleDecision } from '$lib/server/eligibility';
 import { checkYswsStatus } from '$lib/server/verification';
+import { hasEligibilityOverride } from '$lib/server/eligibility-overrides';
 import type { RequestHandler } from './$types';
 
 const ONEKEY_CHANNEL_ID = 'C0AM132QQUR';
@@ -58,9 +59,13 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	// Eligibility comes from Hack Club Identity's verification check, with the
 	// age (13-18) as a fallback when the user isn't verified yet. `verified_eligible`
 	// bypasses the age check; `verified_but_over_18`/`rejected` are hard-blocked.
+	// Admins can grant an override (/admin/eligibility) that bypasses all of this.
 	const checkResult = await checkYswsStatus(user.sub);
 	const decision = decideEligibility(checkResult, user.birthdate);
-	if (!isEligibleDecision(decision)) {
+	if (
+		!isEligibleDecision(decision) &&
+		!(await hasEligibilityOverride({ hcaId: user.sub, slackId: user.slack_id, email: user.email }))
+	) {
 		redirect(302, '/ineligible');
 	}
 

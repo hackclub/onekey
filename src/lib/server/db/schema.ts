@@ -301,3 +301,15 @@ export const reviewers = pgTable('reviewers', {
 		.notNull()
 		.default(sql`now()`)
 });
+
+// Admin-granted bypass of the YSWS eligibility check. Blocked users never get a
+// users row (login redirects before the upsert), so this is keyed on whatever the
+// admin knows about them: an HCA id, Slack id, or email (stored lowercased).
+export const eligibilityOverrides = pgTable('eligibility_overrides', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	identifier: text('identifier').notNull().unique(),
+	note: text('note'),
+	createdAt: timestamp('created_at', { withTimezone: true })
+		.notNull()
+		.default(sql`now()`)
+});
