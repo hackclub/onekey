@@ -71,12 +71,16 @@
 		<a href="/admin" class="back-link">← admin</a>
 		<h1>orders</h1>
 		<p class="sub">oldest first - fulfill in order shown.</p>
-		<input
-			type="text"
-			class="search-input"
-			placeholder="search by order id…"
-			bind:value={search}
-		/>
+		<div class="header-tools">
+			<input
+				type="text"
+				class="search-input"
+				placeholder="search by order id…"
+				bind:value={search}
+			/>
+			<a href="/admin/orders/export" class="btn-export" download>export queue CSV</a>
+			<a href="/admin/orders/export?all=1" class="btn-export" download>export all CSV</a>
+		</div>
 	</div>
 
 	{#if queue.length > 0}
@@ -220,8 +224,30 @@
 		margin: 0;
 	}
 
-	.search-input {
+	.header-tools {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 		margin-top: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.btn-export {
+		font-size: 0.78rem;
+		padding: 0.35rem 0.65rem;
+		border-radius: 6px;
+		border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
+		background: var(--color-bg-soft);
+		color: var(--color-text);
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.btn-export:hover {
+		border-color: color-mix(in srgb, var(--color-text) 40%, transparent);
+	}
+
+	.search-input {
 		background: var(--color-bg-soft);
 		border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
 		border-radius: 6px;
