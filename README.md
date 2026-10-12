@@ -73,4 +73,4 @@ the server listens on port `3000` by default. set `PORT` to override.
 
 ## contributing
 
-pull requests are welcome! poke me (@maxstellar) in #onekey or dm me on slack if you have questions!
+pull requests are welcome! poke me (@stelle) in #onekey or dm me on slack if you have questions!
