@@ -33,6 +33,10 @@
 			<span class="card-label">orders</span>
 			<p class="card-desc">view and fulfill orders (oldest first)</p>
 		</a>
+		<a href="/admin/shop-stats" class="card">
+			<span class="card-label">shop statistics</span>
+			<p class="card-desc">most-ordered items, excluding refunds</p>
+		</a>
 		<a href="/admin/reviewers" class="card">
 			<span class="card-label">reviewers</span>
 			<p class="card-desc">manage who can access review pages</p>
