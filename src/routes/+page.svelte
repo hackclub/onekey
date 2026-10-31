@@ -270,7 +270,7 @@
 	</div>
 	<div class="panel">
 		<img class="logo" src="/img/onekey.png" alt="onekey" />
-		<p class="tagline">make a program that only uses one key, get a one key macropad!</p>
+		<p class="tagline">(a.k.a. job ysws)<br>make a program that only uses one key, get a one key macropad!</p>
 		{#if data.isLaunched}
 			{#if data.user}
 				<a href="/home" class="button filled cta">go to dashboard</a>
